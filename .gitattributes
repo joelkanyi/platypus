@@ -1,0 +1,26 @@
+# Normalize line endings on checkin; auto-convert on checkout per-platform.
+* text=auto eol=lf
+
+# Windows-only scripts keep CRLF.
+*.bat text eol=crlf
+
+# Shell scripts and the Gradle wrapper stay LF.
+gradlew text eol=lf
+*.sh text eol=lf
+
+# Treat these as binary (no eol conversion, no diff noise).
+*.ttf binary
+*.otf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.jar binary
+*.keystore binary
+*.jks binary
+
+# Collapse generated/vendored files in diffs and language stats.
+gradlew linguist-vendored
+gradlew.bat linguist-vendored
+*.api linguist-generated

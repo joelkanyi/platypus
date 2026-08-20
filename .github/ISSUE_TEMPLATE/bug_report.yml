@@ -1,0 +1,46 @@
+name: Bug report
+description: Something is broken or behaving unexpectedly.
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to ...
+        2. Tap ...
+        3. See ...
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Android
+        - iOS
+        - Both
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      placeholder: e.g. 1.0 (build 1)
+  - type: input
+    id: device
+    attributes:
+      label: Device and OS version
+      placeholder: e.g. Pixel 8 / Android 15, iPhone 15 / iOS 18
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Attach anything relevant. Never paste tokens or credentials.

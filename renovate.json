@@ -1,0 +1,31 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommitsDisabled"
+  ],
+  "timezone": "Africa/Nairobi",
+  "schedule": ["before 6am on monday"],
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "description": "Group non-major Gradle/Kotlin updates into one weekly PR to limit CI runs.",
+      "matchManagers": ["gradle", "gradle-wrapper"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "gradle (non-major)"
+    },
+    {
+      "description": "Group GitHub Actions updates.",
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions"
+    },
+    {
+      "description": "Major updates stay separate so breaking changes are reviewed alone.",
+      "matchUpdateTypes": ["major"],
+      "addLabels": ["major-update"]
+    }
+  ]
+}

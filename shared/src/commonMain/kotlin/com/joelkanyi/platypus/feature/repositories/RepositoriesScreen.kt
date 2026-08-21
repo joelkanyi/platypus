@@ -57,20 +57,21 @@ import io.github.joelkanyi.jenga.component.state.JengaErrorState
 import io.github.joelkanyi.jenga.theme.JengaTheme
 
 @Composable
-fun RepositoriesScreen(modifier: Modifier = Modifier) {
+fun RepositoriesScreen(onOpenRepo: (WatchedRepo) -> Unit, modifier: Modifier = Modifier) {
     val dependencies = LocalPlatypusDependencies.current
     val viewModel = viewModel {
         RepositoriesViewModel(dependencies.authRepository, dependencies.watchlistRepository)
     }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    RepositoriesContent(state = state, onEvent = viewModel::onEvent, modifier = modifier)
+    RepositoriesContent(state = state, onEvent = viewModel::onEvent, onOpenRepo = onOpenRepo, modifier = modifier)
 }
 
 @Composable
 internal fun RepositoriesContent(
     state: RepositoriesUiState,
     onEvent: (RepositoriesUiEvent) -> Unit,
+    onOpenRepo: (WatchedRepo) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val spacing = JengaTheme.spacing
@@ -104,7 +105,7 @@ internal fun RepositoriesContent(
             }
 
             when (state.tab) {
-                RepoTab.WATCHING -> WatchingPane(state = state, onEvent = onEvent)
+                RepoTab.WATCHING -> WatchingPane(state = state, onEvent = onEvent, onOpenRepo = onOpenRepo)
                 RepoTab.BROWSE -> BrowsePane(state = state, onEvent = onEvent)
             }
         }
@@ -112,7 +113,11 @@ internal fun RepositoriesContent(
 }
 
 @Composable
-private fun WatchingPane(state: RepositoriesUiState, onEvent: (RepositoriesUiEvent) -> Unit) {
+private fun WatchingPane(
+    state: RepositoriesUiState,
+    onEvent: (RepositoriesUiEvent) -> Unit,
+    onOpenRepo: (WatchedRepo) -> Unit,
+) {
     val spacing = JengaTheme.spacing
 
     if (state.watched.isEmpty()) {
@@ -132,13 +137,17 @@ private fun WatchingPane(state: RepositoriesUiState, onEvent: (RepositoriesUiEve
         verticalArrangement = Arrangement.spacedBy(spacing.xs),
     ) {
         items(state.watched, key = { it.repoUuid }) { watched ->
-            WatchedRow(watched = watched, onUnwatch = { onEvent(RepositoriesUiEvent.Unwatch(watched)) })
+            WatchedRow(
+                watched = watched,
+                onOpen = { onOpenRepo(watched) },
+                onUnwatch = { onEvent(RepositoriesUiEvent.Unwatch(watched)) },
+            )
         }
     }
 }
 
 @Composable
-private fun WatchedRow(watched: WatchedRepo, onUnwatch: () -> Unit) {
+private fun WatchedRow(watched: WatchedRepo, onOpen: () -> Unit, onUnwatch: () -> Unit) {
     JengaListItem(
         headline = watched.name,
         supporting = watched.fullName,
@@ -146,6 +155,7 @@ private fun WatchedRow(watched: WatchedRepo, onUnwatch: () -> Unit) {
         trailingContent = {
             JengaToggle(checked = true, onCheckedChange = { onUnwatch() })
         },
+        onClick = onOpen,
     )
 }
 

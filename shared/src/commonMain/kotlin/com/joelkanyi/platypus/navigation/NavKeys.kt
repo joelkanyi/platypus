@@ -37,11 +37,38 @@ data class PullRequestKey(val workspace: String, val repoSlug: String, val prId:
 data class PullRequestDiffKey(val workspace: String, val repoSlug: String, val prId: Long) : PlatypusKey
 
 @Serializable
-data class RepositoryBrowseKey(val workspace: String, val repoSlug: String, val ref: String, val path: String = "") :
+data class RepositoryOverviewKey(
+    val accountId: String,
+    val workspace: String,
+    val repoSlug: String,
+    val repoName: String,
+) : PlatypusKey
+
+@Serializable
+data class RepositoryBrowseKey(
+    val accountId: String,
+    val workspace: String,
+    val repoSlug: String,
+    val ref: String,
+    val path: String = "",
+) : PlatypusKey
+
+@Serializable
+data class FileViewerKey(
+    val accountId: String,
+    val workspace: String,
+    val repoSlug: String,
+    val ref: String,
+    val path: String,
+) : PlatypusKey
+
+@Serializable
+data class CommitsKey(val accountId: String, val workspace: String, val repoSlug: String, val ref: String) :
     PlatypusKey
 
 @Serializable
-data class FileViewerKey(val workspace: String, val repoSlug: String, val ref: String, val path: String) : PlatypusKey
+data class CommitDetailKey(val accountId: String, val workspace: String, val repoSlug: String, val hash: String) :
+    PlatypusKey
 
 @Serializable
 data class PipelineKey(val workspace: String, val repoSlug: String, val pipelineUuid: String) : PlatypusKey

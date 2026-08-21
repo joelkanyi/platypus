@@ -24,8 +24,14 @@ import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
+import com.joelkanyi.platypus.app.LocalPlatypusDependencies
 import com.joelkanyi.platypus.feature.inbox.InboxScreen
 import com.joelkanyi.platypus.feature.profile.ProfileScreen
+import com.joelkanyi.platypus.feature.repo.browse.RepositoryBrowseScreen
+import com.joelkanyi.platypus.feature.repo.commits.CommitDetailScreen
+import com.joelkanyi.platypus.feature.repo.commits.CommitsScreen
+import com.joelkanyi.platypus.feature.repo.file.FileViewerScreen
+import com.joelkanyi.platypus.feature.repo.overview.RepositoryOverviewScreen
 import com.joelkanyi.platypus.feature.repositories.RepositoriesScreen
 import io.github.joelkanyi.jenga.component.icon.JengaIcon
 import io.github.joelkanyi.jenga.component.icon.JengaIcons
@@ -42,13 +48,91 @@ fun PlatypusShell() {
         topLevelRoutes = TopLevelDestination.entries.map { it.root }.toSet(),
     )
     val navigator = remember(navigationState) { Navigator(navigationState) }
+    val onOpenUrl: (String) -> Unit = LocalPlatypusDependencies.current::openUrl
 
     val entryProvider = entryProvider<NavKey> {
         entry<InboxKey> { InboxScreen(onBrowseWatchlist = { navigator.navigate(RepositoriesKey) }) }
         entry<PullRequestsKey> { TabPlaceholder("Pull Requests") }
-        entry<RepositoriesKey> { RepositoriesScreen() }
+        entry<RepositoriesKey> {
+            RepositoriesScreen(
+                onOpenRepo = { repo ->
+                    navigator.navigate(
+                        RepositoryOverviewKey(repo.accountId, repo.workspaceSlug, repo.repoSlug, repo.name),
+                    )
+                },
+            )
+        }
         entry<PipelinesKey> { TabPlaceholder("Pipelines") }
         entry<ProfileKey> { ProfileScreen() }
+        entry<RepositoryOverviewKey> { key ->
+            RepositoryOverviewScreen(
+                accountId = key.accountId,
+                workspace = key.workspace,
+                repoSlug = key.repoSlug,
+                repoName = key.repoName,
+                onOpenFiles = { ref ->
+                    navigator.navigate(RepositoryBrowseKey(key.accountId, key.workspace, key.repoSlug, ref, ""))
+                },
+                onOpenCommits = { ref ->
+                    navigator.navigate(CommitsKey(key.accountId, key.workspace, key.repoSlug, ref))
+                },
+                onOpenBranch = { ref ->
+                    navigator.navigate(RepositoryBrowseKey(key.accountId, key.workspace, key.repoSlug, ref, ""))
+                },
+                onOpenUrl = onOpenUrl,
+                onBack = navigator::goBack,
+            )
+        }
+        entry<RepositoryBrowseKey> { key ->
+            RepositoryBrowseScreen(
+                accountId = key.accountId,
+                workspace = key.workspace,
+                repoSlug = key.repoSlug,
+                ref = key.ref,
+                path = key.path,
+                onOpenFile = { ref, childPath ->
+                    navigator.navigate(FileViewerKey(key.accountId, key.workspace, key.repoSlug, ref, childPath))
+                },
+                onBack = navigator::goBack,
+            )
+        }
+        entry<FileViewerKey> { key ->
+            FileViewerScreen(
+                accountId = key.accountId,
+                workspace = key.workspace,
+                repoSlug = key.repoSlug,
+                ref = key.ref,
+                path = key.path,
+                onNavigateToPath = { targetPath ->
+                    navigator.navigate(
+                        RepositoryBrowseKey(key.accountId, key.workspace, key.repoSlug, key.ref, targetPath),
+                    )
+                },
+                onOpenUrl = onOpenUrl,
+                onBack = navigator::goBack,
+            )
+        }
+        entry<CommitsKey> { key ->
+            CommitsScreen(
+                accountId = key.accountId,
+                workspace = key.workspace,
+                repoSlug = key.repoSlug,
+                ref = key.ref,
+                onOpenCommit = { hash ->
+                    navigator.navigate(CommitDetailKey(key.accountId, key.workspace, key.repoSlug, hash))
+                },
+                onBack = navigator::goBack,
+            )
+        }
+        entry<CommitDetailKey> { key ->
+            CommitDetailScreen(
+                accountId = key.accountId,
+                workspace = key.workspace,
+                repoSlug = key.repoSlug,
+                hash = key.hash,
+                onBack = navigator::goBack,
+            )
+        }
     }
 
     JengaScaffold(

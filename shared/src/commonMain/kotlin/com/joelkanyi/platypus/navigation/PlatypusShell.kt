@@ -15,6 +15,7 @@
  */
 package com.joelkanyi.platypus.navigation
 
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -23,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
+import com.joelkanyi.platypus.feature.profile.ProfileScreen
 import io.github.joelkanyi.jenga.component.icon.JengaIcon
 import io.github.joelkanyi.jenga.component.icon.JengaIcons
 import io.github.joelkanyi.jenga.component.navigation.JengaNavIndicator
@@ -44,7 +46,7 @@ fun PlatypusShell() {
         entry<PullRequestsKey> { TabPlaceholder("Pull Requests") }
         entry<RepositoriesKey> { TabPlaceholder("Repositories") }
         entry<PipelinesKey> { TabPlaceholder("Pipelines") }
-        entry<ProfileKey> { TabPlaceholder("Profile") }
+        entry<ProfileKey> { ProfileScreen() }
     }
 
     JengaScaffold(
@@ -67,7 +69,10 @@ fun PlatypusShell() {
         NavDisplay(
             entries = navigationState.toEntries(entryProvider),
             onBack = { navigator.goBack() },
-            modifier = Modifier.fillMaxSize().padding(padding),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .consumeWindowInsets(padding),
         )
     }
 }

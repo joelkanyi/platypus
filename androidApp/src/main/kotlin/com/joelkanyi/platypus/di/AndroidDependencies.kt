@@ -15,9 +15,23 @@
  */
 package com.joelkanyi.platypus.di
 
+import android.content.Context
+import android.content.Intent
+import androidx.core.net.toUri
 import com.joelkanyi.platypus.app.PlatypusDependencies
+import com.joelkanyi.platypus.data.auth.Biometrics
+import com.joelkanyi.platypus.data.auth.OAuthDeepLinks
+import com.joelkanyi.platypus.domain.repository.AuthRepository
 
-class AndroidDependencies(private val graph: AppGraph) : PlatypusDependencies {
+class AndroidDependencies(graph: AppGraph, private val appContext: Context) : PlatypusDependencies {
 
-    override val hasGraph: Boolean = true
+    override val authRepository: AuthRepository = graph.authRepository
+    override val biometrics: Biometrics = graph.biometrics
+    override val oauthDeepLinks: OAuthDeepLinks = graph.oauthDeepLinks
+
+    override fun openUrl(url: String) {
+        val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        appContext.startActivity(intent)
+    }
 }

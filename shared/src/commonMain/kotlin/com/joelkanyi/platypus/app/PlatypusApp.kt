@@ -15,15 +15,25 @@
  */
 package com.joelkanyi.platypus.app
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import com.joelkanyi.platypus.navigation.PlatypusShell
+import androidx.compose.ui.Modifier
+import io.github.joelkanyi.jenga.theme.JengaTheme
 
 @Composable
 fun PlatypusApp(dependencies: PlatypusDependencies) {
     CompositionLocalProvider(LocalPlatypusDependencies provides dependencies) {
         PlatypusTheme {
-            PlatypusShell()
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(JengaTheme.colors.background),
+            ) {
+                AuthGate()
+            }
         }
     }
 }

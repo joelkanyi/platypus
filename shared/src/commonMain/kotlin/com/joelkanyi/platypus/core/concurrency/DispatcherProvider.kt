@@ -15,6 +15,10 @@
  */
 package com.joelkanyi.platypus.core.concurrency
 
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 
@@ -26,6 +30,9 @@ interface DispatcherProvider {
 
 internal expect val IoDispatcher: CoroutineDispatcher
 
+@Inject
+@SingleIn(AppScope::class)
+@ContributesBinding(AppScope::class)
 class DefaultDispatcherProvider : DispatcherProvider {
     override val main: CoroutineDispatcher get() = Dispatchers.Main
     override val io: CoroutineDispatcher get() = IoDispatcher

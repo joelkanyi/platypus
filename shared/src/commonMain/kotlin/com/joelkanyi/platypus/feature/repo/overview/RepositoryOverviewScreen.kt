@@ -1,0 +1,277 @@
+/*
+ * Copyright (C) 2026 Joel Kanyi
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.joelkanyi.platypus.feature.repo.overview
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.joelkanyi.platypus.app.LocalPlatypusDependencies
+import com.joelkanyi.platypus.core.result.NetworkResult
+import com.joelkanyi.platypus.core.result.getOrNull
+import com.joelkanyi.platypus.core.result.userMessage
+import com.joelkanyi.platypus.designsystem.expand
+import com.joelkanyi.platypus.designsystem.formatByteSize
+import com.joelkanyi.platypus.domain.model.RepositoryDetail
+import com.joelkanyi.platypus.domain.model.SrcEntryType
+import com.joelkanyi.platypus.domain.repository.RepoContentRepository
+import com.joelkanyi.platypus.feature.repo.branches.BranchesSheet
+import io.github.joelkanyi.jenga.component.button.JengaIconButton
+import io.github.joelkanyi.jenga.component.card.JengaCard
+import io.github.joelkanyi.jenga.component.chip.JengaChip
+import io.github.joelkanyi.jenga.component.icon.JengaIcon
+import io.github.joelkanyi.jenga.component.icon.JengaIcons
+import io.github.joelkanyi.jenga.component.list.JengaListItem
+import io.github.joelkanyi.jenga.component.scaffold.JengaScaffold
+import io.github.joelkanyi.jenga.component.scaffold.JengaTopAppBar
+import io.github.joelkanyi.jenga.component.state.JengaErrorState
+import io.github.joelkanyi.jenga.component.text.JengaText
+import io.github.joelkanyi.jenga.theme.JengaTheme
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+@Immutable
+data class OverviewUiState(
+    val isLoading: Boolean = true,
+    val error: String? = null,
+    val detail: RepositoryDetail? = null,
+    val readme: String? = null,
+)
+
+class RepositoryOverviewViewModel(
+    private val repoContentRepository: RepoContentRepository,
+    private val accountId: String,
+    private val workspace: String,
+    private val repoSlug: String,
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(OverviewUiState())
+    val uiState: StateFlow<OverviewUiState> = _uiState.asStateFlow()
+
+    init {
+        load()
+    }
+
+    fun retry() = load()
+
+    private fun load() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            when (val result = repoContentRepository.repository(accountId, workspace, repoSlug)) {
+                is NetworkResult.Success -> {
+                    _uiState.update { it.copy(isLoading = false, detail = result.data) }
+                    loadReadme(result.data.defaultBranch)
+                }
+                is NetworkResult.Failure ->
+                    _uiState.update { it.copy(isLoading = false, error = result.userMessage()) }
+            }
+        }
+    }
+
+    private fun loadReadme(ref: String) {
+        viewModelScope.launch {
+            val root = repoContentRepository.directory(accountId, workspace, repoSlug, ref, "").getOrNull()
+                ?: return@launch
+            val readme = root.entries.firstOrNull {
+                it.type == SrcEntryType.FILE && it.name.lowercase().startsWith("readme")
+            } ?: return@launch
+            val file = repoContentRepository.file(accountId, workspace, repoSlug, ref, readme.path).getOrNull()
+            if (file != null && file.renderable) {
+                _uiState.update { it.copy(readme = file.lines.joinToString("\n")) }
+            }
+        }
+    }
+}
+
+@Composable
+fun RepositoryOverviewScreen(
+    accountId: String,
+    workspace: String,
+    repoSlug: String,
+    repoName: String,
+    onOpenFiles: (ref: String) -> Unit,
+    onOpenCommits: (ref: String) -> Unit,
+    onOpenBranch: (ref: String) -> Unit,
+    onOpenUrl: (String) -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val dependencies = LocalPlatypusDependencies.current
+    val viewModel = viewModel(key = "$accountId/$workspace/$repoSlug") {
+        RepositoryOverviewViewModel(dependencies.repoContentRepository, accountId, workspace, repoSlug)
+    }
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    var showBranches by rememberSaveable { mutableStateOf(false) }
+
+    OverviewContent(
+        repoName = repoName,
+        state = state,
+        onBack = onBack,
+        onRetry = viewModel::retry,
+        onOpenFiles = onOpenFiles,
+        onOpenCommits = onOpenCommits,
+        onBranchClick = { showBranches = true },
+        onOpenUrl = onOpenUrl,
+        modifier = modifier,
+    )
+
+    val detail = state.detail
+    if (showBranches && detail != null) {
+        BranchesSheet(
+            accountId = accountId,
+            workspace = workspace,
+            repoSlug = repoSlug,
+            currentRef = detail.defaultBranch,
+            onSelect = {
+                showBranches = false
+                onOpenBranch(it)
+            },
+            onDismiss = { showBranches = false },
+        )
+    }
+}
+
+@Composable
+internal fun OverviewContent(
+    repoName: String,
+    state: OverviewUiState,
+    onBack: () -> Unit,
+    onRetry: () -> Unit,
+    onOpenFiles: (ref: String) -> Unit,
+    onOpenCommits: (ref: String) -> Unit,
+    onBranchClick: () -> Unit,
+    onOpenUrl: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val spacing = JengaTheme.spacing
+    val detail = state.detail
+
+    JengaScaffold(
+        modifier = modifier,
+        topBar = {
+            JengaTopAppBar(
+                title = repoName,
+                subtitle = detail?.let { if (it.isPrivate) "Private" else "Public" },
+                navigationIcon = {
+                    JengaIconButton(onClick = onBack) {
+                        JengaIcon(JengaIcons.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    detail?.webUrl?.let { url ->
+                        JengaIconButton(onClick = { onOpenUrl(url) }) {
+                            JengaIcon(JengaIcons.Share, contentDescription = "Open on web")
+                        }
+                    }
+                },
+            )
+        },
+    ) { innerPadding ->
+        when {
+            state.error != null -> JengaErrorState(
+                title = "Couldn't load repository",
+                description = state.error,
+                actionLabel = "Try again",
+                onAction = onRetry,
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+            )
+
+            detail != null -> LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = innerPadding.expand(horizontal = spacing.lg, vertical = spacing.md),
+                verticalArrangement = Arrangement.spacedBy(spacing.md),
+            ) {
+                if (detail.description.isNotBlank()) {
+                    item { JengaText(text = detail.description, color = JengaTheme.colors.textSecondary) }
+                }
+                item { FactChips(detail) }
+                item {
+                    JengaListItem(
+                        headline = detail.defaultBranch,
+                        supporting = "Branch · tap to switch",
+                        leadingContent = { JengaIcon(JengaIcons.Swap, contentDescription = null) },
+                        trailingContent = { JengaIcon(JengaIcons.ChevronDown, contentDescription = null) },
+                        onClick = onBranchClick,
+                    )
+                }
+                item {
+                    JengaListItem(
+                        headline = "Files",
+                        supporting = "Browse the repository",
+                        trailingContent = { JengaIcon(JengaIcons.ChevronRight, contentDescription = null) },
+                        onClick = { onOpenFiles(detail.defaultBranch) },
+                    )
+                }
+                item {
+                    JengaListItem(
+                        headline = "Commits",
+                        supporting = "History on ${detail.defaultBranch}",
+                        trailingContent = { JengaIcon(JengaIcons.ChevronRight, contentDescription = null) },
+                        onClick = { onOpenCommits(detail.defaultBranch) },
+                    )
+                }
+                if (state.readme != null) {
+                    item { ReadmeBlock(state.readme) }
+                }
+            }
+
+            else -> Unit
+        }
+    }
+}
+
+@Composable
+private fun FactChips(detail: RepositoryDetail) {
+    val spacing = JengaTheme.spacing
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+    ) {
+        if (detail.language.isNotBlank()) JengaChip(label = detail.language, selected = false, onClick = {})
+        JengaChip(label = formatByteSize(detail.size), selected = false, onClick = {})
+        if (detail.updatedOn.isNotBlank()) {
+            JengaChip(label = "Updated ${detail.updatedOn.substringBefore('T')}", selected = false, onClick = {})
+        }
+    }
+}
+
+@Composable
+private fun ReadmeBlock(readme: String) {
+    val spacing = JengaTheme.spacing
+    JengaCard(modifier = Modifier.fillMaxWidth()) {
+        JengaText(
+            text = readme,
+            color = JengaTheme.colors.textSecondary,
+            modifier = Modifier.padding(spacing.md),
+        )
+    }
+}

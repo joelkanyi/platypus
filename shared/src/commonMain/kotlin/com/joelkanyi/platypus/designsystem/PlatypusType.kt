@@ -25,6 +25,8 @@ import com.joelkanyi.platypus.shared.resources.geist_mono_medium
 import com.joelkanyi.platypus.shared.resources.geist_mono_regular
 import com.joelkanyi.platypus.shared.resources.geist_regular
 import com.joelkanyi.platypus.shared.resources.geist_semibold
+import com.joelkanyi.platypus.shared.resources.jetbrains_mono_medium
+import com.joelkanyi.platypus.shared.resources.jetbrains_mono_regular
 import org.jetbrains.compose.resources.Font
 
 @Composable
@@ -39,4 +41,11 @@ fun rememberGeistFontFamily(): FontFamily = FontFamily(
 fun rememberGeistMonoFontFamily(): FontFamily = FontFamily(
     Font(Res.font.geist_mono_regular, FontWeight.Normal),
     Font(Res.font.geist_mono_medium, FontWeight.Medium),
+)
+
+/** JetBrains Mono: the code/diff rendering font. */
+@Composable
+fun rememberCodeFontFamily(): FontFamily = FontFamily(
+    Font(Res.font.jetbrains_mono_regular, FontWeight.Normal),
+    Font(Res.font.jetbrains_mono_medium, FontWeight.Medium),
 )

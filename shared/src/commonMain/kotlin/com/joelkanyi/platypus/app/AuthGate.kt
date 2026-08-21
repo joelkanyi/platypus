@@ -23,38 +23,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.joelkanyi.platypus.domain.model.AuthStatus
-import com.joelkanyi.platypus.domain.model.Workspace
 import com.joelkanyi.platypus.feature.auth.signin.AddAccountSheet
 import com.joelkanyi.platypus.feature.auth.signin.SignInScreen
-import com.joelkanyi.platypus.feature.auth.workspace.WorkspacePickScreen
 import com.joelkanyi.platypus.navigation.PlatypusShell
 import io.github.joelkanyi.jenga.component.text.JengaText
 import io.github.joelkanyi.jenga.theme.JengaTheme
-
-private val WorkspaceStateSaver = listSaver<Workspace?, Any?>(
-    save = { workspace ->
-        workspace?.let { listOf(it.uuid, it.slug, it.name, it.avatarUrl) } ?: emptyList()
-    },
-    restore = { values ->
-        if (values.isEmpty()) {
-            null
-        } else {
-            Workspace(
-                uuid = values[0] as String,
-                slug = values[1] as String,
-                name = values[2] as String,
-                avatarUrl = values[3] as String?,
-            )
-        }
-    },
-)
 
 @Composable
 fun AuthGate() {
@@ -81,7 +60,7 @@ fun AuthGate() {
             )
 
             AuthStatus.SignedIn -> {
-                SignedInFlow()
+                PlatypusShell()
                 if (addingAccount) {
                     AddAccountSheet(
                         authRepository = dependencies.authRepository,
@@ -92,40 +71,6 @@ fun AuthGate() {
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun SignedInFlow() {
-    val dependencies = LocalPlatypusDependencies.current
-    val accounts by dependencies.authRepository.accounts.collectAsStateWithLifecycle()
-
-    var activeAccountId by rememberSaveable { mutableStateOf<String?>(null) }
-    LaunchedEffect(accounts) {
-        if (accounts.none { it.id == activeAccountId }) {
-            activeAccountId = accounts.firstOrNull()?.id
-        }
-    }
-
-    var selected by rememberSaveable(stateSaver = WorkspaceStateSaver) {
-        mutableStateOf<Workspace?>(null)
-    }
-
-    val activeId = activeAccountId
-    val workspace = selected
-    when {
-        activeId == null -> LoadingGate()
-        workspace == null -> WorkspacePickScreen(
-            authRepository = dependencies.authRepository,
-            accounts = accounts,
-            activeAccountId = activeId,
-            onSwitchAccount = {
-                activeAccountId = it
-                selected = null
-            },
-            onSelected = { selected = it },
-        )
-        else -> PlatypusShell()
     }
 }
 

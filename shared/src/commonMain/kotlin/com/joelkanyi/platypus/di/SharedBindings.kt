@@ -21,6 +21,8 @@ import com.joelkanyi.platypus.data.auth.Biometrics
 import com.joelkanyi.platypus.data.auth.NoopBiometrics
 import com.joelkanyi.platypus.data.auth.PlatypusConfig
 import com.joelkanyi.platypus.data.auth.createAuthRepository
+import com.joelkanyi.platypus.data.local.PlatypusDatabase
+import com.joelkanyi.platypus.data.local.WatchedRepoDao
 import com.joelkanyi.platypus.domain.repository.AuthRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
@@ -35,6 +37,8 @@ object SharedBindings {
     @Provides fun authConfig(): AuthConfig = PlatypusConfig.auth
 
     @Provides fun biometrics(): Biometrics = NoopBiometrics
+
+    @Provides fun watchedRepoDao(database: PlatypusDatabase): WatchedRepoDao = database.watchedRepoDao()
 
     @Provides
     @SingleIn(AppScope::class)

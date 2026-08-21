@@ -15,6 +15,7 @@
  */
 package com.joelkanyi.platypus
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -25,16 +26,35 @@ import com.joelkanyi.platypus.di.AndroidDependencies
 
 class MainActivity : ComponentActivity() {
 
+    private lateinit var dependencies: AndroidDependencies
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         val app = application as PlatypusApplication
-        val dependencies = AndroidDependencies(graph = app.appGraph)
+        dependencies = AndroidDependencies(graph = app.appGraph, appContext = applicationContext)
+        handleDeepLink(intent)
 
         setContent {
             PlatypusApp(dependencies)
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleDeepLink(intent)
+    }
+
+    private fun handleDeepLink(intent: Intent?) {
+        val data = intent?.data ?: return
+        if (data.scheme == OAUTH_SCHEME) {
+            data.getQueryParameter("code")?.let { dependencies.oauthDeepLinks.submit(it) }
+        }
+    }
+
+    private companion object {
+        const val OAUTH_SCHEME = "platypus"
     }
 }

@@ -25,6 +25,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
 fun createHttpClient(json: Json = PlatypusJson): HttpClient = HttpClient {
+    expectSuccess = true
     install(ContentNegotiation) {
         json(json)
     }

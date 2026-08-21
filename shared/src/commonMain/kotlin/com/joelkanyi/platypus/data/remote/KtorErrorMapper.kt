@@ -20,11 +20,13 @@ import io.ktor.client.network.sockets.ConnectTimeoutException
 import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.plugins.ResponseException
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.decodeFromString
 
 fun ktorErrorMapper(cause: Throwable): NetworkResult.Failure = when (cause) {
     is ResponseException ->
-        NetworkResult.Failure.Http(cause.response.status.value, cause.message)
+        NetworkResult.Failure.Http(cause.response.status.value, bitbucketErrorMessage(cause.message))
 
     is HttpRequestTimeoutException,
     is ConnectTimeoutException,
@@ -37,3 +39,19 @@ fun ktorErrorMapper(cause: Throwable): NetworkResult.Failure = when (cause) {
 
     else -> NetworkResult.Failure.Network(cause)
 }
+
+private fun bitbucketErrorMessage(raw: String?): String? {
+    if (raw == null) return null
+    val start = raw.indexOf('{')
+    val end = raw.lastIndexOf('}')
+    if (start < 0 || end <= start) return null
+    return runCatching {
+        PlatypusJson.decodeFromString<BitbucketErrorEnvelope>(raw.substring(start, end + 1)).error?.message
+    }.getOrNull()?.takeIf { it.isNotBlank() }
+}
+
+@Serializable
+private data class BitbucketErrorEnvelope(val error: BitbucketErrorBody? = null)
+
+@Serializable
+private data class BitbucketErrorBody(val message: String? = null)

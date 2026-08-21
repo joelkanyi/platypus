@@ -15,8 +15,10 @@
  */
 package com.joelkanyi.platypus.di
 
-import com.joelkanyi.platypus.core.concurrency.DefaultDispatcherProvider
-import com.joelkanyi.platypus.core.concurrency.DispatcherProvider
+import android.content.Context
+import com.joelkanyi.platypus.data.auth.Biometrics
+import com.joelkanyi.platypus.data.auth.OAuthDeepLinks
+import com.joelkanyi.platypus.domain.repository.AuthRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
@@ -24,7 +26,12 @@ import dev.zacsweers.metro.Provides
 @DependencyGraph(AppScope::class)
 interface AppGraph {
 
-    val dispatchers: DispatcherProvider
+    val authRepository: AuthRepository
+    val biometrics: Biometrics
+    val oauthDeepLinks: OAuthDeepLinks
 
-    @Provides fun dispatchers(): DispatcherProvider = DefaultDispatcherProvider()
+    @DependencyGraph.Factory
+    interface Factory {
+        fun create(@Provides context: Context): AppGraph
+    }
 }

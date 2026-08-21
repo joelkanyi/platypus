@@ -16,9 +16,16 @@
 package com.joelkanyi.platypus.app
 
 import androidx.compose.runtime.staticCompositionLocalOf
+import com.joelkanyi.platypus.data.auth.Biometrics
+import com.joelkanyi.platypus.data.auth.OAuthDeepLinks
+import com.joelkanyi.platypus.domain.repository.AuthRepository
 
 interface PlatypusDependencies {
-    val hasGraph: Boolean
+    val authRepository: AuthRepository
+    val biometrics: Biometrics
+    val oauthDeepLinks: OAuthDeepLinks
+
+    fun openUrl(url: String)
 }
 
 val LocalPlatypusDependencies = staticCompositionLocalOf<PlatypusDependencies> {

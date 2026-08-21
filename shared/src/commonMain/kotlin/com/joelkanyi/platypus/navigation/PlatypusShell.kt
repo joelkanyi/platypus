@@ -24,7 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
+import com.joelkanyi.platypus.feature.inbox.InboxScreen
 import com.joelkanyi.platypus.feature.profile.ProfileScreen
+import com.joelkanyi.platypus.feature.repositories.RepositoriesScreen
 import io.github.joelkanyi.jenga.component.icon.JengaIcon
 import io.github.joelkanyi.jenga.component.icon.JengaIcons
 import io.github.joelkanyi.jenga.component.navigation.JengaNavIndicator
@@ -42,9 +44,9 @@ fun PlatypusShell() {
     val navigator = remember(navigationState) { Navigator(navigationState) }
 
     val entryProvider = entryProvider<NavKey> {
-        entry<InboxKey> { TabPlaceholder("Inbox") }
+        entry<InboxKey> { InboxScreen(onBrowseWatchlist = { navigator.navigate(RepositoriesKey) }) }
         entry<PullRequestsKey> { TabPlaceholder("Pull Requests") }
-        entry<RepositoriesKey> { TabPlaceholder("Repositories") }
+        entry<RepositoriesKey> { RepositoriesScreen() }
         entry<PipelinesKey> { TabPlaceholder("Pipelines") }
         entry<ProfileKey> { ProfileScreen() }
     }

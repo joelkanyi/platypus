@@ -1,0 +1,40 @@
+/*
+ * Copyright (C) 2026 Joel Kanyi
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.joelkanyi.platypus.data.remote.api
+
+import com.joelkanyi.platypus.data.remote.BITBUCKET_API_BASE
+import com.joelkanyi.platypus.data.remote.dto.PageDto
+import com.joelkanyi.platypus.data.remote.dto.PullRequestDto
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.client.request.parameter
+
+class PullRequestsApi(private val client: HttpClient) {
+
+    suspend fun open(workspaceSlug: String, repoSlug: String): PageDto<PullRequestDto> =
+        client.get("$BITBUCKET_API_BASE/repositories/$workspaceSlug/$repoSlug/pullrequests") {
+            parameter("state", "OPEN")
+            parameter("pagelen", PAGE_LEN)
+            parameter("sort", "-updated_on")
+        }.body()
+
+    suspend fun page(url: String): PageDto<PullRequestDto> = client.get(url).body()
+
+    private companion object {
+        const val PAGE_LEN = 50
+    }
+}

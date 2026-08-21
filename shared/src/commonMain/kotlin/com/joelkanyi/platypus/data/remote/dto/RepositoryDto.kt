@@ -19,25 +19,12 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class UserDto(
+data class RepositoryDto(
     val uuid: String,
-    @SerialName("account_id") val accountId: String? = null,
-    val nickname: String = "",
-    @SerialName("display_name") val displayName: String = "",
+    val name: String = "",
+    val slug: String = "",
+    @SerialName("full_name") val fullName: String = "",
+    @SerialName("is_private") val isPrivate: Boolean = false,
+    val description: String = "",
     val links: LinksDto? = null,
 )
-
-@Serializable
-data class WorkspaceDto(val uuid: String, val slug: String = "", val name: String = "", val links: LinksDto? = null)
-
-@Serializable
-data class WorkspaceMembershipDto(val workspace: WorkspaceDto? = null)
-
-@Serializable
-data class LinksDto(val avatar: LinkDto? = null, val html: LinkDto? = null)
-
-@Serializable
-data class LinkDto(val href: String? = null)
-
-@Serializable
-data class PageDto<T>(val values: List<T> = emptyList(), val next: String? = null)

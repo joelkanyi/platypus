@@ -18,17 +18,27 @@ package com.joelkanyi.platypus.di
 import android.content.Context
 import com.joelkanyi.platypus.data.auth.Biometrics
 import com.joelkanyi.platypus.data.auth.OAuthDeepLinks
+import com.joelkanyi.platypus.data.local.PlatypusDatabase
+import com.joelkanyi.platypus.data.local.createPlatypusDatabase
+import com.joelkanyi.platypus.data.local.platypusDatabaseBuilder
 import com.joelkanyi.platypus.domain.repository.AuthRepository
+import com.joelkanyi.platypus.domain.repository.WatchlistRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
+import dev.zacsweers.metro.SingleIn
 
 @DependencyGraph(AppScope::class)
 interface AppGraph {
 
     val authRepository: AuthRepository
+    val watchlistRepository: WatchlistRepository
     val biometrics: Biometrics
     val oauthDeepLinks: OAuthDeepLinks
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun database(context: Context): PlatypusDatabase = createPlatypusDatabase(platypusDatabaseBuilder(context))
 
     @DependencyGraph.Factory
     interface Factory {

@@ -22,10 +22,12 @@ import com.joelkanyi.platypus.app.PlatypusDependencies
 import com.joelkanyi.platypus.data.auth.Biometrics
 import com.joelkanyi.platypus.data.auth.OAuthDeepLinks
 import com.joelkanyi.platypus.domain.repository.AuthRepository
+import com.joelkanyi.platypus.domain.repository.WatchlistRepository
 
 class AndroidDependencies(graph: AppGraph, private val appContext: Context) : PlatypusDependencies {
 
     override val authRepository: AuthRepository = graph.authRepository
+    override val watchlistRepository: WatchlistRepository = graph.watchlistRepository
     override val biometrics: Biometrics = graph.biometrics
     override val oauthDeepLinks: OAuthDeepLinks = graph.oauthDeepLinks
 

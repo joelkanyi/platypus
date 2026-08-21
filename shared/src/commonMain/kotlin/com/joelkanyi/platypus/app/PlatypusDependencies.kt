@@ -19,9 +19,11 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import com.joelkanyi.platypus.data.auth.Biometrics
 import com.joelkanyi.platypus.data.auth.OAuthDeepLinks
 import com.joelkanyi.platypus.domain.repository.AuthRepository
+import com.joelkanyi.platypus.domain.repository.WatchlistRepository
 
 interface PlatypusDependencies {
     val authRepository: AuthRepository
+    val watchlistRepository: WatchlistRepository
     val biometrics: Biometrics
     val oauthDeepLinks: OAuthDeepLinks
 

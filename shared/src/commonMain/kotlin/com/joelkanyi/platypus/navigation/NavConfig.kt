@@ -39,7 +39,11 @@ val platypusNavConfig: SavedStateConfiguration = SavedStateConfiguration {
             subclass(FileViewerKey::class, FileViewerKey.serializer())
             subclass(CommitsKey::class, CommitsKey.serializer())
             subclass(CommitDetailKey::class, CommitDetailKey.serializer())
-            subclass(PipelineKey::class, PipelineKey.serializer())
+            subclass(PipelinesKey::class, PipelinesKey.serializer())
+            subclass(PipelineDetailKey::class, PipelineDetailKey.serializer())
+            subclass(PipelineStepLogKey::class, PipelineStepLogKey.serializer())
+            subclass(DeploymentsKey::class, DeploymentsKey.serializer())
+            subclass(SchedulesKey::class, SchedulesKey.serializer())
         }
     }
 }

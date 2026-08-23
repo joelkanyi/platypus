@@ -1,0 +1,181 @@
+/*
+ * Copyright (C) 2026 Joel Kanyi
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.joelkanyi.platypus.data.repository
+
+import com.joelkanyi.platypus.core.result.NetworkResult
+import com.joelkanyi.platypus.core.result.safeApiCall
+import com.joelkanyi.platypus.data.remote.api.PipelinesApi
+import com.joelkanyi.platypus.data.remote.ktorErrorMapper
+import com.joelkanyi.platypus.data.remote.mapper.toDomain
+import com.joelkanyi.platypus.data.remote.mapper.toDto
+import com.joelkanyi.platypus.domain.model.Deployment
+import com.joelkanyi.platypus.domain.model.Pipeline
+import com.joelkanyi.platypus.domain.model.PipelineStep
+import com.joelkanyi.platypus.domain.model.PipelineTriggerRequest
+import com.joelkanyi.platypus.domain.model.Schedule
+import com.joelkanyi.platypus.domain.model.TestSummary
+import com.joelkanyi.platypus.domain.repository.AuthRepository
+import com.joelkanyi.platypus.domain.repository.PipelineRepository
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
+import io.ktor.client.HttpClient
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+
+@Inject
+@SingleIn(AppScope::class)
+@ContributesBinding(AppScope::class)
+class DefaultPipelineRepository(private val authRepository: AuthRepository) : PipelineRepository {
+
+    override suspend fun pipelines(
+        accountId: String,
+        workspaceSlug: String,
+        repoSlug: String,
+    ): NetworkResult<List<Pipeline>> = withClient(accountId) { client ->
+        val api = client.api()
+        val out = mutableListOf<Pipeline>()
+        var page = api.list(workspaceSlug, repoSlug)
+        var guard = 0
+        while (true) {
+            out += page.values.map { it.toDomain() }
+            val next = page.next
+            if (next == null || ++guard >= MAX_PAGES) break
+            page = api.page(next)
+        }
+        out
+    }
+
+    override suspend fun pipeline(
+        accountId: String,
+        workspaceSlug: String,
+        repoSlug: String,
+        uuid: String,
+    ): NetworkResult<Pipeline> = withClient(accountId) { client ->
+        client.api().get(workspaceSlug, repoSlug, uuid).toDomain()
+    }
+
+    override suspend fun steps(
+        accountId: String,
+        workspaceSlug: String,
+        repoSlug: String,
+        uuid: String,
+    ): NetworkResult<List<PipelineStep>> = withClient(accountId) { client ->
+        val api = client.api()
+        val out = mutableListOf<PipelineStep>()
+        var page = api.steps(workspaceSlug, repoSlug, uuid)
+        var guard = 0
+        while (true) {
+            out += page.values.map { it.toDomain() }
+            val next = page.next
+            if (next == null || ++guard >= MAX_PAGES) break
+            page = api.stepsPage(next)
+        }
+        coroutineScope {
+            out.map { step ->
+                async {
+                    val report = runCatching {
+                        api.testReport(workspaceSlug, repoSlug, uuid, step.uuid)
+                    }.getOrNull()
+                    if (report != null && report.numberOfTestCases > 0) {
+                        step.copy(
+                            testSummary = TestSummary(
+                                passed = report.numberOfSuccessfulTestCases,
+                                failed = report.numberOfFailedTestCases + report.numberOfErrorTestCases,
+                                skipped = report.numberOfSkippedTestCases,
+                                total = report.numberOfTestCases,
+                            ),
+                        )
+                    } else {
+                        step
+                    }
+                }
+            }.awaitAll()
+        }
+    }
+
+    override suspend fun stepLog(
+        accountId: String,
+        workspaceSlug: String,
+        repoSlug: String,
+        pipelineUuid: String,
+        stepUuid: String,
+    ): NetworkResult<String> = withClient(accountId) { client ->
+        client.api().stepLog(workspaceSlug, repoSlug, pipelineUuid, stepUuid)
+    }
+
+    override suspend fun trigger(
+        accountId: String,
+        workspaceSlug: String,
+        repoSlug: String,
+        request: PipelineTriggerRequest,
+    ): NetworkResult<Pipeline> = withClient(accountId) { client ->
+        client.api().trigger(workspaceSlug, repoSlug, request.toDto()).toDomain()
+    }
+
+    override suspend fun stop(
+        accountId: String,
+        workspaceSlug: String,
+        repoSlug: String,
+        uuid: String,
+    ): NetworkResult<Unit> = withClient(accountId) { client ->
+        client.api().stop(workspaceSlug, repoSlug, uuid)
+    }
+
+    override suspend fun deployments(
+        accountId: String,
+        workspaceSlug: String,
+        repoSlug: String,
+    ): NetworkResult<List<Deployment>> = withClient(accountId) { client ->
+        val api = client.api()
+        val out = mutableListOf<Deployment>()
+        var page = api.deployments(workspaceSlug, repoSlug)
+        var guard = 0
+        while (true) {
+            out += page.values.map { it.toDomain() }
+            val next = page.next
+            if (next == null || ++guard >= MAX_PAGES) break
+            page = api.deploymentsPage(next)
+        }
+        out
+    }
+
+    override suspend fun schedules(
+        accountId: String,
+        workspaceSlug: String,
+        repoSlug: String,
+    ): NetworkResult<List<Schedule>> = withClient(accountId) { client ->
+        client.api().schedules(workspaceSlug, repoSlug).values.map { it.toDomain() }
+    }
+
+    private suspend inline fun <T> withClient(
+        accountId: String,
+        crossinline block: suspend (HttpClient) -> T,
+    ): NetworkResult<T> {
+        val client = authRepository.authenticatedClient(accountId)
+            ?: return NetworkResult.Failure.Http(401, SIGNED_OUT)
+        return safeApiCall(::ktorErrorMapper) { block(client) }
+    }
+
+    private fun HttpClient.api(): PipelinesApi = PipelinesApi(this)
+
+    private companion object {
+        const val SIGNED_OUT = "This account is signed out."
+        const val MAX_PAGES = 10
+    }
+}

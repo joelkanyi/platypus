@@ -26,6 +26,11 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import com.joelkanyi.platypus.app.LocalPlatypusDependencies
 import com.joelkanyi.platypus.feature.inbox.InboxScreen
+import com.joelkanyi.platypus.feature.pipelines.DeploymentsScreen
+import com.joelkanyi.platypus.feature.pipelines.PipelineDetailScreen
+import com.joelkanyi.platypus.feature.pipelines.PipelineListScreen
+import com.joelkanyi.platypus.feature.pipelines.PipelineStepLogScreen
+import com.joelkanyi.platypus.feature.pipelines.SchedulesScreen
 import com.joelkanyi.platypus.feature.pr.commits.PrCommitsScreen
 import com.joelkanyi.platypus.feature.pr.detail.PrDetailScreen
 import com.joelkanyi.platypus.feature.pr.files.FilesChangedScreen
@@ -99,7 +104,110 @@ fun PlatypusShell() {
                         RepoPullRequestsKey(key.accountId, key.workspace, key.repoSlug, key.repoName),
                     )
                 },
+                onOpenPipelines = {
+                    navigator.navigate(
+                        PipelinesKey(key.accountId, key.workspace, key.repoSlug, key.repoName),
+                    )
+                },
+                onOpenDeployments = {
+                    navigator.navigate(
+                        DeploymentsKey(key.accountId, key.workspace, key.repoSlug, key.repoName),
+                    )
+                },
+                onOpenSchedules = {
+                    navigator.navigate(
+                        SchedulesKey(key.accountId, key.workspace, key.repoSlug, key.repoName),
+                    )
+                },
                 onOpenUrl = onOpenUrl,
+                onBack = navigator::goBack,
+            )
+        }
+        entry<DeploymentsKey> { key ->
+            DeploymentsScreen(
+                accountId = key.accountId,
+                workspace = key.workspace,
+                repoSlug = key.repoSlug,
+                repoName = key.repoName,
+                onBack = navigator::goBack,
+            )
+        }
+        entry<SchedulesKey> { key ->
+            SchedulesScreen(
+                accountId = key.accountId,
+                workspace = key.workspace,
+                repoSlug = key.repoSlug,
+                repoName = key.repoName,
+                onBack = navigator::goBack,
+            )
+        }
+        entry<PipelinesKey> { key ->
+            PipelineListScreen(
+                accountId = key.accountId,
+                workspace = key.workspace,
+                repoSlug = key.repoSlug,
+                repoName = key.repoName,
+                onOpenPipeline = { pipeline ->
+                    navigator.navigate(
+                        PipelineDetailKey(
+                            key.accountId,
+                            key.workspace,
+                            key.repoSlug,
+                            pipeline.uuid,
+                            pipeline.buildNumber,
+                        ),
+                    )
+                },
+                onBack = navigator::goBack,
+            )
+        }
+        entry<PipelineDetailKey> { key ->
+            PipelineDetailScreen(
+                accountId = key.accountId,
+                workspace = key.workspace,
+                repoSlug = key.repoSlug,
+                pipelineUuid = key.pipelineUuid,
+                buildNumber = key.buildNumber,
+                onOpenStepLog = { step ->
+                    navigator.navigate(
+                        PipelineStepLogKey(
+                            key.accountId,
+                            key.workspace,
+                            key.repoSlug,
+                            key.pipelineUuid,
+                            step.uuid,
+                            step.name,
+                        ),
+                    )
+                },
+                onOpenPipeline = { pipeline ->
+                    navigator.navigate(
+                        PipelineDetailKey(
+                            key.accountId,
+                            key.workspace,
+                            key.repoSlug,
+                            pipeline.uuid,
+                            pipeline.buildNumber,
+                        ),
+                    )
+                },
+                onOpenCommit = { hash ->
+                    navigator.navigate(CommitDetailKey(key.accountId, key.workspace, key.repoSlug, hash))
+                },
+                onOpenPullRequest = { prId ->
+                    navigator.navigate(PullRequestKey(key.accountId, key.workspace, key.repoSlug, prId, key.repoSlug))
+                },
+                onBack = navigator::goBack,
+            )
+        }
+        entry<PipelineStepLogKey> { key ->
+            PipelineStepLogScreen(
+                accountId = key.accountId,
+                workspace = key.workspace,
+                repoSlug = key.repoSlug,
+                pipelineUuid = key.pipelineUuid,
+                stepUuid = key.stepUuid,
+                stepName = key.stepName,
                 onBack = navigator::goBack,
             )
         }

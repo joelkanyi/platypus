@@ -124,6 +124,9 @@ fun RepositoryOverviewScreen(
     onOpenCommits: (ref: String) -> Unit,
     onOpenBranch: (ref: String) -> Unit,
     onOpenPullRequests: () -> Unit,
+    onOpenPipelines: () -> Unit,
+    onOpenDeployments: () -> Unit,
+    onOpenSchedules: () -> Unit,
     onOpenUrl: (String) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -143,6 +146,9 @@ fun RepositoryOverviewScreen(
         onOpenFiles = onOpenFiles,
         onOpenCommits = onOpenCommits,
         onOpenPullRequests = onOpenPullRequests,
+        onOpenPipelines = onOpenPipelines,
+        onOpenDeployments = onOpenDeployments,
+        onOpenSchedules = onOpenSchedules,
         onBranchClick = { showBranches = true },
         onOpenUrl = onOpenUrl,
         modifier = modifier,
@@ -173,6 +179,9 @@ internal fun OverviewContent(
     onOpenFiles: (ref: String) -> Unit,
     onOpenCommits: (ref: String) -> Unit,
     onOpenPullRequests: () -> Unit,
+    onOpenPipelines: () -> Unit,
+    onOpenDeployments: () -> Unit,
+    onOpenSchedules: () -> Unit,
     onBranchClick: () -> Unit,
     onOpenUrl: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -244,6 +253,33 @@ internal fun OverviewContent(
                         leadingContent = { JengaIcon(JengaIcons.MessageCircle, contentDescription = null) },
                         trailingContent = { JengaIcon(JengaIcons.ChevronRight, contentDescription = null) },
                         onClick = onOpenPullRequests,
+                    )
+                }
+                item {
+                    JengaListItem(
+                        headline = "Pipelines",
+                        supporting = "CI/CD runs for this repository",
+                        leadingContent = { JengaIcon(JengaIcons.Flash, contentDescription = null) },
+                        trailingContent = { JengaIcon(JengaIcons.ChevronRight, contentDescription = null) },
+                        onClick = onOpenPipelines,
+                    )
+                }
+                item {
+                    JengaListItem(
+                        headline = "Deployments",
+                        supporting = "Environments and recent deployments",
+                        leadingContent = { JengaIcon(JengaIcons.Cloud, contentDescription = null) },
+                        trailingContent = { JengaIcon(JengaIcons.ChevronRight, contentDescription = null) },
+                        onClick = onOpenDeployments,
+                    )
+                }
+                item {
+                    JengaListItem(
+                        headline = "Schedules",
+                        supporting = "Scheduled pipeline runs",
+                        leadingContent = { JengaIcon(JengaIcons.Clock, contentDescription = null) },
+                        trailingContent = { JengaIcon(JengaIcons.ChevronRight, contentDescription = null) },
+                        onClick = onOpenSchedules,
                     )
                 }
                 item {

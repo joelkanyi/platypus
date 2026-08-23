@@ -110,7 +110,35 @@ data class CommitDetailKey(val accountId: String, val workspace: String, val rep
     PlatypusKey
 
 @Serializable
-data class PipelineKey(val workspace: String, val repoSlug: String, val pipelineUuid: String) : PlatypusKey
+data class PipelinesKey(val accountId: String, val workspace: String, val repoSlug: String, val repoName: String) :
+    PlatypusKey
+
+@Serializable
+data class PipelineDetailKey(
+    val accountId: String,
+    val workspace: String,
+    val repoSlug: String,
+    val pipelineUuid: String,
+    val buildNumber: Long,
+) : PlatypusKey
+
+@Serializable
+data class DeploymentsKey(val accountId: String, val workspace: String, val repoSlug: String, val repoName: String) :
+    PlatypusKey
+
+@Serializable
+data class SchedulesKey(val accountId: String, val workspace: String, val repoSlug: String, val repoName: String) :
+    PlatypusKey
+
+@Serializable
+data class PipelineStepLogKey(
+    val accountId: String,
+    val workspace: String,
+    val repoSlug: String,
+    val pipelineUuid: String,
+    val stepUuid: String,
+    val stepName: String,
+) : PlatypusKey
 
 enum class TopLevelDestination(val root: PlatypusKey) {
     REPOSITORIES(RepositoriesKey),

@@ -16,6 +16,7 @@
 package com.joelkanyi.platypus.feature.repo.file
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -85,6 +86,7 @@ data class FileUiState(
     val outlineOpen: Boolean = false,
     val isMarkdown: Boolean = false,
     val preview: Boolean = false,
+    val defaultBranch: String? = null,
 ) {
     val currentMatchLine: Int? get() = matches.getOrNull(matchIndex)
 }
@@ -97,6 +99,7 @@ class FileViewerViewModel(
     private val ref: String,
     private val path: String,
     renderMarkdownDefault: Boolean,
+    private val fromSearch: Boolean = false,
 ) : ViewModel() {
 
     private val isMarkdown = path.substringAfterLast('.', "").lowercase() in MARKDOWN_EXTENSIONS
@@ -154,6 +157,16 @@ class FileViewerViewModel(
                 is NetworkResult.Failure -> _uiState.update { it.copy(isLoading = false, error = result.userMessage()) }
             }
         }
+        if (fromSearch) loadDefaultBranch()
+    }
+
+    private fun loadDefaultBranch() {
+        viewModelScope.launch {
+            val result = repoContentRepository.repository(accountId, workspace, repoSlug)
+            if (result is NetworkResult.Success) {
+                _uiState.update { it.copy(defaultBranch = result.data.defaultBranch) }
+            }
+        }
     }
 }
 
@@ -168,6 +181,8 @@ fun FileViewerScreen(
     onOpenUrl: (String) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    fromSearch: Boolean = false,
+    onViewLatest: (defaultRef: String) -> Unit = {},
 ) {
     val dependencies = LocalPlatypusDependencies.current
     val viewModel = viewModel(key = "$accountId/$workspace/$repoSlug/$ref/$path") {
@@ -179,6 +194,7 @@ fun FileViewerScreen(
             ref,
             path,
             dependencies.settingsStore.settings.value.renderMarkdownByDefault,
+            fromSearch,
         )
     }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -192,6 +208,8 @@ fun FileViewerScreen(
         fontSize = settings.codeFontSize.toSp(),
         onNavigateToPath = onNavigateToPath,
         onBack = onBack,
+        searchedVersion = if (fromSearch) ref else null,
+        onViewLatest = { state.defaultBranch?.let(onViewLatest) },
         state = state,
         onRetry = viewModel::retry,
         onTogglePreview = viewModel::togglePreview,
@@ -208,6 +226,33 @@ fun FileViewerScreen(
 }
 
 @Composable
+private fun SearchedVersionBanner(commitHash: String, onViewLatest: () -> Unit) {
+    val spacing = JengaTheme.spacing
+    val colors = JengaTheme.colors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(colors.surfaceVariant)
+            .padding(horizontal = spacing.lg, vertical = spacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        JengaText(
+            text = "Showing the searched version (${commitHash.take(7)}).",
+            style = JengaTheme.typography.caption,
+            color = colors.textSecondary,
+            modifier = Modifier.weight(1f),
+        )
+        JengaText(
+            text = "View latest",
+            style = JengaTheme.typography.caption,
+            color = colors.brand,
+            modifier = Modifier.clickable(onClick = onViewLatest),
+        )
+    }
+}
+
+@Composable
 internal fun FileViewerContent(
     fileName: String,
     repoLabel: String,
@@ -216,6 +261,8 @@ internal fun FileViewerContent(
     fontSize: TextUnit,
     onNavigateToPath: (String) -> Unit,
     onBack: () -> Unit,
+    searchedVersion: String?,
+    onViewLatest: () -> Unit,
     state: FileUiState,
     onRetry: () -> Unit,
     onTogglePreview: () -> Unit,
@@ -234,42 +281,47 @@ internal fun FileViewerContent(
     JengaScaffold(
         modifier = modifier,
         topBar = {
-            JengaTopAppBar(
-                title = fileName,
-                navigationIcon = {
-                    JengaIconButton(onClick = onBack) {
-                        JengaIcon(JengaIcons.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    if (file != null && file.renderable) {
-                        if (state.isMarkdown) {
-                            JengaIconButton(onClick = onTogglePreview) {
-                                JengaIcon(
-                                    if (state.preview) JengaIcons.EyeOff else JengaIcons.Eye,
-                                    contentDescription = if (state.preview) "View source" else "Preview",
-                                )
+            Column {
+                JengaTopAppBar(
+                    title = fileName,
+                    navigationIcon = {
+                        JengaIconButton(onClick = onBack) {
+                            JengaIcon(JengaIcons.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                    actions = {
+                        if (file != null && file.renderable) {
+                            if (state.isMarkdown) {
+                                JengaIconButton(onClick = onTogglePreview) {
+                                    JengaIcon(
+                                        if (state.preview) JengaIcons.EyeOff else JengaIcons.Eye,
+                                        contentDescription = if (state.preview) "View source" else "Preview",
+                                    )
+                                }
+                            }
+                            if (!state.preview) {
+                                JengaIconButton(onClick = onToggleOutline) {
+                                    JengaIcon(JengaIcons.Sliders, contentDescription = "Outline")
+                                }
+                                JengaIconButton(onClick = onToggleFind) {
+                                    JengaIcon(JengaIcons.Search, contentDescription = "Find in file")
+                                }
+                                JengaIconButton(onClick = onToggleWrap) {
+                                    JengaIcon(JengaIcons.Swap, contentDescription = "Toggle wrap")
+                                }
                             }
                         }
-                        if (!state.preview) {
-                            JengaIconButton(onClick = onToggleOutline) {
-                                JengaIcon(JengaIcons.Sliders, contentDescription = "Outline")
-                            }
-                            JengaIconButton(onClick = onToggleFind) {
-                                JengaIcon(JengaIcons.Search, contentDescription = "Find in file")
-                            }
-                            JengaIconButton(onClick = onToggleWrap) {
-                                JengaIcon(JengaIcons.Swap, contentDescription = "Toggle wrap")
+                        file?.webUrl?.let { url ->
+                            JengaIconButton(onClick = { onOpenUrl(url) }) {
+                                JengaIcon(JengaIcons.Share, contentDescription = "Open on web")
                             }
                         }
-                    }
-                    file?.webUrl?.let { url ->
-                        JengaIconButton(onClick = { onOpenUrl(url) }) {
-                            JengaIcon(JengaIcons.Share, contentDescription = "Open on web")
-                        }
-                    }
-                },
-            )
+                    },
+                )
+                if (searchedVersion != null) {
+                    SearchedVersionBanner(commitHash = searchedVersion, onViewLatest = onViewLatest)
+                }
+            }
         },
     ) { innerPadding ->
         when {

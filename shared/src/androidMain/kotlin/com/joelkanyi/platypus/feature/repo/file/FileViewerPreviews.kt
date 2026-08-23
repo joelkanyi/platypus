@@ -46,6 +46,8 @@ private fun FileViewerContentPreview() {
             fontSize = 13.sp,
             onNavigateToPath = {},
             onBack = {},
+            searchedVersion = "a1b2c3d4e5f6",
+            onViewLatest = {},
             state = FileUiState(isLoading = false, file = sampleFile),
             onRetry = {},
             onTogglePreview = {},
@@ -73,6 +75,8 @@ private fun FileViewerBinaryPreview() {
             fontSize = 13.sp,
             onNavigateToPath = {},
             onBack = {},
+            searchedVersion = null,
+            onViewLatest = {},
             state = FileUiState(
                 isLoading = false,
                 file = sampleFile.copy(path = "logo.png", lines = emptyList(), renderable = false),

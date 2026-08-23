@@ -43,6 +43,7 @@ import com.joelkanyi.platypus.feature.repo.commits.CommitsScreen
 import com.joelkanyi.platypus.feature.repo.file.FileViewerScreen
 import com.joelkanyi.platypus.feature.repo.overview.RepositoryOverviewScreen
 import com.joelkanyi.platypus.feature.repositories.RepositoriesScreen
+import com.joelkanyi.platypus.feature.search.SearchScreen
 import com.joelkanyi.platypus.feature.settings.SettingsScreen
 import io.github.joelkanyi.jenga.component.icon.JengaIcon
 import io.github.joelkanyi.jenga.component.icon.JengaIcons
@@ -84,6 +85,27 @@ fun PlatypusShell() {
             ProfileScreen(onOpenSettings = { navigator.navigate(SettingsKey) })
         }
         entry<SettingsKey> { SettingsScreen(onBack = navigator::goBack) }
+        entry<SearchKey> { key ->
+            SearchScreen(
+                accountId = key.accountId,
+                workspaceSlug = key.workspaceSlug,
+                repoSlug = key.repoSlug,
+                repoName = key.repoName,
+                onOpenCode = { accountId, result ->
+                    navigator.navigate(
+                        FileViewerKey(
+                            accountId = accountId,
+                            workspace = result.workspaceSlug,
+                            repoSlug = result.repoSlug,
+                            ref = result.commitHash,
+                            path = result.path,
+                            fromSearch = true,
+                        ),
+                    )
+                },
+                onBack = if (key.repoSlug != null) navigator::goBack else null,
+            )
+        }
         entry<RepositoryOverviewKey> { key ->
             RepositoryOverviewScreen(
                 accountId = key.accountId,
@@ -117,6 +139,16 @@ fun PlatypusShell() {
                 onOpenSchedules = {
                     navigator.navigate(
                         SchedulesKey(key.accountId, key.workspace, key.repoSlug, key.repoName),
+                    )
+                },
+                onSearchRepo = {
+                    navigator.navigate(
+                        SearchKey(
+                            accountId = key.accountId,
+                            workspaceSlug = key.workspace,
+                            repoSlug = key.repoSlug,
+                            repoName = key.repoName,
+                        ),
                     )
                 },
                 onOpenUrl = onOpenUrl,
@@ -252,6 +284,12 @@ fun PlatypusShell() {
                 },
                 onOpenUrl = onOpenUrl,
                 onBack = navigator::goBack,
+                fromSearch = key.fromSearch,
+                onViewLatest = { defaultRef ->
+                    navigator.navigate(
+                        FileViewerKey(key.accountId, key.workspace, key.repoSlug, defaultRef, key.path),
+                    )
+                },
             )
         }
         entry<CommitsKey> { key ->
@@ -366,6 +404,7 @@ private val TopLevelDestination.label: String
     get() = when (this) {
         TopLevelDestination.REPOSITORIES -> "Repositories"
         TopLevelDestination.INBOX -> "Inbox"
+        TopLevelDestination.SEARCH -> "Search"
         TopLevelDestination.PROFILE -> "Profile"
     }
 
@@ -373,5 +412,6 @@ private val TopLevelDestination.icon
     @Composable get() = when (this) {
         TopLevelDestination.REPOSITORIES -> JengaIcons.Database
         TopLevelDestination.INBOX -> JengaIcons.Bell
+        TopLevelDestination.SEARCH -> JengaIcons.Search
         TopLevelDestination.PROFILE -> JengaIcons.User
     }

@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.joelkanyi.platypus.app.LocalPlatypusDependencies
@@ -47,9 +48,17 @@ import io.github.joelkanyi.jenga.theme.JengaTheme
 
 @Composable
 fun SettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
-    val store = LocalPlatypusDependencies.current.settingsStore
+    val dependencies = LocalPlatypusDependencies.current
+    val store = dependencies.settingsStore
     val settings by store.settings.collectAsStateWithLifecycle()
-    SettingsContent(settings = settings, onUpdate = store::update, onBack = onBack, modifier = modifier)
+    val appLockAvailable by produceState(false) { value = dependencies.biometrics.isAvailable() }
+    SettingsContent(
+        settings = settings,
+        onUpdate = store::update,
+        onBack = onBack,
+        appLockAvailable = appLockAvailable,
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -57,6 +66,7 @@ internal fun SettingsContent(
     settings: AppSettings,
     onUpdate: (AppSettings) -> Unit,
     onBack: () -> Unit,
+    appLockAvailable: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val spacing = JengaTheme.spacing
@@ -150,6 +160,21 @@ internal fun SettingsContent(
                     onCheckedChange = { onUpdate(settings.copy(closeSourceBranchOnMerge = it)) },
                 )
             }
+
+            item { SectionLabel("Security") }
+            item {
+                ToggleRow(
+                    title = "Require unlock",
+                    supporting = if (appLockAvailable) {
+                        "Unlock with biometrics or device credential each time you open Platypus"
+                    } else {
+                        "Set up a fingerprint, face, or screen lock on this device to enable"
+                    },
+                    checked = settings.appLockEnabled && appLockAvailable,
+                    enabled = appLockAvailable,
+                    onCheckedChange = { onUpdate(settings.copy(appLockEnabled = it)) },
+                )
+            }
         }
     }
 }
@@ -173,11 +198,17 @@ private fun <T> ChoiceRow(title: String, options: List<T>, selected: T, label: (
 }
 
 @Composable
-private fun ToggleRow(title: String, supporting: String?, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+private fun ToggleRow(
+    title: String,
+    supporting: String?,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    enabled: Boolean = true,
+) {
     JengaListItem(
         headline = title,
         supporting = supporting,
-        trailingContent = { JengaToggle(checked = checked, onCheckedChange = onCheckedChange) },
+        trailingContent = { JengaToggle(checked = checked, enabled = enabled, onCheckedChange = onCheckedChange) },
         modifier = Modifier.fillMaxWidth(),
     )
 }

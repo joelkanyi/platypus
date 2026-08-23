@@ -16,6 +16,7 @@
 package com.joelkanyi.platypus.di
 
 import com.joelkanyi.platypus.data.auth.Biometrics
+import com.joelkanyi.platypus.data.auth.IosBiometrics
 import com.joelkanyi.platypus.data.auth.OAuthDeepLinks
 import com.joelkanyi.platypus.data.local.PlatypusDatabase
 import com.joelkanyi.platypus.data.local.createPlatypusDatabase
@@ -51,4 +52,8 @@ interface IosAppGraph {
     @Provides
     @SingleIn(AppScope::class)
     fun database(): PlatypusDatabase = createPlatypusDatabase(platypusDatabaseBuilder())
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun biometrics(): Biometrics = IosBiometrics()
 }

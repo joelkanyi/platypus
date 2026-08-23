@@ -42,7 +42,9 @@ fun PlatypusApp(dependencies: PlatypusDependencies) {
                     .fillMaxSize()
                     .background(JengaTheme.colors.background),
             ) {
-                AuthGate()
+                AppLockGate {
+                    AuthGate()
+                }
             }
         }
     }

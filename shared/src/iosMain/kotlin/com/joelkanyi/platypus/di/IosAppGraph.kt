@@ -22,6 +22,7 @@ import com.joelkanyi.platypus.data.local.createPlatypusDatabase
 import com.joelkanyi.platypus.data.local.platypusDatabaseBuilder
 import com.joelkanyi.platypus.domain.repository.AuthRepository
 import com.joelkanyi.platypus.domain.repository.InboxCache
+import com.joelkanyi.platypus.domain.repository.PipelineRepository
 import com.joelkanyi.platypus.domain.repository.PullRequestRepository
 import com.joelkanyi.platypus.domain.repository.RepoContentRepository
 import com.joelkanyi.platypus.domain.repository.SettingsStore
@@ -39,6 +40,7 @@ interface IosAppGraph {
     val repoContentRepository: RepoContentRepository
 
     val pullRequestRepository: PullRequestRepository
+    val pipelineRepository: PipelineRepository
     val inboxCache: InboxCache
     val settingsStore: SettingsStore
     val biometrics: Biometrics

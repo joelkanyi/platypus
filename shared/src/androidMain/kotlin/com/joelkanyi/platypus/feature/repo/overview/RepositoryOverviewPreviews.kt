@@ -49,6 +49,9 @@ private fun OverviewContentPreview() {
             onOpenFiles = {},
             onOpenCommits = {},
             onOpenPullRequests = {},
+            onOpenPipelines = {},
+            onOpenDeployments = {},
+            onOpenSchedules = {},
             onBranchClick = {},
             onOpenUrl = {},
         )
@@ -67,6 +70,9 @@ private fun OverviewErrorPreview() {
             onOpenFiles = {},
             onOpenCommits = {},
             onOpenPullRequests = {},
+            onOpenPipelines = {},
+            onOpenDeployments = {},
+            onOpenSchedules = {},
             onBranchClick = {},
             onOpenUrl = {},
         )

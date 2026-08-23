@@ -159,6 +159,7 @@ internal fun CommitDetailContent(
                 }
                 PlatypusDiffView(
                     lines = detail.diffLines,
+                    wrap = false,
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                 )
             }

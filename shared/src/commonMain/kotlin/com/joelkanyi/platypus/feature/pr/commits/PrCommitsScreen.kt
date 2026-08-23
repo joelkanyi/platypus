@@ -1,0 +1,208 @@
+/*
+ * Copyright (C) 2026 Joel Kanyi
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.joelkanyi.platypus.feature.pr.commits
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.joelkanyi.platypus.app.LocalPlatypusDependencies
+import com.joelkanyi.platypus.core.result.NetworkResult
+import com.joelkanyi.platypus.core.result.userMessage
+import com.joelkanyi.platypus.designsystem.expand
+import com.joelkanyi.platypus.domain.model.Commit
+import com.joelkanyi.platypus.domain.repository.PullRequestRepository
+import io.github.joelkanyi.jenga.component.avatar.JengaAvatar
+import io.github.joelkanyi.jenga.component.avatar.JengaAvatarSize
+import io.github.joelkanyi.jenga.component.button.JengaIconButton
+import io.github.joelkanyi.jenga.component.icon.JengaIcon
+import io.github.joelkanyi.jenga.component.icon.JengaIcons
+import io.github.joelkanyi.jenga.component.list.JengaListItem
+import io.github.joelkanyi.jenga.component.progress.jengaShimmer
+import io.github.joelkanyi.jenga.component.scaffold.JengaScaffold
+import io.github.joelkanyi.jenga.component.scaffold.JengaTopAppBar
+import io.github.joelkanyi.jenga.component.state.JengaEmptyState
+import io.github.joelkanyi.jenga.component.state.JengaErrorState
+import io.github.joelkanyi.jenga.theme.JengaTheme
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+@Immutable
+data class PrCommitsUiState(
+    val isLoading: Boolean = true,
+    val error: String? = null,
+    val commits: List<Commit> = emptyList(),
+)
+
+class PrCommitsViewModel(
+    private val repository: PullRequestRepository,
+    private val accountId: String,
+    private val workspace: String,
+    private val repoSlug: String,
+    private val prId: Long,
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(PrCommitsUiState())
+    val uiState: StateFlow<PrCommitsUiState> = _uiState.asStateFlow()
+
+    init {
+        load()
+    }
+
+    fun retry() = load()
+
+    private fun load() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            when (val result = repository.commits(accountId, workspace, repoSlug, prId)) {
+                is NetworkResult.Success -> _uiState.update { it.copy(isLoading = false, commits = result.data) }
+                is NetworkResult.Failure -> _uiState.update { it.copy(isLoading = false, error = result.userMessage()) }
+            }
+        }
+    }
+}
+
+@Composable
+fun PrCommitsScreen(
+    accountId: String,
+    workspace: String,
+    repoSlug: String,
+    prId: Long,
+    onOpenCommit: (hash: String) -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val dependencies = LocalPlatypusDependencies.current
+    val viewModel = viewModel(key = "prcommits/$accountId/$workspace/$repoSlug/$prId") {
+        PrCommitsViewModel(dependencies.pullRequestRepository, accountId, workspace, repoSlug, prId)
+    }
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    PrCommitsContent(
+        state = state,
+        onOpenCommit = onOpenCommit,
+        onBack = onBack,
+        onRetry = viewModel::retry,
+        modifier = modifier,
+    )
+}
+
+@Composable
+internal fun PrCommitsContent(
+    state: PrCommitsUiState,
+    onOpenCommit: (hash: String) -> Unit,
+    onBack: () -> Unit,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val spacing = JengaTheme.spacing
+    JengaScaffold(
+        modifier = modifier,
+        topBar = {
+            JengaTopAppBar(
+                title = "Commits",
+                subtitle = state.commits.size.takeIf { it > 0 }?.let { "$it commits" },
+                navigationIcon = {
+                    JengaIconButton(onClick = onBack) {
+                        JengaIcon(JengaIcons.ArrowBack, contentDescription = "Back")
+                    }
+                },
+            )
+        },
+    ) { innerPadding ->
+        when {
+            state.error != null -> JengaErrorState(
+                title = "Couldn't load commits",
+                description = state.error,
+                actionLabel = "Try again",
+                onAction = onRetry,
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+            )
+
+            state.commits.isEmpty() && !state.isLoading -> JengaEmptyState(
+                title = "No commits",
+                description = "This pull request has no commits.",
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+            )
+
+            state.isLoading -> CommitsSkeleton(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = innerPadding.expand(horizontal = spacing.lg, vertical = spacing.sm),
+            )
+
+            else -> LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = innerPadding.expand(horizontal = spacing.lg, vertical = spacing.sm),
+            ) {
+                items(state.commits, key = { it.hash }) { commit ->
+                    JengaListItem(
+                        headline = commit.subject,
+                        supporting = "${commit.authorName} · ${commit.shortHash} · ${commit.date.substringBefore('T')}",
+                        leadingContent = { JengaAvatar(name = commit.authorName, size = JengaAvatarSize.Small) },
+                        trailingContent = { JengaIcon(JengaIcons.ChevronRight, contentDescription = null) },
+                        onClick = { onOpenCommit(commit.hash) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CommitsSkeleton(modifier: Modifier = Modifier, contentPadding: PaddingValues) {
+    val spacing = JengaTheme.spacing
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = contentPadding,
+        verticalArrangement = Arrangement.spacedBy(spacing.md),
+    ) {
+        items(10) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+            ) {
+                Box(Modifier.size(36.dp).clip(JengaTheme.shapes.pill).jengaShimmer())
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing.xxs)) {
+                    Box(Modifier.height(14.dp).fillMaxWidth(0.8f).clip(JengaTheme.shapes.control).jengaShimmer())
+                    Box(Modifier.height(11.dp).fillMaxWidth(0.5f).clip(JengaTheme.shapes.control).jengaShimmer())
+                }
+            }
+        }
+    }
+}

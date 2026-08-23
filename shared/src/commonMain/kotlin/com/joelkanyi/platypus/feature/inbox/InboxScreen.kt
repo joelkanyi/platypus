@@ -56,7 +56,11 @@ import io.github.joelkanyi.jenga.component.text.JengaText
 import io.github.joelkanyi.jenga.theme.JengaTheme
 
 @Composable
-fun InboxScreen(onBrowseWatchlist: () -> Unit, modifier: Modifier = Modifier) {
+fun InboxScreen(
+    onBrowseWatchlist: () -> Unit,
+    onOpenPullRequest: (PullRequest) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val dependencies = LocalPlatypusDependencies.current
     val useCase = remember(dependencies) {
         GetReviewInbox(dependencies.authRepository, dependencies.watchlistRepository)
@@ -67,7 +71,7 @@ fun InboxScreen(onBrowseWatchlist: () -> Unit, modifier: Modifier = Modifier) {
     InboxContent(
         state = state,
         onEvent = viewModel::onEvent,
-        onOpenPullRequest = { url -> dependencies.openUrl(url) },
+        onOpenPullRequest = onOpenPullRequest,
         onBrowseWatchlist = onBrowseWatchlist,
         modifier = modifier,
     )
@@ -77,7 +81,7 @@ fun InboxScreen(onBrowseWatchlist: () -> Unit, modifier: Modifier = Modifier) {
 internal fun InboxContent(
     state: InboxUiState,
     onEvent: (InboxUiEvent) -> Unit,
-    onOpenPullRequest: (String) -> Unit,
+    onOpenPullRequest: (PullRequest) -> Unit,
     onBrowseWatchlist: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -140,7 +144,7 @@ internal fun InboxContent(
                             PrCard(
                                 pullRequest = pr,
                                 showRelationship = state.filter == InboxFilter.ALL,
-                                onClick = { pr.webUrl?.let(onOpenPullRequest) },
+                                onClick = { onOpenPullRequest(pr) },
                             )
                         }
                     }

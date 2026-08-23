@@ -22,8 +22,10 @@ import com.joelkanyi.platypus.data.auth.Biometrics
 import com.joelkanyi.platypus.data.auth.OAuthDeepLinks
 import com.joelkanyi.platypus.di.IosAppGraph
 import com.joelkanyi.platypus.domain.repository.AuthRepository
+import com.joelkanyi.platypus.domain.repository.InboxCache
 import com.joelkanyi.platypus.domain.repository.PullRequestRepository
 import com.joelkanyi.platypus.domain.repository.RepoContentRepository
+import com.joelkanyi.platypus.domain.repository.SettingsStore
 import com.joelkanyi.platypus.domain.repository.WatchlistRepository
 import dev.zacsweers.metro.createGraph
 import platform.Foundation.NSURL
@@ -59,6 +61,8 @@ class IosDependencies(graph: IosAppGraph) : PlatypusDependencies {
     override val watchlistRepository: WatchlistRepository = graph.watchlistRepository
     override val repoContentRepository: RepoContentRepository = graph.repoContentRepository
     override val pullRequestRepository: PullRequestRepository = graph.pullRequestRepository
+    override val inboxCache: InboxCache = graph.inboxCache
+    override val settingsStore: SettingsStore = graph.settingsStore
     override val biometrics: Biometrics = graph.biometrics
     override val oauthDeepLinks: OAuthDeepLinks = graph.oauthDeepLinks
 

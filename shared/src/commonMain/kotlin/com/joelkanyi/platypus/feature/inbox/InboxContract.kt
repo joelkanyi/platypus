@@ -16,11 +16,10 @@
 package com.joelkanyi.platypus.feature.inbox
 
 import androidx.compose.runtime.Immutable
+import com.joelkanyi.platypus.domain.model.InboxFilter
 import com.joelkanyi.platypus.domain.model.InboxSourceFailure
 import com.joelkanyi.platypus.domain.model.PrRelationship
 import com.joelkanyi.platypus.domain.model.PullRequest
-
-enum class InboxFilter { TO_REVIEW, MINE, ALL }
 
 @Immutable
 data class InboxUiState(
@@ -30,6 +29,7 @@ data class InboxUiState(
     val filter: InboxFilter = InboxFilter.TO_REVIEW,
     val pullRequests: List<PullRequest> = emptyList(),
     val failures: List<InboxSourceFailure> = emptyList(),
+    val lastUpdatedEpochMs: Long? = null,
 ) {
     val toReviewCount: Int get() = pullRequests.count { it.relationship == PrRelationship.TO_REVIEW }
 

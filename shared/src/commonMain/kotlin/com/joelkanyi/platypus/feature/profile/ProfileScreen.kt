@@ -46,7 +46,7 @@ import io.github.joelkanyi.jenga.theme.JengaTheme
 import kotlinx.coroutines.launch
 
 @Composable
-fun ProfileScreen(modifier: Modifier = Modifier) {
+fun ProfileScreen(onOpenSettings: () -> Unit, modifier: Modifier = Modifier) {
     val dependencies = LocalPlatypusDependencies.current
     val accounts by dependencies.authRepository.accounts.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
@@ -54,12 +54,18 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
     ProfileContent(
         accounts = accounts,
         onSignOut = { accountId -> scope.launch { dependencies.authRepository.signOut(accountId) } },
+        onOpenSettings = onOpenSettings,
         modifier = modifier,
     )
 }
 
 @Composable
-internal fun ProfileContent(accounts: List<Account>, onSignOut: (String) -> Unit, modifier: Modifier = Modifier) {
+internal fun ProfileContent(
+    accounts: List<Account>,
+    onSignOut: (String) -> Unit,
+    onOpenSettings: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val spacing = JengaTheme.spacing
     val itemModifier = Modifier.fillMaxWidth().widthIn(max = 560.dp)
     val addAccount = LocalAccountActions.current.addAccount
@@ -97,6 +103,17 @@ internal fun ProfileContent(accounts: List<Account>, onSignOut: (String) -> Unit
                     leadingContent = { JengaIcon(JengaIcons.Add, contentDescription = null) },
                     onClick = addAccount,
                     modifier = itemModifier.padding(top = spacing.sm),
+                )
+            }
+
+            item {
+                JengaListItem(
+                    headline = "Settings",
+                    supporting = "Appearance and defaults",
+                    leadingContent = { JengaIcon(JengaIcons.Sliders, contentDescription = null) },
+                    trailingContent = { JengaIcon(JengaIcons.ChevronRight, contentDescription = null) },
+                    onClick = onOpenSettings,
+                    modifier = itemModifier,
                 )
             }
         }

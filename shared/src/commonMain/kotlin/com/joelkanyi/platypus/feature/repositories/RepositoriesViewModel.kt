@@ -19,6 +19,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.userMessage
+import com.joelkanyi.platypus.domain.model.RepoTab
 import com.joelkanyi.platypus.domain.model.Repository
 import com.joelkanyi.platypus.domain.model.WatchedRepo
 import com.joelkanyi.platypus.domain.repository.AuthRepository
@@ -34,9 +35,10 @@ import kotlinx.coroutines.launch
 class RepositoriesViewModel(
     private val authRepository: AuthRepository,
     private val watchlistRepository: WatchlistRepository,
+    initialTab: RepoTab,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(RepositoriesUiState())
+    private val _uiState = MutableStateFlow(RepositoriesUiState(tab = initialTab))
     val uiState: StateFlow<RepositoriesUiState> = _uiState.asStateFlow()
 
     private var allWatched: List<WatchedRepo> = emptyList()

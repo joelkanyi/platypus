@@ -22,13 +22,11 @@ sealed interface PlatypusKey : NavKey
 
 @Serializable data object InboxKey : PlatypusKey
 
-@Serializable data object PullRequestsKey : PlatypusKey
-
 @Serializable data object RepositoriesKey : PlatypusKey
 
-@Serializable data object PipelinesKey : PlatypusKey
-
 @Serializable data object ProfileKey : PlatypusKey
+
+@Serializable data object SettingsKey : PlatypusKey
 
 @Serializable
 data class PullRequestKey(
@@ -78,6 +76,14 @@ data class RepositoryOverviewKey(
 ) : PlatypusKey
 
 @Serializable
+data class RepoPullRequestsKey(
+    val accountId: String,
+    val workspace: String,
+    val repoSlug: String,
+    val repoName: String,
+) : PlatypusKey
+
+@Serializable
 data class RepositoryBrowseKey(
     val accountId: String,
     val workspace: String,
@@ -107,9 +113,7 @@ data class CommitDetailKey(val accountId: String, val workspace: String, val rep
 data class PipelineKey(val workspace: String, val repoSlug: String, val pipelineUuid: String) : PlatypusKey
 
 enum class TopLevelDestination(val root: PlatypusKey) {
-    INBOX(InboxKey),
-    PULL_REQUESTS(PullRequestsKey),
     REPOSITORIES(RepositoriesKey),
-    PIPELINES(PipelinesKey),
+    INBOX(InboxKey),
     PROFILE(ProfileKey),
 }

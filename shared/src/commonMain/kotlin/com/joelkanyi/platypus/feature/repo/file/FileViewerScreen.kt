@@ -35,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -45,9 +46,11 @@ import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.userMessage
 import com.joelkanyi.platypus.designsystem.PlatypusBreadcrumb
 import com.joelkanyi.platypus.designsystem.PlatypusCodeView
+import com.joelkanyi.platypus.designsystem.PlatypusMarkdown
 import com.joelkanyi.platypus.designsystem.crumbsFor
 import com.joelkanyi.platypus.designsystem.highlightLine
 import com.joelkanyi.platypus.designsystem.rememberSyntaxColors
+import com.joelkanyi.platypus.designsystem.toSp
 import com.joelkanyi.platypus.domain.model.RepoFile
 import com.joelkanyi.platypus.domain.repository.RepoContentRepository
 import com.joelkanyi.platypus.syntax.highlighterFor
@@ -75,12 +78,13 @@ data class FileUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val file: RepoFile? = null,
-    val wrap: Boolean = true,
     val findActive: Boolean = false,
     val findQuery: String = "",
     val matches: List<Int> = emptyList(),
     val matchIndex: Int = 0,
     val outlineOpen: Boolean = false,
+    val isMarkdown: Boolean = false,
+    val preview: Boolean = false,
 ) {
     val currentMatchLine: Int? get() = matches.getOrNull(matchIndex)
 }
@@ -92,9 +96,13 @@ class FileViewerViewModel(
     private val repoSlug: String,
     private val ref: String,
     private val path: String,
+    renderMarkdownDefault: Boolean,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(FileUiState())
+    private val isMarkdown = path.substringAfterLast('.', "").lowercase() in MARKDOWN_EXTENSIONS
+
+    private val _uiState =
+        MutableStateFlow(FileUiState(isMarkdown = isMarkdown, preview = isMarkdown && renderMarkdownDefault))
     val uiState: StateFlow<FileUiState> = _uiState.asStateFlow()
 
     init {
@@ -103,7 +111,7 @@ class FileViewerViewModel(
 
     fun retry() = load()
 
-    fun toggleWrap() = _uiState.update { it.copy(wrap = !it.wrap) }
+    fun togglePreview() = _uiState.update { it.copy(preview = !it.preview) }
 
     fun toggleFind() = _uiState.update {
         if (it.findActive) {
@@ -163,19 +171,31 @@ fun FileViewerScreen(
 ) {
     val dependencies = LocalPlatypusDependencies.current
     val viewModel = viewModel(key = "$accountId/$workspace/$repoSlug/$ref/$path") {
-        FileViewerViewModel(dependencies.repoContentRepository, accountId, workspace, repoSlug, ref, path)
+        FileViewerViewModel(
+            dependencies.repoContentRepository,
+            accountId,
+            workspace,
+            repoSlug,
+            ref,
+            path,
+            dependencies.settingsStore.settings.value.renderMarkdownByDefault,
+        )
     }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val settings by dependencies.settingsStore.settings.collectAsStateWithLifecycle()
 
     FileViewerContent(
         fileName = path.substringAfterLast('/'),
         repoLabel = repoSlug,
         path = path,
+        wrap = settings.wrapCode,
+        fontSize = settings.codeFontSize.toSp(),
         onNavigateToPath = onNavigateToPath,
         onBack = onBack,
         state = state,
         onRetry = viewModel::retry,
-        onToggleWrap = viewModel::toggleWrap,
+        onTogglePreview = viewModel::togglePreview,
+        onToggleWrap = { dependencies.settingsStore.update(settings.copy(wrapCode = !settings.wrapCode)) },
         onToggleFind = viewModel::toggleFind,
         onFindQuery = viewModel::onFindQuery,
         onNextMatch = viewModel::nextMatch,
@@ -192,10 +212,13 @@ internal fun FileViewerContent(
     fileName: String,
     repoLabel: String,
     path: String,
+    wrap: Boolean,
+    fontSize: TextUnit,
     onNavigateToPath: (String) -> Unit,
     onBack: () -> Unit,
     state: FileUiState,
     onRetry: () -> Unit,
+    onTogglePreview: () -> Unit,
     onToggleWrap: () -> Unit,
     onToggleFind: () -> Unit,
     onFindQuery: (String) -> Unit,
@@ -220,14 +243,24 @@ internal fun FileViewerContent(
                 },
                 actions = {
                     if (file != null && file.renderable) {
-                        JengaIconButton(onClick = onToggleOutline) {
-                            JengaIcon(JengaIcons.Sliders, contentDescription = "Outline")
+                        if (state.isMarkdown) {
+                            JengaIconButton(onClick = onTogglePreview) {
+                                JengaIcon(
+                                    if (state.preview) JengaIcons.EyeOff else JengaIcons.Eye,
+                                    contentDescription = if (state.preview) "View source" else "Preview",
+                                )
+                            }
                         }
-                        JengaIconButton(onClick = onToggleFind) {
-                            JengaIcon(JengaIcons.Search, contentDescription = "Find in file")
-                        }
-                        JengaIconButton(onClick = onToggleWrap) {
-                            JengaIcon(JengaIcons.Swap, contentDescription = "Toggle wrap")
+                        if (!state.preview) {
+                            JengaIconButton(onClick = onToggleOutline) {
+                                JengaIcon(JengaIcons.Sliders, contentDescription = "Outline")
+                            }
+                            JengaIconButton(onClick = onToggleFind) {
+                                JengaIcon(JengaIcons.Search, contentDescription = "Find in file")
+                            }
+                            JengaIconButton(onClick = onToggleWrap) {
+                                JengaIcon(JengaIcons.Swap, contentDescription = "Toggle wrap")
+                            }
                         }
                     }
                     file?.webUrl?.let { url ->
@@ -256,9 +289,20 @@ internal fun FileViewerContent(
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
             )
 
+            file != null && state.preview -> MarkdownFile(
+                content = file.lines.joinToString("\n"),
+                repoLabel = repoLabel,
+                path = path,
+                truncatedAtLine = file.truncatedAtLine,
+                onNavigateToPath = onNavigateToPath,
+                contentPadding = innerPadding,
+            )
+
             file != null -> RenderableFile(
                 state = state,
                 file = file,
+                wrap = wrap,
+                fontSize = fontSize,
                 repoLabel = repoLabel,
                 path = path,
                 onNavigateToPath = onNavigateToPath,
@@ -308,9 +352,48 @@ private fun OutlineSheet(fileName: String, lines: List<String>, onSelect: (Int) 
 }
 
 @Composable
+private fun MarkdownFile(
+    content: String,
+    repoLabel: String,
+    path: String,
+    truncatedAtLine: Int?,
+    onNavigateToPath: (String) -> Unit,
+    contentPadding: PaddingValues,
+) {
+    val spacing = JengaTheme.spacing
+    LazyColumn(modifier = Modifier.fillMaxSize().padding(contentPadding)) {
+        item {
+            PlatypusBreadcrumb(
+                crumbs = crumbsFor(repoLabel, path),
+                onNavigate = onNavigateToPath,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.lg, vertical = spacing.sm),
+            )
+        }
+        if (truncatedAtLine != null) {
+            item {
+                JengaText(
+                    text = "Showing the first $truncatedAtLine lines. Open on web for the full file.",
+                    style = JengaTheme.typography.caption,
+                    color = JengaTheme.colors.warning,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.md, vertical = spacing.xs),
+                )
+            }
+        }
+        item {
+            PlatypusMarkdown(
+                content = content,
+                modifier = Modifier.padding(horizontal = spacing.lg, vertical = spacing.sm),
+            )
+        }
+    }
+}
+
+@Composable
 private fun RenderableFile(
     state: FileUiState,
     file: RepoFile,
+    wrap: Boolean,
+    fontSize: TextUnit,
     repoLabel: String,
     path: String,
     onNavigateToPath: (String) -> Unit,
@@ -357,8 +440,9 @@ private fun RenderableFile(
         Box(modifier = Modifier.weight(1f).fillMaxWidth().background(syntaxColors.ground)) {
             PlatypusCodeView(
                 lines = annotated,
-                wrap = state.wrap,
+                wrap = wrap,
                 listState = listState,
+                fontSize = fontSize,
                 gutterColor = syntaxColors.gutter,
                 highlightedLine = state.currentMatchLine,
                 modifier = Modifier.fillMaxSize().padding(horizontal = spacing.sm),
@@ -401,3 +485,5 @@ private fun FindBar(
         }
     }
 }
+
+private val MARKDOWN_EXTENSIONS = setOf("md", "markdown", "mdown", "mkd")

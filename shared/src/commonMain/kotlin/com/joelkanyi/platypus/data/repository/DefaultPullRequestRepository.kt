@@ -27,6 +27,7 @@ import com.joelkanyi.platypus.domain.model.Commit
 import com.joelkanyi.platypus.domain.model.MergeStrategy
 import com.joelkanyi.platypus.domain.model.PrComment
 import com.joelkanyi.platypus.domain.model.PrDiff
+import com.joelkanyi.platypus.domain.model.PullRequest
 import com.joelkanyi.platypus.domain.model.PullRequestDetail
 import com.joelkanyi.platypus.domain.repository.AuthRepository
 import com.joelkanyi.platypus.domain.repository.PullRequestRepository
@@ -42,6 +43,27 @@ import io.ktor.client.HttpClient
 class DefaultPullRequestRepository(private val authRepository: AuthRepository) : PullRequestRepository {
 
     private val diffCache = mutableMapOf<String, PrDiff>()
+
+    override suspend fun pullRequests(
+        accountId: String,
+        workspaceSlug: String,
+        repoSlug: String,
+        repoName: String,
+    ): NetworkResult<List<PullRequest>> = withClient(accountId) { client ->
+        val api = client.api()
+        val me = me(accountId)
+        val label = accountLabel(accountId)
+        val out = mutableListOf<PullRequest>()
+        var page = api.open(workspaceSlug, repoSlug)
+        var guard = 0
+        while (true) {
+            out += page.values.map { it.toDomain(me, accountId, workspaceSlug, repoSlug, repoName, label) }
+            val next = page.next
+            if (next == null || ++guard >= MAX_PAGES) break
+            page = api.page(next)
+        }
+        out
+    }
 
     override suspend fun detail(
         accountId: String,
@@ -239,6 +261,9 @@ class DefaultPullRequestRepository(private val authRepository: AuthRepository) :
 
     private fun me(accountId: String): String =
         authRepository.accounts.value.firstOrNull { it.id == accountId }?.user?.uuid.orEmpty()
+
+    private fun accountLabel(accountId: String): String =
+        authRepository.accounts.value.firstOrNull { it.id == accountId }?.user?.displayName.orEmpty()
 
     private companion object {
         const val SIGNED_OUT = "This account is signed out."

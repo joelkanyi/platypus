@@ -16,13 +16,11 @@
 package com.joelkanyi.platypus.feature.inbox
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,24 +28,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.joelkanyi.platypus.app.LocalPlatypusDependencies
-import com.joelkanyi.platypus.domain.model.PrRelationship
+import com.joelkanyi.platypus.designsystem.PlatypusListRowSkeleton
+import com.joelkanyi.platypus.designsystem.PlatypusPullRequestRow
+import com.joelkanyi.platypus.domain.model.InboxFilter
 import com.joelkanyi.platypus.domain.model.PullRequest
 import com.joelkanyi.platypus.domain.usecase.GetReviewInbox
-import io.github.joelkanyi.jenga.component.avatar.JengaAvatar
-import io.github.joelkanyi.jenga.component.badge.JengaBadge
-import io.github.joelkanyi.jenga.component.badge.JengaBadgeTone
 import io.github.joelkanyi.jenga.component.chip.JengaChip
-import io.github.joelkanyi.jenga.component.icon.JengaIcon
-import io.github.joelkanyi.jenga.component.icon.JengaIcons
-import io.github.joelkanyi.jenga.component.list.JengaListItem
-import io.github.joelkanyi.jenga.component.progress.jengaShimmer
 import io.github.joelkanyi.jenga.component.refresh.JengaPullToRefresh
 import io.github.joelkanyi.jenga.component.scaffold.JengaScaffold
 import io.github.joelkanyi.jenga.component.scaffold.JengaTopAppBar
@@ -65,7 +55,14 @@ fun InboxScreen(
     val useCase = remember(dependencies) {
         GetReviewInbox(dependencies.authRepository, dependencies.watchlistRepository)
     }
-    val viewModel = viewModel { InboxViewModel(useCase, dependencies.watchlistRepository) }
+    val viewModel = viewModel {
+        InboxViewModel(
+            useCase,
+            dependencies.watchlistRepository,
+            dependencies.inboxCache,
+            dependencies.settingsStore.settings.value.defaultInboxFilter,
+        )
+    }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     InboxContent(
@@ -119,6 +116,15 @@ internal fun InboxContent(
                 )
             }
 
+            state.lastUpdatedEpochMs?.let { ts ->
+                JengaText(
+                    text = lastUpdatedLabel(ts),
+                    style = JengaTheme.typography.caption,
+                    color = JengaTheme.colors.textMuted,
+                    modifier = Modifier.padding(horizontal = spacing.lg, vertical = spacing.xxs),
+                )
+            }
+
             JengaPullToRefresh(
                 isRefreshing = state.isRefreshing,
                 onRefresh = { onEvent(InboxUiEvent.Refresh) },
@@ -130,7 +136,7 @@ internal fun InboxContent(
                     verticalArrangement = Arrangement.spacedBy(spacing.xs),
                 ) {
                     when {
-                        state.isLoading -> items(8) { PrSkeletonRow() }
+                        state.isLoading -> items(8) { PlatypusListRowSkeleton() }
 
                         state.visible.isEmpty() -> item {
                             JengaEmptyState(
@@ -141,10 +147,11 @@ internal fun InboxContent(
                         }
 
                         else -> items(state.visible, key = { it.key }) { pr ->
-                            PrCard(
+                            PlatypusPullRequestRow(
                                 pullRequest = pr,
-                                showRelationship = state.filter == InboxFilter.ALL,
                                 onClick = { onOpenPullRequest(pr) },
+                                showRepo = true,
+                                showRelationship = state.filter == InboxFilter.ALL,
                             )
                         }
                     }
@@ -181,66 +188,19 @@ private fun FilterRow(state: InboxUiState, onEvent: (InboxUiEvent) -> Unit) {
     }
 }
 
-@Composable
-private fun PrCard(pullRequest: PullRequest, showRelationship: Boolean, onClick: () -> Unit) {
-    val spacing = JengaTheme.spacing
-    JengaListItem(
-        headline = pullRequest.title,
-        supporting = "${pullRequest.repoName} · #${pullRequest.id} · ${pullRequest.authorName}",
-        leadingContent = { JengaAvatar(name = pullRequest.authorName) },
-        trailingContent = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(spacing.sm),
-            ) {
-                if (showRelationship) {
-                    relationshipBadge(pullRequest.relationship)?.let { (label, tone) ->
-                        JengaBadge(text = label, tone = tone)
-                    }
-                }
-                if (pullRequest.commentCount > 0) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(spacing.xxs),
-                    ) {
-                        JengaIcon(JengaIcons.MessageCircle, contentDescription = "Comments")
-                        JengaText(
-                            text = pullRequest.commentCount.toString(),
-                            style = JengaTheme.typography.caption,
-                            color = JengaTheme.colors.textMuted,
-                        )
-                    }
-                }
-            }
-        },
-        onClick = onClick,
-    )
-}
-
-@Composable
-private fun PrSkeletonRow() {
-    val spacing = JengaTheme.spacing
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = spacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(spacing.md),
-    ) {
-        Box(modifier = Modifier.size(36.dp).clip(JengaTheme.shapes.pill).jengaShimmer())
-        Column(verticalArrangement = Arrangement.spacedBy(spacing.xs), modifier = Modifier.fillMaxWidth()) {
-            Box(modifier = Modifier.height(14.dp).fillMaxWidth(0.7f).clip(JengaTheme.shapes.control).jengaShimmer())
-            Box(modifier = Modifier.height(12.dp).fillMaxWidth(0.4f).clip(JengaTheme.shapes.control).jengaShimmer())
-        }
-    }
-}
-
-private fun relationshipBadge(relationship: PrRelationship): Pair<String, JengaBadgeTone>? = when (relationship) {
-    PrRelationship.TO_REVIEW -> "Review" to JengaBadgeTone.Brand
-    PrRelationship.MINE -> "Mine" to JengaBadgeTone.Neutral
-    PrRelationship.OTHER -> null
-}
-
 private fun failuresNotice(count: Int): String =
     if (count == 1) "Couldn't refresh 1 source" else "Couldn't refresh $count sources"
+
+@OptIn(kotlin.time.ExperimentalTime::class)
+private fun lastUpdatedLabel(epochMs: Long): String {
+    val diff = kotlin.time.Clock.System.now().toEpochMilliseconds() - epochMs
+    return when {
+        diff < 60_000L -> "Updated just now"
+        diff < 3_600_000L -> "Updated ${diff / 60_000L}m ago"
+        diff < 86_400_000L -> "Updated ${diff / 3_600_000L}h ago"
+        else -> "Updated ${diff / 86_400_000L}d ago"
+    }
+}
 
 private fun emptyTitle(filter: InboxFilter): String = when (filter) {
     InboxFilter.TO_REVIEW -> "You're all caught up"

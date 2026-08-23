@@ -13,32 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.joelkanyi.platypus.feature.profile
+package com.joelkanyi.platypus.feature.settings
 
 import androidx.compose.runtime.Composable
-import com.joelkanyi.platypus.domain.model.Account
-import com.joelkanyi.platypus.domain.model.AuthMode
-import com.joelkanyi.platypus.domain.model.BitbucketUser
+import com.joelkanyi.platypus.domain.model.AppSettings
 import com.joelkanyi.platypus.preview.PlatypusPreview
 import com.joelkanyi.platypus.preview.PlatypusThemePreviews
 
-private val sampleAccounts = listOf(
-    Account("1", BitbucketUser("{u1}", "acc1", "joelkanyi", "Joel Kanyi", null), AuthMode.API_TOKEN),
-    Account("2", BitbucketUser("{u2}", "acc2", "joel-acme", "Joel (Acme Corp)", null), AuthMode.OAUTH),
-)
-
 @PlatypusThemePreviews
 @Composable
-private fun ProfileOneAccountPreview() {
+private fun SettingsContentPreview() {
     PlatypusPreview {
-        ProfileContent(accounts = sampleAccounts.take(1), onSignOut = {}, onOpenSettings = {})
-    }
-}
-
-@PlatypusThemePreviews
-@Composable
-private fun ProfileMultiAccountPreview() {
-    PlatypusPreview {
-        ProfileContent(accounts = sampleAccounts, onSignOut = {}, onOpenSettings = {})
+        SettingsContent(settings = AppSettings(), onUpdate = {}, onBack = {})
     }
 }

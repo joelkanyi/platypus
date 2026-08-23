@@ -16,13 +16,11 @@
 package com.joelkanyi.platypus.feature.repositories
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -34,20 +32,18 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.joelkanyi.platypus.app.LocalPlatypusDependencies
+import com.joelkanyi.platypus.designsystem.PlatypusListRowSkeleton
+import com.joelkanyi.platypus.domain.model.RepoTab
 import com.joelkanyi.platypus.domain.model.WatchedRepo
 import io.github.joelkanyi.jenga.component.avatar.JengaAvatar
 import io.github.joelkanyi.jenga.component.chip.JengaChip
 import io.github.joelkanyi.jenga.component.icon.JengaIcon
 import io.github.joelkanyi.jenga.component.icon.JengaIcons
 import io.github.joelkanyi.jenga.component.list.JengaListItem
-import io.github.joelkanyi.jenga.component.progress.jengaShimmer
 import io.github.joelkanyi.jenga.component.scaffold.JengaScaffold
 import io.github.joelkanyi.jenga.component.scaffold.JengaTopAppBar
 import io.github.joelkanyi.jenga.component.search.JengaSearchField
@@ -60,7 +56,11 @@ import io.github.joelkanyi.jenga.theme.JengaTheme
 fun RepositoriesScreen(onOpenRepo: (WatchedRepo) -> Unit, modifier: Modifier = Modifier) {
     val dependencies = LocalPlatypusDependencies.current
     val viewModel = viewModel {
-        RepositoriesViewModel(dependencies.authRepository, dependencies.watchlistRepository)
+        RepositoriesViewModel(
+            dependencies.authRepository,
+            dependencies.watchlistRepository,
+            dependencies.settingsStore.settings.value.defaultReposTab,
+        )
     }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -275,7 +275,7 @@ private fun BrowseList(state: RepositoriesUiState, onEvent: (RepositoriesUiEvent
                 }
 
                 if (state.isPaginating) {
-                    item(key = "paginating") { RepoSkeletonRow() }
+                    item(key = "paginating") { PlatypusListRowSkeleton() }
                 }
             }
         }
@@ -290,23 +290,7 @@ private fun LoadingRepos() {
         contentPadding = PaddingValues(horizontal = spacing.lg, vertical = spacing.sm),
         verticalArrangement = Arrangement.spacedBy(spacing.xs),
     ) {
-        items(8) { RepoSkeletonRow() }
-    }
-}
-
-@Composable
-private fun RepoSkeletonRow() {
-    val spacing = JengaTheme.spacing
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = spacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(spacing.md),
-    ) {
-        Box(modifier = Modifier.size(36.dp).clip(JengaTheme.shapes.pill).jengaShimmer())
-        Column(verticalArrangement = Arrangement.spacedBy(spacing.xs), modifier = Modifier.fillMaxWidth()) {
-            Box(modifier = Modifier.height(14.dp).fillMaxWidth(0.5f).clip(JengaTheme.shapes.control).jengaShimmer())
-            Box(modifier = Modifier.height(12.dp).fillMaxWidth(0.7f).clip(JengaTheme.shapes.control).jengaShimmer())
-        }
+        items(8) { PlatypusListRowSkeleton() }
     }
 }
 

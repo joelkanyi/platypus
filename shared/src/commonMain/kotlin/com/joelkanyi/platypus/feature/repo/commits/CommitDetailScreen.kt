@@ -23,7 +23,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.TextUnit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
@@ -32,6 +34,8 @@ import com.joelkanyi.platypus.app.LocalPlatypusDependencies
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.userMessage
 import com.joelkanyi.platypus.designsystem.PlatypusDiffView
+import com.joelkanyi.platypus.designsystem.parseDiffRows
+import com.joelkanyi.platypus.designsystem.toSp
 import com.joelkanyi.platypus.domain.model.CommitDetail
 import com.joelkanyi.platypus.domain.repository.RepoContentRepository
 import io.github.joelkanyi.jenga.component.button.JengaIconButton
@@ -98,10 +102,13 @@ fun CommitDetailScreen(
         CommitDetailViewModel(dependencies.repoContentRepository, accountId, workspace, repoSlug, hash)
     }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val settings by dependencies.settingsStore.settings.collectAsStateWithLifecycle()
 
     CommitDetailContent(
         shortHash = hash.take(7),
         state = state,
+        wrap = settings.wrapCode,
+        fontSize = settings.codeFontSize.toSp(),
         onBack = onBack,
         onRetry = viewModel::retry,
         modifier = modifier,
@@ -112,6 +119,8 @@ fun CommitDetailScreen(
 internal fun CommitDetailContent(
     shortHash: String,
     state: CommitDetailUiState,
+    wrap: Boolean,
+    fontSize: TextUnit,
     onBack: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
@@ -158,8 +167,9 @@ internal fun CommitDetailContent(
                     }
                 }
                 PlatypusDiffView(
-                    lines = detail.diffLines,
-                    wrap = false,
+                    rows = remember(detail.diffLines) { parseDiffRows(detail.diffLines) },
+                    wrap = wrap,
+                    fontSize = fontSize,
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                 )
             }

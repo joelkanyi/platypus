@@ -36,6 +36,8 @@ import com.joelkanyi.platypus.app.LocalPlatypusDependencies
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.getOrNull
 import com.joelkanyi.platypus.core.result.userMessage
+import com.joelkanyi.platypus.designsystem.PlatypusIcons
+import com.joelkanyi.platypus.designsystem.PlatypusMarkdown
 import com.joelkanyi.platypus.designsystem.expand
 import com.joelkanyi.platypus.designsystem.formatByteSize
 import com.joelkanyi.platypus.domain.model.RepositoryDetail
@@ -121,6 +123,7 @@ fun RepositoryOverviewScreen(
     onOpenFiles: (ref: String) -> Unit,
     onOpenCommits: (ref: String) -> Unit,
     onOpenBranch: (ref: String) -> Unit,
+    onOpenPullRequests: () -> Unit,
     onOpenUrl: (String) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -139,6 +142,7 @@ fun RepositoryOverviewScreen(
         onRetry = viewModel::retry,
         onOpenFiles = onOpenFiles,
         onOpenCommits = onOpenCommits,
+        onOpenPullRequests = onOpenPullRequests,
         onBranchClick = { showBranches = true },
         onOpenUrl = onOpenUrl,
         modifier = modifier,
@@ -168,6 +172,7 @@ internal fun OverviewContent(
     onRetry: () -> Unit,
     onOpenFiles: (ref: String) -> Unit,
     onOpenCommits: (ref: String) -> Unit,
+    onOpenPullRequests: () -> Unit,
     onBranchClick: () -> Unit,
     onOpenUrl: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -226,15 +231,26 @@ internal fun OverviewContent(
                 item {
                     JengaListItem(
                         headline = "Files",
-                        supporting = "Browse the repository",
+                        supporting = "Browse the source",
+                        leadingContent = { JengaIcon(PlatypusIcons.Folder, contentDescription = null) },
                         trailingContent = { JengaIcon(JengaIcons.ChevronRight, contentDescription = null) },
                         onClick = { onOpenFiles(detail.defaultBranch) },
                     )
                 }
                 item {
                     JengaListItem(
+                        headline = "Pull requests",
+                        supporting = "Open pull requests for this repository",
+                        leadingContent = { JengaIcon(JengaIcons.MessageCircle, contentDescription = null) },
+                        trailingContent = { JengaIcon(JengaIcons.ChevronRight, contentDescription = null) },
+                        onClick = onOpenPullRequests,
+                    )
+                }
+                item {
+                    JengaListItem(
                         headline = "Commits",
                         supporting = "History on ${detail.defaultBranch}",
+                        leadingContent = { JengaIcon(PlatypusIcons.GitBranch, contentDescription = null) },
                         trailingContent = { JengaIcon(JengaIcons.ChevronRight, contentDescription = null) },
                         onClick = { onOpenCommits(detail.defaultBranch) },
                     )
@@ -268,10 +284,6 @@ private fun FactChips(detail: RepositoryDetail) {
 private fun ReadmeBlock(readme: String) {
     val spacing = JengaTheme.spacing
     JengaCard(modifier = Modifier.fillMaxWidth()) {
-        JengaText(
-            text = readme,
-            color = JengaTheme.colors.textSecondary,
-            modifier = Modifier.padding(spacing.md),
-        )
+        PlatypusMarkdown(content = readme, modifier = Modifier.padding(spacing.md))
     }
 }

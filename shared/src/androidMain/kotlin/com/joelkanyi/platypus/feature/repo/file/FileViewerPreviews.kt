@@ -16,6 +16,7 @@
 package com.joelkanyi.platypus.feature.repo.file
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.sp
 import com.joelkanyi.platypus.domain.model.RepoFile
 import com.joelkanyi.platypus.preview.PlatypusPreview
 import com.joelkanyi.platypus.preview.PlatypusThemePreviews
@@ -41,10 +42,13 @@ private fun FileViewerContentPreview() {
             fileName = "Main.kt",
             repoLabel = "platypus",
             path = "shared/src/Main.kt",
+            wrap = true,
+            fontSize = 13.sp,
             onNavigateToPath = {},
             onBack = {},
-            state = FileUiState(isLoading = false, file = sampleFile, wrap = true),
+            state = FileUiState(isLoading = false, file = sampleFile),
             onRetry = {},
+            onTogglePreview = {},
             onToggleWrap = {},
             onToggleFind = {},
             onFindQuery = {},
@@ -65,14 +69,16 @@ private fun FileViewerBinaryPreview() {
             fileName = "logo.png",
             repoLabel = "platypus",
             path = "assets/logo.png",
+            wrap = true,
+            fontSize = 13.sp,
             onNavigateToPath = {},
             onBack = {},
             state = FileUiState(
                 isLoading = false,
                 file = sampleFile.copy(path = "logo.png", lines = emptyList(), renderable = false),
-                wrap = true,
             ),
             onRetry = {},
+            onTogglePreview = {},
             onToggleWrap = {},
             onToggleFind = {},
             onFindQuery = {},

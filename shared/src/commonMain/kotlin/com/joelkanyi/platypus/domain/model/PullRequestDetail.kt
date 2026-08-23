@@ -15,10 +15,13 @@
  */
 package com.joelkanyi.platypus.domain.model
 
+import kotlinx.serialization.Serializable
+
 enum class PrState { OPEN, MERGED, DECLINED, SUPERSEDED, OTHER }
 
 enum class PrApproval { APPROVED, CHANGES_REQUESTED, NONE }
 
+@Serializable
 enum class MergeStrategy(val wire: String) {
     MERGE_COMMIT("merge_commit"),
     SQUASH("squash"),

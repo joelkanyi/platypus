@@ -30,6 +30,7 @@ import com.joelkanyi.platypus.feature.pr.commits.PrCommitsScreen
 import com.joelkanyi.platypus.feature.pr.detail.PrDetailScreen
 import com.joelkanyi.platypus.feature.pr.files.FilesChangedScreen
 import com.joelkanyi.platypus.feature.pr.files.PrFileDiffScreen
+import com.joelkanyi.platypus.feature.pr.list.RepoPullRequestsScreen
 import com.joelkanyi.platypus.feature.profile.ProfileScreen
 import com.joelkanyi.platypus.feature.repo.browse.RepositoryBrowseScreen
 import com.joelkanyi.platypus.feature.repo.commits.CommitDetailScreen
@@ -37,18 +38,18 @@ import com.joelkanyi.platypus.feature.repo.commits.CommitsScreen
 import com.joelkanyi.platypus.feature.repo.file.FileViewerScreen
 import com.joelkanyi.platypus.feature.repo.overview.RepositoryOverviewScreen
 import com.joelkanyi.platypus.feature.repositories.RepositoriesScreen
+import com.joelkanyi.platypus.feature.settings.SettingsScreen
 import io.github.joelkanyi.jenga.component.icon.JengaIcon
 import io.github.joelkanyi.jenga.component.icon.JengaIcons
 import io.github.joelkanyi.jenga.component.navigation.JengaNavIndicator
 import io.github.joelkanyi.jenga.component.navigation.JengaNavigationBar
 import io.github.joelkanyi.jenga.component.navigation.JengaNavigationBarItem
 import io.github.joelkanyi.jenga.component.scaffold.JengaScaffold
-import io.github.joelkanyi.jenga.component.state.JengaEmptyState
 
 @Composable
 fun PlatypusShell() {
     val navigationState = rememberNavigationState(
-        startRoute = InboxKey,
+        startRoute = RepositoriesKey,
         topLevelRoutes = TopLevelDestination.entries.map { it.root }.toSet(),
     )
     val navigator = remember(navigationState) { Navigator(navigationState) }
@@ -65,7 +66,6 @@ fun PlatypusShell() {
                 },
             )
         }
-        entry<PullRequestsKey> { TabPlaceholder("Pull Requests") }
         entry<RepositoriesKey> {
             RepositoriesScreen(
                 onOpenRepo = { repo ->
@@ -75,8 +75,10 @@ fun PlatypusShell() {
                 },
             )
         }
-        entry<PipelinesKey> { TabPlaceholder("Pipelines") }
-        entry<ProfileKey> { ProfileScreen() }
+        entry<ProfileKey> {
+            ProfileScreen(onOpenSettings = { navigator.navigate(SettingsKey) })
+        }
+        entry<SettingsKey> { SettingsScreen(onBack = navigator::goBack) }
         entry<RepositoryOverviewKey> { key ->
             RepositoryOverviewScreen(
                 accountId = key.accountId,
@@ -92,7 +94,26 @@ fun PlatypusShell() {
                 onOpenBranch = { ref ->
                     navigator.navigate(RepositoryBrowseKey(key.accountId, key.workspace, key.repoSlug, ref, ""))
                 },
+                onOpenPullRequests = {
+                    navigator.navigate(
+                        RepoPullRequestsKey(key.accountId, key.workspace, key.repoSlug, key.repoName),
+                    )
+                },
                 onOpenUrl = onOpenUrl,
+                onBack = navigator::goBack,
+            )
+        }
+        entry<RepoPullRequestsKey> { key ->
+            RepoPullRequestsScreen(
+                accountId = key.accountId,
+                workspace = key.workspace,
+                repoSlug = key.repoSlug,
+                repoName = key.repoName,
+                onOpenPullRequest = { pr ->
+                    navigator.navigate(
+                        PullRequestKey(pr.accountId, pr.workspaceSlug, pr.repoSlug, pr.id, pr.repoName),
+                    )
+                },
                 onBack = navigator::goBack,
             )
         }
@@ -233,29 +254,16 @@ fun PlatypusShell() {
     }
 }
 
-@Composable
-private fun TabPlaceholder(title: String) {
-    JengaEmptyState(
-        title = title,
-        description = "Coming soon",
-        modifier = Modifier.fillMaxSize(),
-    )
-}
-
 private val TopLevelDestination.label: String
     get() = when (this) {
-        TopLevelDestination.INBOX -> "Inbox"
-        TopLevelDestination.PULL_REQUESTS -> "Pull Requests"
         TopLevelDestination.REPOSITORIES -> "Repositories"
-        TopLevelDestination.PIPELINES -> "Pipelines"
+        TopLevelDestination.INBOX -> "Inbox"
         TopLevelDestination.PROFILE -> "Profile"
     }
 
 private val TopLevelDestination.icon
     @Composable get() = when (this) {
-        TopLevelDestination.INBOX -> JengaIcons.Bell
-        TopLevelDestination.PULL_REQUESTS -> JengaIcons.MessageCircle
         TopLevelDestination.REPOSITORIES -> JengaIcons.Database
-        TopLevelDestination.PIPELINES -> JengaIcons.Flash
+        TopLevelDestination.INBOX -> JengaIcons.Bell
         TopLevelDestination.PROFILE -> JengaIcons.User
     }

@@ -13,23 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.joelkanyi.platypus.feature.inbox
+package com.joelkanyi.platypus.feature.pr.list
 
 import androidx.compose.runtime.Composable
-import com.joelkanyi.platypus.domain.model.InboxFilter
 import com.joelkanyi.platypus.domain.model.PrRelationship
 import com.joelkanyi.platypus.domain.model.PullRequest
 import com.joelkanyi.platypus.preview.PlatypusPreview
 import com.joelkanyi.platypus.preview.PlatypusThemePreviews
 
-private fun pr(
-    id: Long,
-    title: String,
-    author: String,
-    relationship: PrRelationship,
-    comments: Int,
-    repo: String = "API Gateway",
-) = PullRequest(
+private fun pr(id: Long, title: String, author: String, relationship: PrRelationship, comments: Int) = PullRequest(
     id = id,
     title = title,
     authorName = author,
@@ -44,69 +36,56 @@ private fun pr(
     accountLabel = "Joel Kanyi",
     workspaceSlug = "acme",
     repoSlug = "api-gateway",
-    repoName = repo,
+    repoName = "API Gateway",
 )
 
 private val samplePullRequests = listOf(
     pr(101, "Add retry to token refresh", "Grace Njeri", PrRelationship.TO_REVIEW, 3),
-    pr(102, "Fix null crash on empty workspace", "Peter Otieno", PrRelationship.TO_REVIEW, 0),
-    pr(103, "Bump Ktor to 3.5.1", "Joel Kanyi", PrRelationship.MINE, 5, repo = "Mobile"),
-    pr(104, "Docs: contributing guide", "Asha Mwangi", PrRelationship.OTHER, 1, repo = "Web App"),
+    pr(102, "Fix null crash on empty workspace", "Peter Otieno", PrRelationship.OTHER, 0),
+    pr(103, "Bump Ktor to 3.5.1", "Joel Kanyi", PrRelationship.MINE, 5),
 )
 
 @PlatypusThemePreviews
 @Composable
-private fun InboxToReviewPreview() {
+private fun RepoPullRequestsContentPreview() {
     PlatypusPreview {
-        InboxContent(
-            state = InboxUiState(isLoading = false, pullRequests = samplePullRequests),
-            onEvent = {},
+        RepoPullRequestsContent(
+            repoName = "API Gateway",
+            state = RepoPullRequestsUiState(isLoading = false, pullRequests = samplePullRequests),
+            onBack = {},
+            onRetry = {},
+            onRefresh = {},
             onOpenPullRequest = {},
-            onBrowseWatchlist = {},
         )
     }
 }
 
 @PlatypusThemePreviews
 @Composable
-private fun InboxAllPreview() {
+private fun RepoPullRequestsEmptyPreview() {
     PlatypusPreview {
-        InboxContent(
-            state = InboxUiState(
-                isLoading = false,
-                filter = InboxFilter.ALL,
-                pullRequests = samplePullRequests,
-                failures = emptyList(),
-            ),
-            onEvent = {},
+        RepoPullRequestsContent(
+            repoName = "API Gateway",
+            state = RepoPullRequestsUiState(isLoading = false, pullRequests = emptyList()),
+            onBack = {},
+            onRetry = {},
+            onRefresh = {},
             onOpenPullRequest = {},
-            onBrowseWatchlist = {},
         )
     }
 }
 
 @PlatypusThemePreviews
 @Composable
-private fun InboxEmptyWatchlistPreview() {
+private fun RepoPullRequestsLoadingPreview() {
     PlatypusPreview {
-        InboxContent(
-            state = InboxUiState(isLoading = false, hasWatchlist = false),
-            onEvent = {},
+        RepoPullRequestsContent(
+            repoName = "API Gateway",
+            state = RepoPullRequestsUiState(isLoading = true),
+            onBack = {},
+            onRetry = {},
+            onRefresh = {},
             onOpenPullRequest = {},
-            onBrowseWatchlist = {},
-        )
-    }
-}
-
-@PlatypusThemePreviews
-@Composable
-private fun InboxLoadingPreview() {
-    PlatypusPreview {
-        InboxContent(
-            state = InboxUiState(isLoading = true),
-            onEvent = {},
-            onOpenPullRequest = {},
-            onBrowseWatchlist = {},
         )
     }
 }

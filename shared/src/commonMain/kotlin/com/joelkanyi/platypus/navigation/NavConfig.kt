@@ -25,16 +25,16 @@ val platypusNavConfig: SavedStateConfiguration = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
             subclass(InboxKey::class, InboxKey.serializer())
-            subclass(PullRequestsKey::class, PullRequestsKey.serializer())
             subclass(RepositoriesKey::class, RepositoriesKey.serializer())
-            subclass(PipelinesKey::class, PipelinesKey.serializer())
             subclass(ProfileKey::class, ProfileKey.serializer())
+            subclass(SettingsKey::class, SettingsKey.serializer())
             subclass(PullRequestKey::class, PullRequestKey.serializer())
             subclass(PullRequestDiffKey::class, PullRequestDiffKey.serializer())
             subclass(FilesChangedKey::class, FilesChangedKey.serializer())
             subclass(PrFileDiffKey::class, PrFileDiffKey.serializer())
             subclass(PrCommitsKey::class, PrCommitsKey.serializer())
             subclass(RepositoryOverviewKey::class, RepositoryOverviewKey.serializer())
+            subclass(RepoPullRequestsKey::class, RepoPullRequestsKey.serializer())
             subclass(RepositoryBrowseKey::class, RepositoryBrowseKey.serializer())
             subclass(FileViewerKey::class, FileViewerKey.serializer())
             subclass(CommitsKey::class, CommitsKey.serializer())

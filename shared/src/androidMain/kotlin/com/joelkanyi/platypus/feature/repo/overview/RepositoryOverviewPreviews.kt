@@ -48,6 +48,7 @@ private fun OverviewContentPreview() {
             onRetry = {},
             onOpenFiles = {},
             onOpenCommits = {},
+            onOpenPullRequests = {},
             onBranchClick = {},
             onOpenUrl = {},
         )
@@ -65,6 +66,7 @@ private fun OverviewErrorPreview() {
             onRetry = {},
             onOpenFiles = {},
             onOpenCommits = {},
+            onOpenPullRequests = {},
             onBranchClick = {},
             onOpenUrl = {},
         )

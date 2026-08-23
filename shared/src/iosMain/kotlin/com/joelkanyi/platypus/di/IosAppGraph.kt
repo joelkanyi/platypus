@@ -21,8 +21,10 @@ import com.joelkanyi.platypus.data.local.PlatypusDatabase
 import com.joelkanyi.platypus.data.local.createPlatypusDatabase
 import com.joelkanyi.platypus.data.local.platypusDatabaseBuilder
 import com.joelkanyi.platypus.domain.repository.AuthRepository
+import com.joelkanyi.platypus.domain.repository.InboxCache
 import com.joelkanyi.platypus.domain.repository.PullRequestRepository
 import com.joelkanyi.platypus.domain.repository.RepoContentRepository
+import com.joelkanyi.platypus.domain.repository.SettingsStore
 import com.joelkanyi.platypus.domain.repository.WatchlistRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
@@ -37,6 +39,8 @@ interface IosAppGraph {
     val repoContentRepository: RepoContentRepository
 
     val pullRequestRepository: PullRequestRepository
+    val inboxCache: InboxCache
+    val settingsStore: SettingsStore
     val biometrics: Biometrics
     val oauthDeepLinks: OAuthDeepLinks
 

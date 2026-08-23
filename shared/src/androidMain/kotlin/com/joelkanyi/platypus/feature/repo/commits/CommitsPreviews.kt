@@ -16,6 +16,7 @@
 package com.joelkanyi.platypus.feature.repo.commits
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.sp
 import com.joelkanyi.platypus.domain.model.Commit
 import com.joelkanyi.platypus.domain.model.CommitDetail
 import com.joelkanyi.platypus.preview.PlatypusPreview
@@ -67,6 +68,8 @@ private fun CommitDetailContentPreview() {
                     ),
                 ),
             ),
+            wrap = false,
+            fontSize = 13.sp,
             onBack = {},
             onRetry = {},
         )

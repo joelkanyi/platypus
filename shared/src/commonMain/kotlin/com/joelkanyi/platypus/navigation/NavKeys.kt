@@ -31,10 +31,43 @@ sealed interface PlatypusKey : NavKey
 @Serializable data object ProfileKey : PlatypusKey
 
 @Serializable
-data class PullRequestKey(val workspace: String, val repoSlug: String, val prId: Long) : PlatypusKey
+data class PullRequestKey(
+    val accountId: String,
+    val workspace: String,
+    val repoSlug: String,
+    val prId: Long,
+    val repoName: String = "",
+) : PlatypusKey
 
 @Serializable
 data class PullRequestDiffKey(val workspace: String, val repoSlug: String, val prId: Long) : PlatypusKey
+
+@Serializable
+data class FilesChangedKey(
+    val accountId: String,
+    val workspace: String,
+    val repoSlug: String,
+    val prId: Long,
+    val repoName: String = "",
+) : PlatypusKey
+
+@Serializable
+data class PrFileDiffKey(
+    val accountId: String,
+    val workspace: String,
+    val repoSlug: String,
+    val prId: Long,
+    val path: String,
+) : PlatypusKey
+
+@Serializable
+data class PrCommitsKey(
+    val accountId: String,
+    val workspace: String,
+    val repoSlug: String,
+    val prId: Long,
+    val repoName: String = "",
+) : PlatypusKey
 
 @Serializable
 data class RepositoryOverviewKey(

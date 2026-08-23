@@ -26,6 +26,10 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import com.joelkanyi.platypus.app.LocalPlatypusDependencies
 import com.joelkanyi.platypus.feature.inbox.InboxScreen
+import com.joelkanyi.platypus.feature.pr.commits.PrCommitsScreen
+import com.joelkanyi.platypus.feature.pr.detail.PrDetailScreen
+import com.joelkanyi.platypus.feature.pr.files.FilesChangedScreen
+import com.joelkanyi.platypus.feature.pr.files.PrFileDiffScreen
 import com.joelkanyi.platypus.feature.profile.ProfileScreen
 import com.joelkanyi.platypus.feature.repo.browse.RepositoryBrowseScreen
 import com.joelkanyi.platypus.feature.repo.commits.CommitDetailScreen
@@ -51,7 +55,16 @@ fun PlatypusShell() {
     val onOpenUrl: (String) -> Unit = LocalPlatypusDependencies.current::openUrl
 
     val entryProvider = entryProvider<NavKey> {
-        entry<InboxKey> { InboxScreen(onBrowseWatchlist = { navigator.navigate(RepositoriesKey) }) }
+        entry<InboxKey> {
+            InboxScreen(
+                onBrowseWatchlist = { navigator.navigate(RepositoriesKey) },
+                onOpenPullRequest = { pr ->
+                    navigator.navigate(
+                        PullRequestKey(pr.accountId, pr.workspaceSlug, pr.repoSlug, pr.id, pr.repoName),
+                    )
+                },
+            )
+        }
         entry<PullRequestsKey> { TabPlaceholder("Pull Requests") }
         entry<RepositoriesKey> {
             RepositoriesScreen(
@@ -121,6 +134,63 @@ fun PlatypusShell() {
                 onOpenCommit = { hash ->
                     navigator.navigate(CommitDetailKey(key.accountId, key.workspace, key.repoSlug, hash))
                 },
+                onBack = navigator::goBack,
+            )
+        }
+        entry<PullRequestKey> { key ->
+            PrDetailScreen(
+                accountId = key.accountId,
+                workspace = key.workspace,
+                repoSlug = key.repoSlug,
+                prId = key.prId,
+                repoName = key.repoName,
+                onBack = navigator::goBack,
+                onOpenFiles = {
+                    navigator.navigate(
+                        FilesChangedKey(key.accountId, key.workspace, key.repoSlug, key.prId, key.repoName),
+                    )
+                },
+                onOpenCommits = {
+                    navigator.navigate(
+                        PrCommitsKey(key.accountId, key.workspace, key.repoSlug, key.prId, key.repoName),
+                    )
+                },
+                onOpenUrl = onOpenUrl,
+            )
+        }
+        entry<PrCommitsKey> { key ->
+            PrCommitsScreen(
+                accountId = key.accountId,
+                workspace = key.workspace,
+                repoSlug = key.repoSlug,
+                prId = key.prId,
+                onOpenCommit = { hash ->
+                    navigator.navigate(CommitDetailKey(key.accountId, key.workspace, key.repoSlug, hash))
+                },
+                onBack = navigator::goBack,
+            )
+        }
+        entry<FilesChangedKey> { key ->
+            FilesChangedScreen(
+                accountId = key.accountId,
+                workspace = key.workspace,
+                repoSlug = key.repoSlug,
+                prId = key.prId,
+                onOpenFile = { path ->
+                    navigator.navigate(
+                        PrFileDiffKey(key.accountId, key.workspace, key.repoSlug, key.prId, path),
+                    )
+                },
+                onBack = navigator::goBack,
+            )
+        }
+        entry<PrFileDiffKey> { key ->
+            PrFileDiffScreen(
+                accountId = key.accountId,
+                workspace = key.workspace,
+                repoSlug = key.repoSlug,
+                prId = key.prId,
+                path = key.path,
                 onBack = navigator::goBack,
             )
         }

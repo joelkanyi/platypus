@@ -40,6 +40,9 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.jenga)
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor3)
+            implementation(libs.markdown.renderer.m3)
 
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)

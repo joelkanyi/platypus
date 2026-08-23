@@ -11,6 +11,7 @@ androidx-biometric = "1.4.0-alpha04"
 androidx-lifecycle = "2.11.0-rc01"
 androidx-testCore = "1.7.0"
 androidx-testExt = "1.3.0"
+coil = "3.5.0"
 composeMultiplatform = "1.11.1"
 coroutines = "1.11.0"
 datastore = "1.2.1"
@@ -22,6 +23,7 @@ ksp = "2.3.9"
 ktlint = "1.5.0"
 ktor = "3.5.1"
 logback = "1.5.12"
+markdownRenderer = "0.44.0"
 metro = "1.3.0"
 navigation3 = "1.1.1"
 robolectric = "4.16.1"
@@ -32,6 +34,9 @@ turbine = "1.2.1"
 
 [libraries]
 jenga = { module = "io.github.joelkanyi:jenga", version.ref = "jenga" }
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
+markdown-renderer-m3 = { module = "com.mikepenz:multiplatform-markdown-renderer-m3", version.ref = "markdownRenderer" }
 
 # Compose Multiplatform
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeMultiplatform" }

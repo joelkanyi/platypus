@@ -45,6 +45,17 @@ object PlatypusIcons {
         )
     }
 
+    val MoreVertical: ImageVector by lazy {
+        icon(
+            "M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 " +
+                "2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z",
+        )
+    }
+
+    val Send: ImageVector by lazy {
+        icon("M2.01 21L23 12 2.01 3 2 10l15 2-15 2z")
+    }
+
     private fun icon(pathData: String): ImageVector = ImageVector.Builder(
         defaultWidth = 24.dp,
         defaultHeight = 24.dp,

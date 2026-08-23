@@ -22,11 +22,14 @@ import kotlinx.serialization.Serializable
 data class PullRequestDto(
     val id: Long,
     val title: String = "",
+    val description: String = "",
     val state: String = "",
     @SerialName("comment_count") val commentCount: Int = 0,
     @SerialName("created_on") val createdOn: String = "",
     @SerialName("updated_on") val updatedOn: String = "",
+    @SerialName("close_source_branch") val closeSourceBranch: Boolean = false,
     val author: PrUserDto? = null,
+    val reviewers: List<PrUserDto> = emptyList(),
     val participants: List<PrParticipantDto> = emptyList(),
     val source: PrEndpointDto? = null,
     val destination: PrEndpointDto? = null,
@@ -50,7 +53,13 @@ data class PrParticipantDto(
 )
 
 @Serializable
-data class PrEndpointDto(val branch: PrBranchDto? = null)
+data class PrEndpointDto(val branch: PrBranchDto? = null, val commit: PrCommitRefDto? = null)
 
 @Serializable
 data class PrBranchDto(val name: String = "")
+
+@Serializable
+data class PrCommitRefDto(val hash: String = "")
+
+@Serializable
+data class DiffStatEntryDto(val status: String = "")

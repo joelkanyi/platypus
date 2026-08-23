@@ -40,4 +40,4 @@ data class LinksDto(val avatar: LinkDto? = null, val html: LinkDto? = null)
 data class LinkDto(val href: String? = null)
 
 @Serializable
-data class PageDto<T>(val values: List<T> = emptyList(), val next: String? = null)
+data class PageDto<T>(val values: List<T> = emptyList(), val next: String? = null, val size: Int? = null)

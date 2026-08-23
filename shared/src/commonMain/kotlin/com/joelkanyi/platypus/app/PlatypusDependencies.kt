@@ -23,6 +23,7 @@ import com.joelkanyi.platypus.domain.repository.InboxCache
 import com.joelkanyi.platypus.domain.repository.PipelineRepository
 import com.joelkanyi.platypus.domain.repository.PullRequestRepository
 import com.joelkanyi.platypus.domain.repository.RepoContentRepository
+import com.joelkanyi.platypus.domain.repository.SearchRepository
 import com.joelkanyi.platypus.domain.repository.SettingsStore
 import com.joelkanyi.platypus.domain.repository.WatchlistRepository
 
@@ -32,6 +33,7 @@ interface PlatypusDependencies {
     val repoContentRepository: RepoContentRepository
     val pullRequestRepository: PullRequestRepository
     val pipelineRepository: PipelineRepository
+    val searchRepository: SearchRepository
     val inboxCache: InboxCache
     val settingsStore: SettingsStore
     val biometrics: Biometrics

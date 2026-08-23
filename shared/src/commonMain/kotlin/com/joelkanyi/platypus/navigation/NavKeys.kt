@@ -26,6 +26,14 @@ sealed interface PlatypusKey : NavKey
 
 @Serializable data object ProfileKey : PlatypusKey
 
+@Serializable
+data class SearchKey(
+    val accountId: String? = null,
+    val workspaceSlug: String? = null,
+    val repoSlug: String? = null,
+    val repoName: String? = null,
+) : PlatypusKey
+
 @Serializable data object SettingsKey : PlatypusKey
 
 @Serializable
@@ -99,6 +107,7 @@ data class FileViewerKey(
     val repoSlug: String,
     val ref: String,
     val path: String,
+    val fromSearch: Boolean = false,
 ) : PlatypusKey
 
 @Serializable
@@ -143,5 +152,6 @@ data class PipelineStepLogKey(
 enum class TopLevelDestination(val root: PlatypusKey) {
     REPOSITORIES(RepositoriesKey),
     INBOX(InboxKey),
+    SEARCH(SearchKey()),
     PROFILE(ProfileKey),
 }

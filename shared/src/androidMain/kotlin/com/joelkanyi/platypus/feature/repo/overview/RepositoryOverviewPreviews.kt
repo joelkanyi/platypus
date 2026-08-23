@@ -52,6 +52,7 @@ private fun OverviewContentPreview() {
             onOpenPipelines = {},
             onOpenDeployments = {},
             onOpenSchedules = {},
+            onSearchRepo = {},
             onBranchClick = {},
             onOpenUrl = {},
         )
@@ -73,6 +74,7 @@ private fun OverviewErrorPreview() {
             onOpenPipelines = {},
             onOpenDeployments = {},
             onOpenSchedules = {},
+            onSearchRepo = {},
             onBranchClick = {},
             onOpenUrl = {},
         )

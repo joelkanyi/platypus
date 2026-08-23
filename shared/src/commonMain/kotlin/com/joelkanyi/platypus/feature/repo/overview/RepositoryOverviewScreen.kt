@@ -127,6 +127,7 @@ fun RepositoryOverviewScreen(
     onOpenPipelines: () -> Unit,
     onOpenDeployments: () -> Unit,
     onOpenSchedules: () -> Unit,
+    onSearchRepo: () -> Unit,
     onOpenUrl: (String) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -149,6 +150,7 @@ fun RepositoryOverviewScreen(
         onOpenPipelines = onOpenPipelines,
         onOpenDeployments = onOpenDeployments,
         onOpenSchedules = onOpenSchedules,
+        onSearchRepo = onSearchRepo,
         onBranchClick = { showBranches = true },
         onOpenUrl = onOpenUrl,
         modifier = modifier,
@@ -182,6 +184,7 @@ internal fun OverviewContent(
     onOpenPipelines: () -> Unit,
     onOpenDeployments: () -> Unit,
     onOpenSchedules: () -> Unit,
+    onSearchRepo: () -> Unit,
     onBranchClick: () -> Unit,
     onOpenUrl: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -244,6 +247,15 @@ internal fun OverviewContent(
                         leadingContent = { JengaIcon(PlatypusIcons.Folder, contentDescription = null) },
                         trailingContent = { JengaIcon(JengaIcons.ChevronRight, contentDescription = null) },
                         onClick = { onOpenFiles(detail.defaultBranch) },
+                    )
+                }
+                item {
+                    JengaListItem(
+                        headline = "Search code",
+                        supporting = "Find text in this repository",
+                        leadingContent = { JengaIcon(JengaIcons.Search, contentDescription = null) },
+                        trailingContent = { JengaIcon(JengaIcons.ChevronRight, contentDescription = null) },
+                        onClick = onSearchRepo,
                     )
                 }
                 item {

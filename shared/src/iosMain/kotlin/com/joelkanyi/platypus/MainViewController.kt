@@ -26,6 +26,7 @@ import com.joelkanyi.platypus.domain.repository.InboxCache
 import com.joelkanyi.platypus.domain.repository.PipelineRepository
 import com.joelkanyi.platypus.domain.repository.PullRequestRepository
 import com.joelkanyi.platypus.domain.repository.RepoContentRepository
+import com.joelkanyi.platypus.domain.repository.SearchRepository
 import com.joelkanyi.platypus.domain.repository.SettingsStore
 import com.joelkanyi.platypus.domain.repository.WatchlistRepository
 import dev.zacsweers.metro.createGraph
@@ -63,6 +64,7 @@ class IosDependencies(graph: IosAppGraph) : PlatypusDependencies {
     override val repoContentRepository: RepoContentRepository = graph.repoContentRepository
     override val pullRequestRepository: PullRequestRepository = graph.pullRequestRepository
     override val pipelineRepository: PipelineRepository = graph.pipelineRepository
+    override val searchRepository: SearchRepository = graph.searchRepository
     override val inboxCache: InboxCache = graph.inboxCache
     override val settingsStore: SettingsStore = graph.settingsStore
     override val biometrics: Biometrics = graph.biometrics

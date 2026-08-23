@@ -27,6 +27,7 @@ val platypusNavConfig: SavedStateConfiguration = SavedStateConfiguration {
             subclass(InboxKey::class, InboxKey.serializer())
             subclass(RepositoriesKey::class, RepositoriesKey.serializer())
             subclass(ProfileKey::class, ProfileKey.serializer())
+            subclass(SearchKey::class, SearchKey.serializer())
             subclass(SettingsKey::class, SettingsKey.serializer())
             subclass(PullRequestKey::class, PullRequestKey.serializer())
             subclass(PullRequestDiffKey::class, PullRequestDiffKey.serializer())

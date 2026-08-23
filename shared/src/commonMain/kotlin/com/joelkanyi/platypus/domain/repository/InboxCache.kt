@@ -13,16 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.joelkanyi.platypus.designsystem
+package com.joelkanyi.platypus.domain.repository
 
-fun shortDate(isoTimestamp: String): String = isoTimestamp.substringBefore('T')
+import com.joelkanyi.platypus.domain.model.PullRequest
 
-fun formatByteSize(bytes: Long): String = when {
-    bytes < 1_024 -> "$bytes B"
-    bytes < 1_024 * 1_024 -> "${bytes / 1_024} KB"
-    else -> {
-        val mb = bytes.toDouble() / (1_024 * 1_024)
-        val rounded = (mb * 10).toLong() / 10.0
-        "$rounded MB"
-    }
+data class CachedInbox(val pullRequests: List<PullRequest>, val updatedAtEpochMs: Long)
+
+interface InboxCache {
+    suspend fun load(): CachedInbox?
+
+    suspend fun save(pullRequests: List<PullRequest>, updatedAtEpochMs: Long)
 }

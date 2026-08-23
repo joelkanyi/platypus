@@ -16,17 +16,27 @@
 package com.joelkanyi.platypus.app
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.joelkanyi.platypus.domain.model.ThemeMode
 import io.github.joelkanyi.jenga.theme.JengaTheme
 
 @Composable
 fun PlatypusApp(dependencies: PlatypusDependencies) {
+    val settings by dependencies.settingsStore.settings.collectAsStateWithLifecycle()
+    val darkTheme = when (settings.theme) {
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+    }
     CompositionLocalProvider(LocalPlatypusDependencies provides dependencies) {
-        PlatypusTheme {
+        PlatypusTheme(darkTheme = darkTheme) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()

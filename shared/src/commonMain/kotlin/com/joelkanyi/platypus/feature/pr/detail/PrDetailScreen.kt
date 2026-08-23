@@ -109,7 +109,16 @@ fun PrDetailScreen(
 ) {
     val dependencies = LocalPlatypusDependencies.current
     val viewModel = viewModel(key = "$accountId/$workspace/$repoSlug/$prId") {
-        PrDetailViewModel(dependencies.pullRequestRepository, accountId, workspace, repoSlug, prId)
+        val settings = dependencies.settingsStore.settings.value
+        PrDetailViewModel(
+            dependencies.pullRequestRepository,
+            accountId,
+            workspace,
+            repoSlug,
+            prId,
+            settings.defaultMergeStrategy,
+            settings.closeSourceBranchOnMerge,
+        )
     }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 

@@ -16,6 +16,7 @@
 package com.joelkanyi.platypus.feature.repositories
 
 import androidx.compose.runtime.Composable
+import com.joelkanyi.platypus.domain.model.RepoTab
 import com.joelkanyi.platypus.domain.model.Repository
 import com.joelkanyi.platypus.domain.model.WatchedRepo
 import com.joelkanyi.platypus.domain.model.Workspace

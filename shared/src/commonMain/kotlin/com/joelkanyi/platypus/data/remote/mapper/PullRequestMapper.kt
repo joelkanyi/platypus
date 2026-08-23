@@ -20,7 +20,17 @@ import com.joelkanyi.platypus.domain.model.PrRelationship
 import com.joelkanyi.platypus.domain.model.PullRequest
 import com.joelkanyi.platypus.domain.model.WatchedRepo
 
-fun PullRequestDto.toDomain(me: String, source: WatchedRepo, accountLabel: String): PullRequest {
+fun PullRequestDto.toDomain(me: String, source: WatchedRepo, accountLabel: String): PullRequest =
+    toDomain(me, source.accountId, source.workspaceSlug, source.repoSlug, source.name, accountLabel)
+
+fun PullRequestDto.toDomain(
+    me: String,
+    accountId: String,
+    workspaceSlug: String,
+    repoSlug: String,
+    repoName: String,
+    accountLabel: String,
+): PullRequest {
     val relationship = when {
         participants.any { it.role == "REVIEWER" && it.user?.uuid == me && !it.approved } -> PrRelationship.TO_REVIEW
         author?.uuid == me -> PrRelationship.MINE
@@ -37,10 +47,10 @@ fun PullRequestDto.toDomain(me: String, source: WatchedRepo, accountLabel: Strin
         updatedOn = updatedOn,
         webUrl = links?.html?.href,
         relationship = relationship,
-        accountId = source.accountId,
+        accountId = accountId,
         accountLabel = accountLabel,
-        workspaceSlug = source.workspaceSlug,
-        repoSlug = source.repoSlug,
-        repoName = source.name,
+        workspaceSlug = workspaceSlug,
+        repoSlug = repoSlug,
+        repoName = repoName,
     )
 }

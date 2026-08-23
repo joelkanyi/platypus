@@ -20,6 +20,7 @@ import androidx.lifecycle.viewModelScope
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.getOrNull
 import com.joelkanyi.platypus.core.result.userMessage
+import com.joelkanyi.platypus.domain.model.MergeStrategy
 import com.joelkanyi.platypus.domain.model.PrApproval
 import com.joelkanyi.platypus.domain.model.PrComment
 import com.joelkanyi.platypus.domain.model.PullRequestDetail
@@ -36,9 +37,11 @@ class PrDetailViewModel(
     private val workspace: String,
     private val repoSlug: String,
     private val prId: Long,
+    initialMergeStrategy: MergeStrategy,
+    private val defaultCloseSourceBranch: Boolean,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(PrDetailUiState())
+    private val _uiState = MutableStateFlow(PrDetailUiState(mergeStrategy = initialMergeStrategy))
     val uiState: StateFlow<PrDetailUiState> = _uiState.asStateFlow()
 
     init {
@@ -61,7 +64,7 @@ class PrDetailViewModel(
             PrDetailEvent.OpenReviewSheet -> _uiState.update { it.copy(showReviewSheet = true) }
             PrDetailEvent.DismissReviewSheet -> _uiState.update { it.copy(showReviewSheet = false) }
             PrDetailEvent.OpenMergeSheet -> _uiState.update {
-                it.copy(showMergeSheet = true, closeSourceBranch = it.detail?.closeSourceBranch ?: false)
+                it.copy(showMergeSheet = true, closeSourceBranch = defaultCloseSourceBranch)
             }
             PrDetailEvent.DismissMergeSheet -> _uiState.update { it.copy(showMergeSheet = false) }
             is PrDetailEvent.SelectMergeStrategy -> _uiState.update { it.copy(mergeStrategy = event.strategy) }

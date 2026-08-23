@@ -15,11 +15,7 @@
  */
 package com.joelkanyi.platypus.feature.pr.files
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,10 +25,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
@@ -40,13 +32,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
@@ -55,11 +42,10 @@ import com.joelkanyi.platypus.app.LocalPlatypusDependencies
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.getOrNull
 import com.joelkanyi.platypus.core.result.userMessage
-import com.joelkanyi.platypus.designsystem.DiffRow
-import com.joelkanyi.platypus.designsystem.DiffRowType
+import com.joelkanyi.platypus.designsystem.PlatypusDiffView
 import com.joelkanyi.platypus.designsystem.PlatypusMarkdown
 import com.joelkanyi.platypus.designsystem.parseDiffRows
-import com.joelkanyi.platypus.designsystem.rememberCodeFontFamily
+import com.joelkanyi.platypus.designsystem.toSp
 import com.joelkanyi.platypus.domain.model.PrComment
 import com.joelkanyi.platypus.domain.model.PrDiffFile
 import com.joelkanyi.platypus.domain.repository.PullRequestRepository
@@ -85,7 +71,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.math.max
 
 @Immutable
 data class PrFileDiffUiState(
@@ -93,7 +78,6 @@ data class PrFileDiffUiState(
     val error: String? = null,
     val file: PrDiffFile? = null,
     val comments: List<PrComment> = emptyList(),
-    val wrap: Boolean = false,
     val composerLine: Int? = null,
     val draft: String = "",
     val posting: Boolean = false,
@@ -117,8 +101,6 @@ class PrFileDiffViewModel(
     }
 
     fun retry() = load()
-
-    fun toggleWrap() = _uiState.update { it.copy(wrap = !it.wrap) }
 
     fun startComment(line: Int?) = _uiState.update { it.copy(composerLine = line, draft = "") }
 
@@ -191,13 +173,16 @@ fun PrFileDiffScreen(
         PrFileDiffViewModel(dependencies.pullRequestRepository, accountId, workspace, repoSlug, prId, path)
     }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val settings by dependencies.settingsStore.settings.collectAsStateWithLifecycle()
 
     PrFileDiffContent(
         path = path,
         state = state,
+        wrap = settings.wrapCode,
+        fontSize = settings.codeFontSize.toSp(),
         onBack = onBack,
         onRetry = viewModel::retry,
-        onToggleWrap = viewModel::toggleWrap,
+        onToggleWrap = { dependencies.settingsStore.update(settings.copy(wrapCode = !settings.wrapCode)) },
         onStartComment = viewModel::startComment,
         onCancelComment = viewModel::cancelComment,
         onDraftChanged = viewModel::draftChanged,
@@ -210,6 +195,8 @@ fun PrFileDiffScreen(
 internal fun PrFileDiffContent(
     path: String,
     state: PrFileDiffUiState,
+    wrap: Boolean,
+    fontSize: TextUnit,
     onBack: () -> Unit,
     onRetry: () -> Unit,
     onToggleWrap: () -> Unit,
@@ -232,8 +219,8 @@ internal fun PrFileDiffContent(
                 },
                 actions = {
                     JengaChip(
-                        label = if (state.wrap) "Wrap" else "No wrap",
-                        selected = state.wrap,
+                        label = if (wrap) "Wrap" else "No wrap",
+                        selected = wrap,
                         onClick = onToggleWrap,
                     )
                 },
@@ -252,7 +239,8 @@ internal fun PrFileDiffContent(
             state.file != null -> DiffWithComments(
                 file = state.file,
                 comments = state.comments,
-                wrap = state.wrap,
+                wrap = wrap,
+                fontSize = fontSize,
                 onLongPressLine = onStartComment,
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
             )
@@ -280,151 +268,41 @@ internal fun PrFileDiffContent(
     }
 }
 
-private sealed interface DiffDisplayItem {
-    data class Code(val row: DiffRow) : DiffDisplayItem
-
-    data class Comment(val comment: PrComment) : DiffDisplayItem
-}
-
 @Composable
 private fun DiffWithComments(
     file: PrDiffFile,
     comments: List<PrComment>,
     wrap: Boolean,
+    fontSize: TextUnit,
     onLongPressLine: (Int?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val rows = remember(file) { parseDiffRows(file.lines) }
     val byLine = remember(comments) { comments.filter { it.parentId == null }.groupBy { it.inlineTo } }
     val repliesByParent = remember(comments) { comments.filter { it.parentId != null }.groupBy { it.parentId } }
-    val display = remember(rows, byLine) {
-        buildList {
-            rows.forEach { row ->
-                add(DiffDisplayItem.Code(row))
-                row.newLine?.let { ln ->
-                    byLine[ln]?.forEach { comment ->
-                        add(DiffDisplayItem.Comment(comment))
-                        repliesByParent[comment.id]?.forEach { add(DiffDisplayItem.Comment(it)) }
+
+    Column(modifier = modifier) {
+        CommentHint()
+        byLine[null]?.forEach { comment ->
+            InlineCommentRow(comment)
+            repliesByParent[comment.id]?.forEach { InlineCommentRow(it) }
+        }
+        PlatypusDiffView(
+            rows = rows,
+            wrap = wrap,
+            fontSize = fontSize,
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            onLineLongPress = { row -> onLongPressLine(row.newLine ?: row.oldLine) },
+            lineContent = { row ->
+                row.newLine?.let { line ->
+                    byLine[line]?.forEach { comment ->
+                        InlineCommentRow(comment)
+                        repliesByParent[comment.id]?.forEach { InlineCommentRow(it) }
                     }
                 }
-            }
-            byLine[null]?.forEach { add(DiffDisplayItem.Comment(it)) }
-        }
-    }
-
-    val mono = rememberCodeFontFamily()
-    val codeStyle = remember(mono) { TextStyle(fontFamily = mono, fontSize = 13.sp, lineHeight = 13.sp * 1.5f) }
-    val hScroll = rememberScrollState()
-    val density = LocalDensity.current
-    val charWidth = with(density) { (13.sp.toPx() * 0.6f).toDp() }
-    val maxLineDigits = max(2, (rows.maxOfOrNull { max(it.oldLine ?: 0, it.newLine ?: 0) } ?: 0).toString().length)
-    val gutterWidth = (maxLineDigits * 9 + 12).dp
-    val maxChars = remember(rows) { rows.maxOfOrNull { it.text.length } ?: 0 }
-    val codeWidth = charWidth * maxChars + 24.dp
-
-    LazyColumn(modifier = modifier) {
-        item { CommentHint() }
-        items(display.size) { index ->
-            when (val item = display[index]) {
-                is DiffDisplayItem.Code -> DiffCodeRow(
-                    row = item.row,
-                    codeStyle = codeStyle,
-                    gutterWidth = gutterWidth,
-                    codeWidth = codeWidth,
-                    wrap = wrap,
-                    hScroll = hScroll,
-                    onLongPress = { onLongPressLine(item.row.newLine ?: item.row.oldLine) },
-                )
-                is DiffDisplayItem.Comment -> InlineCommentRow(item.comment)
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun DiffCodeRow(
-    row: DiffRow,
-    codeStyle: TextStyle,
-    gutterWidth: Dp,
-    codeWidth: Dp,
-    wrap: Boolean,
-    hScroll: ScrollState,
-    onLongPress: () -> Unit,
-) {
-    val colors = JengaTheme.colors
-    if (row.type == DiffRowType.HUNK) {
-        JengaText(
-            text = row.text,
-            style = codeStyle,
-            color = colors.textMuted,
-            softWrap = false,
-            maxLines = 1,
-            modifier = Modifier.fillMaxWidth().background(
-                colors.surfaceVariant,
-            ).padding(horizontal = 8.dp, vertical = 4.dp),
+            },
         )
-        return
     }
-    val tint = when (row.type) {
-        DiffRowType.ADD -> colors.successContainer
-        DiffRowType.DELETE -> colors.errorContainer
-        else -> colors.background
-    }
-    val sign = when (row.type) {
-        DiffRowType.ADD -> "+"
-        DiffRowType.DELETE -> "-"
-        else -> " "
-    }
-    val signColor = when (row.type) {
-        DiffRowType.ADD -> colors.success
-        DiffRowType.DELETE -> colors.error
-        else -> colors.textMuted
-    }
-    val clickable = Modifier.combinedClickable(onClick = {}, onLongClick = onLongPress)
-    if (wrap) {
-        Row(modifier = Modifier.fillMaxWidth().background(tint).then(clickable)) {
-            Gutter(row.oldLine, gutterWidth, codeStyle, colors.textMuted)
-            Gutter(row.newLine, gutterWidth, codeStyle, colors.textMuted)
-            JengaText(sign, style = codeStyle, color = signColor, modifier = Modifier.width(16.dp))
-            JengaText(
-                text = row.text.ifEmpty { " " },
-                style = codeStyle,
-                color = colors.textPrimary,
-                softWrap = true,
-                modifier = Modifier.weight(1f).padding(end = 12.dp),
-            )
-        }
-    } else {
-        Row(modifier = Modifier.fillMaxWidth().horizontalScroll(hScroll).then(clickable)) {
-            Row(modifier = Modifier.background(tint)) {
-                Gutter(row.oldLine, gutterWidth, codeStyle, colors.textMuted)
-                Gutter(row.newLine, gutterWidth, codeStyle, colors.textMuted)
-                JengaText(sign, style = codeStyle, color = signColor, modifier = Modifier.width(16.dp))
-                JengaText(
-                    text = row.text.ifEmpty { " " },
-                    style = codeStyle,
-                    color = colors.textPrimary,
-                    softWrap = false,
-                    maxLines = 1,
-                    modifier = Modifier.width(codeWidth),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun Gutter(number: Int?, gutterWidth: Dp, style: TextStyle, color: Color) {
-    JengaText(
-        text = number?.toString().orEmpty(),
-        style = style,
-        color = color,
-        textAlign = TextAlign.End,
-        softWrap = false,
-        maxLines = 1,
-        modifier = Modifier.width(gutterWidth).padding(end = 6.dp),
-    )
 }
 
 @Composable

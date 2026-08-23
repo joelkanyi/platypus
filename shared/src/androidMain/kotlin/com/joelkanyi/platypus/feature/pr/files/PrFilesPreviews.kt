@@ -16,6 +16,7 @@
 package com.joelkanyi.platypus.feature.pr.files
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.sp
 import com.joelkanyi.platypus.domain.model.DiffFileStatus
 import com.joelkanyi.platypus.domain.model.PrDiff
 import com.joelkanyi.platypus.domain.model.PrDiffFile
@@ -96,6 +97,8 @@ private fun PrFileDiffContentPreview() {
         PrFileDiffContent(
             path = "app/data/mappers/DtoToDomain.kt",
             state = PrFileDiffUiState(isLoading = false, file = sampleFile),
+            wrap = false,
+            fontSize = 13.sp,
             onBack = {},
             onRetry = {},
             onToggleWrap = {},

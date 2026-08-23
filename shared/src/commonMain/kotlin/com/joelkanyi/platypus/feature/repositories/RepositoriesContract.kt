@@ -16,11 +16,10 @@
 package com.joelkanyi.platypus.feature.repositories
 
 import androidx.compose.runtime.Immutable
+import com.joelkanyi.platypus.domain.model.RepoTab
 import com.joelkanyi.platypus.domain.model.Repository
 import com.joelkanyi.platypus.domain.model.WatchedRepo
 import com.joelkanyi.platypus.domain.model.Workspace
-
-enum class RepoTab { WATCHING, BROWSE }
 
 @Immutable
 data class WorkspaceOption(val accountId: String, val accountLabel: String, val workspace: Workspace) {

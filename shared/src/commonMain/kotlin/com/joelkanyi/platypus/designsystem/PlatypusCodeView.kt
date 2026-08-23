@@ -63,7 +63,7 @@ fun PlatypusCodeView(
 ) {
     val mono = rememberCodeFontFamily()
     val codeStyle = remember(mono, fontSize) {
-        TextStyle(fontFamily = mono, fontSize = fontSize, lineHeight = fontSize * 1.5f)
+        TextStyle(fontFamily = mono, fontSize = fontSize, lineHeight = fontSize * CodeMetrics.LINE_HEIGHT_RATIO)
     }
     val digits = max(2, lines.size.toString().length)
     val gutterWidth = (digits * 9 + 20).dp
@@ -74,7 +74,7 @@ fun PlatypusCodeView(
         }
     } else {
         val density = LocalDensity.current
-        val charWidth = with(density) { (fontSize.toPx() * 0.6f).toDp() }
+        val charWidth = with(density) { (fontSize.toPx() * CodeMetrics.CHAR_ADVANCE_RATIO).toDp() }
         val maxChars = remember(lines) { lines.maxOfOrNull { it.length } ?: 0 }
         val contentWidth = gutterWidth + charWidth * maxChars + 24.dp
 

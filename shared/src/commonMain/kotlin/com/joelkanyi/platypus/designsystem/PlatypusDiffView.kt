@@ -15,21 +15,21 @@
  */
 package com.joelkanyi.platypus.designsystem
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.joelkanyi.jenga.component.text.JengaText
@@ -78,69 +79,133 @@ fun parseDiffRows(lines: List<String>): List<DiffRow> {
     return rows
 }
 
+@Immutable
+class DiffColors internal constructor(
+    val addBackground: Color,
+    val deleteBackground: Color,
+    val hunkBackground: Color,
+    val addSign: Color,
+    val deleteSign: Color,
+    val contextSign: Color,
+    val gutterText: Color,
+    val codeText: Color,
+    val hunkText: Color,
+)
+
+object DiffDefaults {
+    val FontSize: TextUnit = 13.sp
+
+    internal const val GUTTER_DIGIT_WIDTH = 9
+    internal const val GUTTER_PADDING = 12
+
+    @Composable
+    fun colors(
+        addBackground: Color = JengaTheme.colors.successContainer,
+        deleteBackground: Color = JengaTheme.colors.errorContainer,
+        hunkBackground: Color = JengaTheme.colors.surfaceVariant,
+        addSign: Color = JengaTheme.colors.success,
+        deleteSign: Color = JengaTheme.colors.error,
+        contextSign: Color = JengaTheme.colors.textMuted,
+        gutterText: Color = JengaTheme.colors.textMuted,
+        codeText: Color = JengaTheme.colors.textPrimary,
+        hunkText: Color = JengaTheme.colors.textMuted,
+    ): DiffColors = DiffColors(
+        addBackground = addBackground,
+        deleteBackground = deleteBackground,
+        hunkBackground = hunkBackground,
+        addSign = addSign,
+        deleteSign = deleteSign,
+        contextSign = contextSign,
+        gutterText = gutterText,
+        codeText = codeText,
+        hunkText = hunkText,
+    )
+}
+
 /**
- * Renders a unified diff one lazy row per line, matching [PlatypusCodeView]: when [wrap] is true the
- * code soft-wraps; when false the whole block (gutters included) scrolls horizontally as a single unit,
- * sized to the widest line via the monospace character advance. Add/remove rows carry a tint; git
- * metadata lines are hidden and hunk headers styled.
+ * Renders a unified diff, one row per line. Code rows share a single horizontal scroll so gutters and
+ * code stay column-aligned when [wrap] is false; when [wrap] is true the code soft-wraps. Pass
+ * [onLineLongPress] to make lines commentable (null leaves the diff read-only, no gesture installed),
+ * and [lineContent] to render full-width content under a line (for example inline comment threads),
+ * which never scrolls horizontally.
  */
 @Composable
 fun PlatypusDiffView(
-    lines: List<String>,
-    wrap: Boolean,
+    rows: List<DiffRow>,
     modifier: Modifier = Modifier,
+    wrap: Boolean = false,
+    colors: DiffColors = DiffDefaults.colors(),
+    fontSize: TextUnit = DiffDefaults.FontSize,
     listState: LazyListState = rememberLazyListState(),
+    onLineLongPress: ((DiffRow) -> Unit)? = null,
+    lineContent: @Composable (DiffRow) -> Unit = {},
 ) {
-    val rows = remember(lines) { parseDiffRows(lines) }
     val mono = rememberCodeFontFamily()
-    val codeStyle = remember(mono) { TextStyle(fontFamily = mono, fontSize = 13.sp, lineHeight = 13.sp * 1.5f) }
-    val maxLineDigits = max(2, (rows.maxOfOrNull { max(it.oldLine ?: 0, it.newLine ?: 0) } ?: 0).toString().length)
-    val gutterWidth = (maxLineDigits * 9 + 12).dp
+    val codeStyle = remember(mono, fontSize) {
+        TextStyle(fontFamily = mono, fontSize = fontSize, lineHeight = fontSize * CodeMetrics.LINE_HEIGHT_RATIO)
+    }
+    val density = LocalDensity.current
+    val charWidth = remember(fontSize, density) {
+        with(density) { (fontSize.toPx() * CodeMetrics.CHAR_ADVANCE_RATIO).toDp() }
+    }
+    val gutterWidth = remember(rows) {
+        val digits = max(2, (rows.maxOfOrNull { max(it.oldLine ?: 0, it.newLine ?: 0) } ?: 0).toString().length)
+        (digits * DiffDefaults.GUTTER_DIGIT_WIDTH + DiffDefaults.GUTTER_PADDING).dp
+    }
+    val codeWidth = remember(rows, charWidth) {
+        charWidth * (rows.maxOfOrNull { it.text.length } ?: 0) + 24.dp
+    }
+    val horizontalScroll = rememberScrollState()
 
-    if (wrap) {
-        LazyColumn(state = listState, modifier = modifier) {
-            diffRows(rows, codeStyle, gutterWidth, wrap = true)
-        }
-    } else {
-        val density = LocalDensity.current
-        val charWidth = with(density) { (13.sp.toPx() * 0.6f).toDp() }
-        val maxChars = remember(rows) { rows.maxOfOrNull { it.text.length } ?: 0 }
-        val contentWidth = gutterWidth * 2 + 16.dp + charWidth * maxChars + 24.dp
-        Box(modifier = modifier.horizontalScroll(rememberScrollState())) {
-            LazyColumn(state = listState, modifier = Modifier.width(contentWidth).fillMaxHeight()) {
-                diffRows(rows, codeStyle, gutterWidth, wrap = false)
+    LazyColumn(state = listState, modifier = modifier) {
+        items(rows.size) { index ->
+            val row = rows[index]
+            Column {
+                DiffLineRow(
+                    row = row,
+                    codeStyle = codeStyle,
+                    colors = colors,
+                    gutterWidth = gutterWidth,
+                    codeWidth = codeWidth,
+                    wrap = wrap,
+                    horizontalScroll = horizontalScroll,
+                    onLineLongPress = onLineLongPress,
+                )
+                lineContent(row)
             }
         }
     }
 }
 
-private fun LazyListScope.diffRows(rows: List<DiffRow>, codeStyle: TextStyle, gutterWidth: Dp, wrap: Boolean) {
-    items(rows.size) { index ->
-        val row = rows[index]
-        DiffLine(row = row, codeStyle = codeStyle, gutterWidth = gutterWidth, wrap = wrap)
-    }
-}
-
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun DiffLine(row: DiffRow, codeStyle: TextStyle, gutterWidth: Dp, wrap: Boolean) {
-    val colors = JengaTheme.colors
+private fun DiffLineRow(
+    row: DiffRow,
+    codeStyle: TextStyle,
+    colors: DiffColors,
+    gutterWidth: Dp,
+    codeWidth: Dp,
+    wrap: Boolean,
+    horizontalScroll: androidx.compose.foundation.ScrollState,
+    onLineLongPress: ((DiffRow) -> Unit)?,
+) {
     if (row.type == DiffRowType.HUNK) {
         JengaText(
             text = row.text,
             style = codeStyle,
-            color = colors.textMuted,
+            color = colors.hunkText,
             softWrap = false,
             maxLines = 1,
             modifier = Modifier
                 .fillMaxWidth()
-                .background(colors.surfaceVariant)
+                .background(colors.hunkBackground)
                 .padding(horizontal = 8.dp, vertical = 4.dp),
         )
         return
     }
-    val rowBackground = when (row.type) {
-        DiffRowType.ADD -> colors.successContainer
-        DiffRowType.DELETE -> colors.errorContainer
+    val tint = when (row.type) {
+        DiffRowType.ADD -> colors.addBackground
+        DiffRowType.DELETE -> colors.deleteBackground
         else -> Color.Transparent
     }
     val sign = when (row.type) {
@@ -149,27 +214,44 @@ private fun DiffLine(row: DiffRow, codeStyle: TextStyle, gutterWidth: Dp, wrap: 
         else -> " "
     }
     val signColor = when (row.type) {
-        DiffRowType.ADD -> colors.success
-        DiffRowType.DELETE -> colors.error
-        else -> colors.textMuted
+        DiffRowType.ADD -> colors.addSign
+        DiffRowType.DELETE -> colors.deleteSign
+        else -> colors.contextSign
     }
-    Row(modifier = Modifier.fillMaxWidth().background(rowBackground)) {
-        Gutter(row.oldLine, gutterWidth, codeStyle, colors.textMuted)
-        Gutter(row.newLine, gutterWidth, codeStyle, colors.textMuted)
-        JengaText(
-            text = sign,
-            style = codeStyle,
-            color = signColor,
-            modifier = Modifier.width(16.dp),
-        )
-        JengaText(
-            text = row.text.ifEmpty { " " },
-            style = codeStyle,
-            color = colors.textPrimary,
-            softWrap = wrap,
-            maxLines = if (wrap) Int.MAX_VALUE else 1,
-            modifier = if (wrap) Modifier.weight(1f).padding(end = 12.dp) else Modifier.padding(end = 12.dp),
-        )
+    val clickable = if (onLineLongPress != null) {
+        Modifier.combinedClickable(onClick = {}, onLongClick = { onLineLongPress(row) })
+    } else {
+        Modifier
+    }
+    if (wrap) {
+        Row(modifier = Modifier.fillMaxWidth().background(tint).then(clickable)) {
+            Gutter(row.oldLine, gutterWidth, codeStyle, colors.gutterText)
+            Gutter(row.newLine, gutterWidth, codeStyle, colors.gutterText)
+            JengaText(sign, style = codeStyle, color = signColor, modifier = Modifier.width(16.dp))
+            JengaText(
+                text = row.text.ifEmpty { " " },
+                style = codeStyle,
+                color = colors.codeText,
+                softWrap = true,
+                modifier = Modifier.weight(1f).padding(end = 12.dp),
+            )
+        }
+    } else {
+        Row(modifier = Modifier.fillMaxWidth().horizontalScroll(horizontalScroll).then(clickable)) {
+            Row(modifier = Modifier.background(tint)) {
+                Gutter(row.oldLine, gutterWidth, codeStyle, colors.gutterText)
+                Gutter(row.newLine, gutterWidth, codeStyle, colors.gutterText)
+                JengaText(sign, style = codeStyle, color = signColor, modifier = Modifier.width(16.dp))
+                JengaText(
+                    text = row.text.ifEmpty { " " },
+                    style = codeStyle,
+                    color = colors.codeText,
+                    softWrap = false,
+                    maxLines = 1,
+                    modifier = Modifier.width(codeWidth),
+                )
+            }
+        }
     }
 }
 

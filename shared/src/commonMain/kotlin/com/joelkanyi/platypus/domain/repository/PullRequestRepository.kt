@@ -21,9 +21,17 @@ import com.joelkanyi.platypus.domain.model.Commit
 import com.joelkanyi.platypus.domain.model.MergeStrategy
 import com.joelkanyi.platypus.domain.model.PrComment
 import com.joelkanyi.platypus.domain.model.PrDiff
+import com.joelkanyi.platypus.domain.model.PullRequest
 import com.joelkanyi.platypus.domain.model.PullRequestDetail
 
 interface PullRequestRepository {
+
+    suspend fun pullRequests(
+        accountId: String,
+        workspaceSlug: String,
+        repoSlug: String,
+        repoName: String,
+    ): NetworkResult<List<PullRequest>>
 
     suspend fun detail(
         accountId: String,

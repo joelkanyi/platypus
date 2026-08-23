@@ -16,16 +16,10 @@
 package com.joelkanyi.platypus.feature.pr.files
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -33,8 +27,6 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
@@ -42,6 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.joelkanyi.platypus.app.LocalPlatypusDependencies
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.userMessage
+import com.joelkanyi.platypus.designsystem.PlatypusListSkeleton
 import com.joelkanyi.platypus.designsystem.expand
 import com.joelkanyi.platypus.domain.model.DiffFileStatus
 import com.joelkanyi.platypus.domain.model.PrDiff
@@ -53,7 +46,6 @@ import io.github.joelkanyi.jenga.component.button.JengaIconButton
 import io.github.joelkanyi.jenga.component.icon.JengaIcon
 import io.github.joelkanyi.jenga.component.icon.JengaIcons
 import io.github.joelkanyi.jenga.component.list.JengaListItem
-import io.github.joelkanyi.jenga.component.progress.jengaShimmer
 import io.github.joelkanyi.jenga.component.scaffold.JengaScaffold
 import io.github.joelkanyi.jenga.component.scaffold.JengaTopAppBar
 import io.github.joelkanyi.jenga.component.state.JengaEmptyState
@@ -172,35 +164,10 @@ internal fun FilesChangedContent(
                 }
             }
 
-            else -> FileListSkeleton(
+            else -> PlatypusListSkeleton(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = innerPadding.expand(horizontal = spacing.lg, vertical = spacing.sm),
             )
-        }
-    }
-}
-
-@Composable
-private fun FileListSkeleton(modifier: Modifier = Modifier, contentPadding: PaddingValues) {
-    val spacing = JengaTheme.spacing
-    LazyColumn(
-        modifier = modifier,
-        contentPadding = contentPadding,
-        verticalArrangement = Arrangement.spacedBy(spacing.md),
-    ) {
-        items(10) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(spacing.sm),
-            ) {
-                Box(Modifier.size(20.dp).clip(JengaTheme.shapes.control).jengaShimmer())
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing.xxs)) {
-                    Box(Modifier.height(14.dp).fillMaxWidth(0.55f).clip(JengaTheme.shapes.control).jengaShimmer())
-                    Box(Modifier.height(11.dp).fillMaxWidth(0.35f).clip(JengaTheme.shapes.control).jengaShimmer())
-                }
-                Box(Modifier.height(12.dp).width(36.dp).clip(JengaTheme.shapes.control).jengaShimmer())
-            }
         }
     }
 }

@@ -33,14 +33,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -386,39 +381,6 @@ private fun CodeResultCard(result: CodeSearchResult, monoFamily: FontFamily, sho
                 )
             }
         }
-    }
-}
-
-private fun highlightedText(line: CodeLine, matchColor: Color): AnnotatedString = buildAnnotatedString {
-    line.segments.forEach { segment ->
-        if (segment.isMatch) {
-            withStyle(SpanStyle(color = matchColor, fontWeight = FontWeight.Bold)) { append(segment.text) }
-        } else {
-            append(segment.text)
-        }
-    }
-}
-
-private fun dedent(lines: List<CodeLine>): List<CodeLine> {
-    if (lines.isEmpty()) return lines
-    val indents = lines.mapNotNull { line ->
-        val text = line.segments.joinToString("") { it.text }
-        if (text.isBlank()) null else text.indexOfFirst { !it.isWhitespace() }.takeIf { it >= 0 }
-    }
-    val trim = indents.minOrNull() ?: 0
-    if (trim == 0) return lines
-    return lines.map { line ->
-        var remaining = trim
-        val trimmed = line.segments.map { segment ->
-            if (remaining <= 0) {
-                segment
-            } else {
-                val drop = minOf(remaining, segment.text.length)
-                remaining -= drop
-                segment.copy(text = segment.text.substring(drop))
-            }
-        }
-        CodeLine(trimmed)
     }
 }
 

@@ -45,3 +45,13 @@ interface PlatypusDependencies {
 val LocalPlatypusDependencies = staticCompositionLocalOf<PlatypusDependencies> {
     error("PlatypusDependencies was not provided. Render the app through PlatypusApp(dependencies).")
 }
+
+/**
+ * Drops transient, session-derived data on sign-out: the persisted inbox snapshot and the in-memory
+ * content/diff caches. The watchlist is intentionally left (it is per-account and survives sign-out).
+ */
+suspend fun PlatypusDependencies.purgeSessionCaches() {
+    inboxCache.clear()
+    repoContentRepository.clearCache()
+    pullRequestRepository.clearCache()
+}

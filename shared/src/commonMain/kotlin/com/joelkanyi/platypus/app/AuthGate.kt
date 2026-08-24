@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,7 +28,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import com.joelkanyi.platypus.domain.model.AuthStatus
 import com.joelkanyi.platypus.feature.auth.signin.AddAccountSheet
 import com.joelkanyi.platypus.feature.auth.signin.SignInScreen
@@ -53,13 +57,15 @@ fun AuthGate() {
 
             AuthStatus.Locked -> LoadingGate()
 
-            AuthStatus.SignedOut -> SignInScreen(
-                authRepository = dependencies.authRepository,
-                oauthDeepLinks = dependencies.oauthDeepLinks,
-                openUrl = dependencies::openUrl,
-            )
+            AuthStatus.SignedOut -> SessionScope {
+                SignInScreen(
+                    authRepository = dependencies.authRepository,
+                    oauthDeepLinks = dependencies.oauthDeepLinks,
+                    openUrl = dependencies::openUrl,
+                )
+            }
 
-            AuthStatus.SignedIn -> {
+            AuthStatus.SignedIn -> SessionScope {
                 PlatypusShell()
                 if (addingAccount) {
                     AddAccountSheet(
@@ -72,6 +78,24 @@ fun AuthGate() {
             }
         }
     }
+}
+
+/**
+ * Binds every [androidx.lifecycle.viewmodel.compose.viewModel] created inside [content] to a
+ * ViewModelStore tied to this auth session. Leaving the branch (a sign-out, or the sign-in flow
+ * completing) clears the store, so no screen keeps another session's state.
+ */
+@Composable
+private fun SessionScope(content: @Composable () -> Unit) {
+    val owner = remember {
+        object : ViewModelStoreOwner {
+            override val viewModelStore = ViewModelStore()
+        }
+    }
+    DisposableEffect(owner) {
+        onDispose { owner.viewModelStore.clear() }
+    }
+    CompositionLocalProvider(LocalViewModelStoreOwner provides owner, content = content)
 }
 
 @Composable

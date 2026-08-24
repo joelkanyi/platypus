@@ -62,7 +62,10 @@ class SignInViewModel(private val authRepository: AuthRepository, private val oa
         viewModelScope.launch {
             _uiState.update { it.copy(isSubmitting = true, error = null) }
             when (val result = authRepository.signInWithApiToken(state.email.trim(), state.apiToken.trim())) {
-                is NetworkResult.Success -> _effects.trySend(SignInUiEffect.SignedIn)
+                is NetworkResult.Success -> {
+                    _uiState.update { it.copy(isSubmitting = false) }
+                    _effects.trySend(SignInUiEffect.SignedIn)
+                }
                 is NetworkResult.Failure -> _uiState.update {
                     it.copy(isSubmitting = false, error = result.userMessage())
                 }
@@ -79,7 +82,10 @@ class SignInViewModel(private val authRepository: AuthRepository, private val oa
         viewModelScope.launch {
             _uiState.update { it.copy(isSubmitting = true, error = null) }
             when (val result = authRepository.completeOAuth(code)) {
-                is NetworkResult.Success -> _effects.trySend(SignInUiEffect.SignedIn)
+                is NetworkResult.Success -> {
+                    _uiState.update { it.copy(isSubmitting = false) }
+                    _effects.trySend(SignInUiEffect.SignedIn)
+                }
                 is NetworkResult.Failure -> _uiState.update {
                     it.copy(isSubmitting = false, error = result.userMessage())
                 }

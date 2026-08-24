@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.joelkanyi.platypus.app.LocalAccountActions
 import com.joelkanyi.platypus.app.LocalPlatypusDependencies
+import com.joelkanyi.platypus.app.purgeSessionCaches
 import com.joelkanyi.platypus.designsystem.PlatypusIcons
 import com.joelkanyi.platypus.designsystem.expand
 import com.joelkanyi.platypus.domain.model.Account
@@ -65,12 +66,17 @@ fun ProfileScreen(onOpenSettings: () -> Unit, modifier: Modifier = Modifier) {
 
     ProfileContent(
         accounts = accounts,
-        onSignOut = { accountId -> scope.launch { dependencies.authRepository.signOut(accountId) } },
+        onSignOut = { accountId ->
+            scope.launch {
+                dependencies.authRepository.signOut(accountId)
+                dependencies.purgeSessionCaches()
+            }
+        },
         onDeleteAccount = { accountId ->
             scope.launch {
                 dependencies.watchlistRepository.clearAccount(accountId)
-                dependencies.inboxCache.clear()
                 dependencies.authRepository.signOut(accountId)
+                dependencies.purgeSessionCaches()
             }
         },
         onManageAtlassian = { dependencies.openUrl(ATLASSIAN_ACCOUNT_URL) },

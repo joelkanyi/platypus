@@ -44,6 +44,12 @@ class DefaultRepoContentRepository(private val authRepository: AuthRepository) :
     private val fileCache = mutableMapOf<String, RepoFile>()
     private val pathsCache = mutableMapOf<String, List<String>>()
 
+    override fun clearCache() {
+        directoryCache.clear()
+        fileCache.clear()
+        pathsCache.clear()
+    }
+
     override suspend fun repository(
         accountId: String,
         workspaceSlug: String,

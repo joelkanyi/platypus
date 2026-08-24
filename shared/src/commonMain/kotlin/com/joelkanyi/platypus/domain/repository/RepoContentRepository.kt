@@ -25,6 +25,9 @@ import com.joelkanyi.platypus.domain.model.RepositoryDetail
 
 interface RepoContentRepository {
 
+    /** Drops all in-memory cached tree/file/path data. Call on sign-out so no session's content lingers. */
+    fun clearCache()
+
     suspend fun repository(accountId: String, workspaceSlug: String, repoSlug: String): NetworkResult<RepositoryDetail>
 
     suspend fun directory(

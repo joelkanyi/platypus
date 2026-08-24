@@ -37,4 +37,6 @@ interface WatchlistRepository {
     suspend fun watch(accountId: String, repo: Repository)
 
     suspend fun unwatch(accountId: String, workspaceSlug: String, repoSlug: String)
+
+    suspend fun clearAccount(accountId: String)
 }

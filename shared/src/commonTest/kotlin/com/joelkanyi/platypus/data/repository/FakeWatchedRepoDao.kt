@@ -44,6 +44,10 @@ class FakeWatchedRepoDao : WatchedRepoDao {
         }
     }
 
+    override suspend fun deleteByAccount(accountId: String) {
+        rows.update { current -> current.filterNot { it.accountId == accountId } }
+    }
+
     private fun WatchedRepoEntity.sameKeyAs(other: WatchedRepoEntity): Boolean =
         accountId == other.accountId && workspaceSlug == other.workspaceSlug && repoSlug == other.repoSlug
 }

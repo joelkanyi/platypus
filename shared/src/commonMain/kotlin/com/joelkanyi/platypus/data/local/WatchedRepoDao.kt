@@ -37,4 +37,7 @@ interface WatchedRepoDao {
             "WHERE accountId = :accountId AND workspaceSlug = :workspaceSlug AND repoSlug = :repoSlug",
     )
     suspend fun delete(accountId: String, workspaceSlug: String, repoSlug: String)
+
+    @Query("DELETE FROM watched_repos WHERE accountId = :accountId")
+    suspend fun deleteByAccount(accountId: String)
 }

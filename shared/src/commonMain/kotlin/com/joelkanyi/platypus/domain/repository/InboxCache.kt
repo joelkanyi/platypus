@@ -23,4 +23,6 @@ interface InboxCache {
     suspend fun load(): CachedInbox?
 
     suspend fun save(pullRequests: List<PullRequest>, updatedAtEpochMs: Long)
+
+    suspend fun clear()
 }

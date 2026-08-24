@@ -94,6 +94,15 @@ room {
     schemaDirectory("$projectDir/schemas")
 }
 
+// Run with -PcomposeReports=true to emit Compose stability/recomposition reports under build/compose_reports.
+composeCompiler {
+    if (providers.gradleProperty("composeReports").orNull == "true") {
+        val reports = layout.buildDirectory.dir("compose_reports")
+        reportsDestination.set(reports)
+        metricsDestination.set(reports)
+    }
+}
+
 dependencies {
     add("kspAndroid", libs.room.compiler)
     add("kspIosArm64", libs.room.compiler)

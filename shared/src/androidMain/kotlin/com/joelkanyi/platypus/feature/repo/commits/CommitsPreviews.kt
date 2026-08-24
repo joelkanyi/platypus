@@ -49,6 +49,81 @@ private fun CommitsContentPreview() {
 
 @PlatypusThemePreviews
 @Composable
+private fun CommitsLoadingPreview() {
+    PlatypusPreview {
+        CommitsContent(
+            ref = "main",
+            state = CommitsUiState(isLoading = true),
+            onBack = {},
+            onRetry = {},
+            onLoadMore = {},
+            onOpenCommit = {},
+        )
+    }
+}
+
+@PlatypusThemePreviews
+@Composable
+private fun CommitsEmptyPreview() {
+    PlatypusPreview {
+        CommitsContent(
+            ref = "main",
+            state = CommitsUiState(isLoading = false, commits = emptyList()),
+            onBack = {},
+            onRetry = {},
+            onLoadMore = {},
+            onOpenCommit = {},
+        )
+    }
+}
+
+@PlatypusThemePreviews
+@Composable
+private fun CommitsErrorPreview() {
+    PlatypusPreview {
+        CommitsContent(
+            ref = "main",
+            state = CommitsUiState(isLoading = false, error = "Network unavailable", commits = emptyList()),
+            onBack = {},
+            onRetry = {},
+            onLoadMore = {},
+            onOpenCommit = {},
+        )
+    }
+}
+
+@PlatypusThemePreviews
+@Composable
+private fun CommitDetailLoadingPreview() {
+    PlatypusPreview {
+        CommitDetailContent(
+            shortHash = "a1b2c3d",
+            state = CommitDetailUiState(isLoading = true, detail = null),
+            wrap = false,
+            fontSize = 13.sp,
+            onBack = {},
+            onRetry = {},
+        )
+    }
+}
+
+@PlatypusThemePreviews
+@Composable
+private fun CommitDetailErrorPreview() {
+    PlatypusPreview {
+        CommitDetailContent(
+            shortHash = "a1b2c3d",
+            state = CommitDetailUiState(isLoading = false, error = "Couldn't reach Bitbucket", detail = null),
+            wrap = false,
+            fontSize = 13.sp,
+            onBack = {},
+            onRetry = {},
+        )
+    }
+}
+
+@PlatypusThemePreviews
+@Composable
 private fun CommitDetailContentPreview() {
     PlatypusPreview {
         CommitDetailContent(

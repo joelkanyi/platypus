@@ -13,19 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.joelkanyi.platypus.data.auth
+package com.joelkanyi.platypus.domain.repository
 
-import com.joelkanyi.platypus.domain.model.BitbucketUser
-import com.joelkanyi.platypus.domain.model.Credential
+interface Biometrics {
+    suspend fun isAvailable(): Boolean
 
-data class StoredAccount(val id: String, val user: BitbucketUser, val credential: Credential)
+    suspend fun authenticate(reason: String): Boolean
+}
 
-interface AccountStore {
-    suspend fun read(): List<StoredAccount>
+object NoopBiometrics : Biometrics {
+    override suspend fun isAvailable(): Boolean = false
 
-    suspend fun upsert(account: StoredAccount)
-
-    suspend fun remove(id: String)
-
-    suspend fun clear()
+    override suspend fun authenticate(reason: String): Boolean = true
 }

@@ -13,10 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.joelkanyi.platypus.data.auth
+package com.joelkanyi.platypus.domain.model
 
-import androidx.fragment.app.FragmentActivity
-
-object PlatypusActivityHolder {
-    var activity: FragmentActivity? = null
+data class AuthConfig(
+    val backendBaseUrl: String,
+    val oauthClientId: String,
+    val redirectUri: String,
+    val authorizeEndpoint: String = "https://bitbucket.org/site/oauth2/authorize",
+) {
+    val isOAuthConfigured: Boolean
+        get() = oauthClientId.isNotBlank() && backendBaseUrl.isNotBlank()
 }

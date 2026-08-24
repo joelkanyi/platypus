@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.joelkanyi.platypus.data.auth
+package com.joelkanyi.platypus.data.repository
 
 import com.joelkanyi.platypus.domain.model.BitbucketUser
 import com.joelkanyi.platypus.domain.model.Credential
+import com.joelkanyi.platypus.domain.model.StoredAccount
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

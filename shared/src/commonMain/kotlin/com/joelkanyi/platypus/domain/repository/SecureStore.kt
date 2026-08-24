@@ -13,20 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.joelkanyi.platypus.data.auth.dto
+package com.joelkanyi.platypus.domain.repository
 
-import kotlinx.serialization.Serializable
+interface SecureStore {
+    suspend fun get(key: String): String?
 
-@Serializable
-data class ExchangeRequestDto(val code: String, val redirectUri: String? = null)
+    suspend fun set(key: String, value: String)
 
-@Serializable
-data class RefreshRequestDto(val refreshToken: String)
-
-@Serializable
-data class TokenResponseDto(
-    val accessToken: String,
-    val refreshToken: String? = null,
-    val expiresIn: Long = 0,
-    val scopes: String? = null,
-)
+    suspend fun remove(key: String)
+}

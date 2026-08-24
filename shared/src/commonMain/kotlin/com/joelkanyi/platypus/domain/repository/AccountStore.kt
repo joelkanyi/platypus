@@ -13,14 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.joelkanyi.platypus.data.auth
+package com.joelkanyi.platypus.domain.repository
 
-data class AuthConfig(
-    val backendBaseUrl: String,
-    val oauthClientId: String,
-    val redirectUri: String,
-    val authorizeEndpoint: String = "https://bitbucket.org/site/oauth2/authorize",
-) {
-    val isOAuthConfigured: Boolean
-        get() = oauthClientId.isNotBlank() && backendBaseUrl.isNotBlank()
+import com.joelkanyi.platypus.domain.model.StoredAccount
+
+interface AccountStore {
+    suspend fun read(): List<StoredAccount>
+
+    suspend fun upsert(account: StoredAccount)
+
+    suspend fun remove(id: String)
+
+    suspend fun clear()
 }

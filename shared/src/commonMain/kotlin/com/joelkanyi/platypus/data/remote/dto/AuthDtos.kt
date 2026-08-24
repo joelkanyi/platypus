@@ -13,10 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.joelkanyi.platypus.data.auth
+package com.joelkanyi.platypus.data.remote.dto
 
-import com.joelkanyi.platypus.data.remote.createHttpClient
-import com.joelkanyi.platypus.domain.repository.AuthRepository
+import kotlinx.serialization.Serializable
 
-fun createAuthRepository(config: AuthConfig, accountStore: AccountStore): AuthRepository =
-    DefaultAuthRepository(config, accountStore, baseClientFactory = { createHttpClient() })
+@Serializable
+data class ExchangeRequestDto(val code: String, val redirectUri: String? = null)
+
+@Serializable
+data class RefreshRequestDto(val refreshToken: String)
+
+@Serializable
+data class TokenResponseDto(
+    val accessToken: String,
+    val refreshToken: String? = null,
+    val expiresIn: Long = 0,
+    val scopes: String? = null,
+)

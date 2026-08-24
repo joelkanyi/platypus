@@ -15,9 +15,9 @@
  */
 package com.joelkanyi.platypus.data.repository
 
-import com.joelkanyi.platypus.data.auth.SecureStore
 import com.joelkanyi.platypus.domain.model.PrRelationship
 import com.joelkanyi.platypus.domain.model.PullRequest
+import com.joelkanyi.platypus.domain.repository.SecureStore
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals

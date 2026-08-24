@@ -13,14 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.joelkanyi.platypus.data.auth
+package com.joelkanyi.platypus.data.repository
 
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.data.remote.PlatypusJson
+import com.joelkanyi.platypus.domain.model.AuthConfig
 import com.joelkanyi.platypus.domain.model.AuthMode
 import com.joelkanyi.platypus.domain.model.AuthStatus
 import com.joelkanyi.platypus.domain.model.BitbucketUser
 import com.joelkanyi.platypus.domain.model.Credential
+import com.joelkanyi.platypus.domain.model.StoredAccount
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandler

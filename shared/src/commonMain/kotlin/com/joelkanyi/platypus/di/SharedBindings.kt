@@ -15,12 +15,12 @@
  */
 package com.joelkanyi.platypus.di
 
-import com.joelkanyi.platypus.data.auth.AccountStore
-import com.joelkanyi.platypus.data.auth.AuthConfig
-import com.joelkanyi.platypus.data.auth.PlatypusConfig
-import com.joelkanyi.platypus.data.auth.createAuthRepository
+import com.joelkanyi.platypus.app.PlatypusConfig
 import com.joelkanyi.platypus.data.local.PlatypusDatabase
 import com.joelkanyi.platypus.data.local.WatchedRepoDao
+import com.joelkanyi.platypus.data.repository.createAuthRepository
+import com.joelkanyi.platypus.domain.model.AuthConfig
+import com.joelkanyi.platypus.domain.repository.AccountStore
 import com.joelkanyi.platypus.domain.repository.AuthRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer

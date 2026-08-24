@@ -32,11 +32,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.joelkanyi.platypus.app.LocalPlatypusDependencies
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.userMessage
-import com.joelkanyi.platypus.designsystem.PlatypusCommitRow
 import com.joelkanyi.platypus.designsystem.PlatypusListRowSkeleton
 import com.joelkanyi.platypus.designsystem.expand
 import com.joelkanyi.platypus.domain.model.Commit
 import com.joelkanyi.platypus.domain.repository.RepoContentRepository
+import com.joelkanyi.platypus.ui.PlatypusCommitRow
 import io.github.joelkanyi.jenga.component.button.JengaButton
 import io.github.joelkanyi.jenga.component.button.JengaButtonVariant
 import io.github.joelkanyi.jenga.component.button.JengaIconButton

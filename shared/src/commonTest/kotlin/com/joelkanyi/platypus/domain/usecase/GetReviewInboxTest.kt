@@ -16,6 +16,7 @@
 package com.joelkanyi.platypus.domain.usecase
 
 import com.joelkanyi.platypus.data.remote.PlatypusJson
+import com.joelkanyi.platypus.data.repository.DefaultPullRequestRepository
 import com.joelkanyi.platypus.data.repository.FakeAuthRepository
 import com.joelkanyi.platypus.data.repository.FakeWatchlistRepository
 import com.joelkanyi.platypus.domain.model.Account
@@ -75,11 +76,13 @@ class GetReviewInboxTest {
     @Test
     fun aggregatesTagsAndSortsByUpdatedDescending() = runTest {
         val useCase = GetReviewInbox(
-            authRepository = FakeAuthRepository(
-                client = client { respond(PR_PAGE, HttpStatusCode.OK, jsonHeaders) },
-                accounts = listOf(account),
-            ),
             watchlistRepository = FakeWatchlistRepository(listOf(watched)),
+            pullRequestRepository = DefaultPullRequestRepository(
+                FakeAuthRepository(
+                    client = client { respond(PR_PAGE, HttpStatusCode.OK, jsonHeaders) },
+                    accounts = listOf(account),
+                ),
+            ),
         )
 
         val inbox = useCase()
@@ -94,8 +97,10 @@ class GetReviewInboxTest {
     @Test
     fun reportsPerSourceFailureWhenAccountSignedOut() = runTest {
         val useCase = GetReviewInbox(
-            authRepository = FakeAuthRepository(client = null, accounts = listOf(account)),
             watchlistRepository = FakeWatchlistRepository(listOf(watched)),
+            pullRequestRepository = DefaultPullRequestRepository(
+                FakeAuthRepository(client = null, accounts = listOf(account)),
+            ),
         )
 
         val inbox = useCase()

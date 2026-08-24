@@ -18,9 +18,9 @@ package com.joelkanyi.platypus.di
 import android.content.Context
 import android.content.Intent
 import androidx.core.net.toUri
+import com.joelkanyi.platypus.app.OAuthDeepLinks
 import com.joelkanyi.platypus.app.PlatypusDependencies
 import com.joelkanyi.platypus.data.auth.Biometrics
-import com.joelkanyi.platypus.data.auth.OAuthDeepLinks
 import com.joelkanyi.platypus.domain.repository.AuthRepository
 import com.joelkanyi.platypus.domain.repository.InboxCache
 import com.joelkanyi.platypus.domain.repository.PipelineRepository

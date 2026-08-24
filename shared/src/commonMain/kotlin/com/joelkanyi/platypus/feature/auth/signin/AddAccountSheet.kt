@@ -29,7 +29,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.joelkanyi.platypus.data.auth.OAuthDeepLinks
+import com.joelkanyi.platypus.app.OAuthDeepLinks
 import com.joelkanyi.platypus.domain.repository.AuthRepository
 import io.github.joelkanyi.jenga.component.button.JengaButton
 import io.github.joelkanyi.jenga.component.button.JengaButtonVariant

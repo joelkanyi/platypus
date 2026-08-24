@@ -45,10 +45,10 @@ import com.joelkanyi.platypus.core.result.userMessage
 import com.joelkanyi.platypus.designsystem.PlatypusDiffView
 import com.joelkanyi.platypus.designsystem.PlatypusMarkdown
 import com.joelkanyi.platypus.designsystem.parseDiffRows
-import com.joelkanyi.platypus.designsystem.toSp
 import com.joelkanyi.platypus.domain.model.PrComment
 import com.joelkanyi.platypus.domain.model.PrDiffFile
 import com.joelkanyi.platypus.domain.repository.PullRequestRepository
+import com.joelkanyi.platypus.ui.toSp
 import io.github.joelkanyi.jenga.component.avatar.JengaAvatar
 import io.github.joelkanyi.jenga.component.avatar.JengaAvatarSize
 import io.github.joelkanyi.jenga.component.button.JengaButton

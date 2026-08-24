@@ -15,9 +15,9 @@
  */
 package com.joelkanyi.platypus.di
 
+import com.joelkanyi.platypus.app.OAuthDeepLinks
 import com.joelkanyi.platypus.data.auth.Biometrics
 import com.joelkanyi.platypus.data.auth.IosBiometrics
-import com.joelkanyi.platypus.data.auth.OAuthDeepLinks
 import com.joelkanyi.platypus.data.local.PlatypusDatabase
 import com.joelkanyi.platypus.data.local.createPlatypusDatabase
 import com.joelkanyi.platypus.data.local.platypusDatabaseBuilder

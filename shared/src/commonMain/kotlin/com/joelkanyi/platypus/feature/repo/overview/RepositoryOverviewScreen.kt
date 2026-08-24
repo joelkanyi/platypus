@@ -43,7 +43,7 @@ import com.joelkanyi.platypus.designsystem.formatByteSize
 import com.joelkanyi.platypus.domain.model.RepositoryDetail
 import com.joelkanyi.platypus.domain.model.SrcEntryType
 import com.joelkanyi.platypus.domain.repository.RepoContentRepository
-import com.joelkanyi.platypus.feature.repo.branches.BranchesSheet
+import com.joelkanyi.platypus.ui.BranchesSheet
 import io.github.joelkanyi.jenga.component.button.JengaIconButton
 import io.github.joelkanyi.jenga.component.card.JengaCard
 import io.github.joelkanyi.jenga.component.chip.JengaChip

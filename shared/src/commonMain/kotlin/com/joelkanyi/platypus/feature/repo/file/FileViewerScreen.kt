@@ -51,11 +51,11 @@ import com.joelkanyi.platypus.designsystem.PlatypusMarkdown
 import com.joelkanyi.platypus.designsystem.crumbsFor
 import com.joelkanyi.platypus.designsystem.highlightLine
 import com.joelkanyi.platypus.designsystem.rememberSyntaxColors
-import com.joelkanyi.platypus.designsystem.toSp
 import com.joelkanyi.platypus.domain.model.RepoFile
 import com.joelkanyi.platypus.domain.repository.RepoContentRepository
 import com.joelkanyi.platypus.syntax.highlighterFor
 import com.joelkanyi.platypus.syntax.outlineOf
+import com.joelkanyi.platypus.ui.toSp
 import io.github.joelkanyi.jenga.component.button.JengaIconButton
 import io.github.joelkanyi.jenga.component.feedback.JengaBottomSheet
 import io.github.joelkanyi.jenga.component.icon.JengaIcon

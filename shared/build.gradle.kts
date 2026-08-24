@@ -78,6 +78,9 @@ kotlin {
             implementation(libs.turbine)
             implementation(libs.ktor.client.mock)
         }
+        getByName("androidHostTest").dependencies {
+            implementation(libs.konsist)
+        }
     }
 }
 

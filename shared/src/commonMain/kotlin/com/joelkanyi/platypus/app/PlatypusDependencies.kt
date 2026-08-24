@@ -17,7 +17,6 @@ package com.joelkanyi.platypus.app
 
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.joelkanyi.platypus.data.auth.Biometrics
-import com.joelkanyi.platypus.data.auth.OAuthDeepLinks
 import com.joelkanyi.platypus.domain.repository.AuthRepository
 import com.joelkanyi.platypus.domain.repository.InboxCache
 import com.joelkanyi.platypus.domain.repository.PipelineRepository

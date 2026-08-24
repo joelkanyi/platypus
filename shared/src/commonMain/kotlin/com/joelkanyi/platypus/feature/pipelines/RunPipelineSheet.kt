@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.dp
 import com.joelkanyi.platypus.domain.model.PipelineTriggerRequest
 import com.joelkanyi.platypus.domain.model.PipelineVariable
 import com.joelkanyi.platypus.domain.model.RefType
-import com.joelkanyi.platypus.feature.repo.branches.BranchesSheet
+import com.joelkanyi.platypus.ui.BranchesSheet
 import io.github.joelkanyi.jenga.component.button.JengaButton
 import io.github.joelkanyi.jenga.component.button.JengaButtonVariant
 import io.github.joelkanyi.jenga.component.button.JengaIconButton

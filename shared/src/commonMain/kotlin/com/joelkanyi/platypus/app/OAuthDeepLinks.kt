@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.joelkanyi.platypus.data.auth
+package com.joelkanyi.platypus.app
 
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject

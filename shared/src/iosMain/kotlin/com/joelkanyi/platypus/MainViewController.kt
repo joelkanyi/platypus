@@ -16,10 +16,10 @@
 package com.joelkanyi.platypus
 
 import androidx.compose.ui.window.ComposeUIViewController
+import com.joelkanyi.platypus.app.OAuthDeepLinks
 import com.joelkanyi.platypus.app.PlatypusApp
 import com.joelkanyi.platypus.app.PlatypusDependencies
 import com.joelkanyi.platypus.data.auth.Biometrics
-import com.joelkanyi.platypus.data.auth.OAuthDeepLinks
 import com.joelkanyi.platypus.di.IosAppGraph
 import com.joelkanyi.platypus.domain.repository.AuthRepository
 import com.joelkanyi.platypus.domain.repository.InboxCache

@@ -37,9 +37,9 @@ import com.joelkanyi.platypus.designsystem.PlatypusDiffView
 import com.joelkanyi.platypus.designsystem.PlatypusListRowSkeleton
 import com.joelkanyi.platypus.designsystem.PlatypusSkeletonLine
 import com.joelkanyi.platypus.designsystem.parseDiffRows
-import com.joelkanyi.platypus.designsystem.toSp
 import com.joelkanyi.platypus.domain.model.CommitDetail
 import com.joelkanyi.platypus.domain.repository.RepoContentRepository
+import com.joelkanyi.platypus.ui.toSp
 import io.github.joelkanyi.jenga.component.button.JengaIconButton
 import io.github.joelkanyi.jenga.component.card.JengaCard
 import io.github.joelkanyi.jenga.component.icon.JengaIcon

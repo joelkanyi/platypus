@@ -42,7 +42,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.joelkanyi.platypus.data.auth.OAuthDeepLinks
+import com.joelkanyi.platypus.app.OAuthDeepLinks
 import com.joelkanyi.platypus.designsystem.expand
 import com.joelkanyi.platypus.domain.repository.AuthRepository
 import io.github.joelkanyi.jenga.component.button.JengaButton

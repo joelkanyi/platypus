@@ -2,4 +2,11 @@
 <resources>
     <!-- Window chrome only; all real UI is Compose + Jenga. -->
     <style name="Theme.Platypus" parent="@android:style/Theme.Material.Light.NoActionBar" />
+
+    <!-- Branded cold-start splash: platypus mark on the terracotta brand tile. -->
+    <style name="Theme.Platypus.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/ic_launcher_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.Platypus</item>
+    </style>
 </resources>

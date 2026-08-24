@@ -24,6 +24,11 @@ android {
         versionCode = 1
         versionName = "0.0.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        resValue("string", "app_name", "Platypus")
+    }
+
+    buildFeatures {
+        resValues = true
     }
 
     signingConfigs {
@@ -47,6 +52,10 @@ android {
         val hasKeystore = releaseSigning.storeFile != null
 
         getByName("debug") {
+            // Distinct applicationId + label so a debug build installs alongside release on one device.
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+            resValue("string", "app_name", "Platypus Debug")
             // Use the same signing identity as release when a keystore is configured, so debug and
             // release builds share one signature; fall back to the auto debug keystore otherwise.
             if (hasKeystore) signingConfig = releaseSigning

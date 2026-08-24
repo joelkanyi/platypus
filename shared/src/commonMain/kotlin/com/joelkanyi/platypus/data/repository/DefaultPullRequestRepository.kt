@@ -44,6 +44,10 @@ class DefaultPullRequestRepository(private val authRepository: AuthRepository) :
 
     private val diffCache = mutableMapOf<String, PrDiff>()
 
+    override fun clearCache() {
+        diffCache.clear()
+    }
+
     override suspend fun pullRequests(
         accountId: String,
         workspaceSlug: String,

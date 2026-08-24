@@ -26,6 +26,9 @@ import com.joelkanyi.platypus.domain.model.PullRequestDetail
 
 interface PullRequestRepository {
 
+    /** Drops the in-memory diff cache. Call on sign-out so no session's diffs linger. */
+    fun clearCache()
+
     suspend fun pullRequests(
         accountId: String,
         workspaceSlug: String,

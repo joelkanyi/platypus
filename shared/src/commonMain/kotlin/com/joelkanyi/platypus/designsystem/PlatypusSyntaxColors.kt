@@ -23,9 +23,9 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import com.joelkanyi.platypus.syntax.LineHighlighter
-import com.joelkanyi.platypus.syntax.SyntaxPalette
-import com.joelkanyi.platypus.syntax.TokenRole
+import com.joelkanyi.platypus.core.syntax.LineHighlighter
+import com.joelkanyi.platypus.core.syntax.SyntaxPalette
+import com.joelkanyi.platypus.core.syntax.TokenRole
 import io.github.joelkanyi.jenga.theme.JengaTheme
 
 @Immutable

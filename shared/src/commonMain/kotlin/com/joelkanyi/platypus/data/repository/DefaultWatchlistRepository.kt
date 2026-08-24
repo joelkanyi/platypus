@@ -21,8 +21,8 @@ import com.joelkanyi.platypus.data.local.WatchedRepoDao
 import com.joelkanyi.platypus.data.local.toDomain
 import com.joelkanyi.platypus.data.local.toEntity
 import com.joelkanyi.platypus.data.remote.api.RepositoriesApi
-import com.joelkanyi.platypus.data.remote.ktorErrorMapper
 import com.joelkanyi.platypus.data.remote.mapper.toDomain
+import com.joelkanyi.platypus.data.remote.network.ktorErrorMapper
 import com.joelkanyi.platypus.domain.model.Repository
 import com.joelkanyi.platypus.domain.model.RepositoryPage
 import com.joelkanyi.platypus.domain.model.WatchedRepo

@@ -18,10 +18,10 @@ package com.joelkanyi.platypus.data.repository
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.safeApiCall
 import com.joelkanyi.platypus.data.remote.api.PullRequestsApi
-import com.joelkanyi.platypus.data.remote.ktorErrorMapper
 import com.joelkanyi.platypus.data.remote.mapper.parsePrDiff
 import com.joelkanyi.platypus.data.remote.mapper.toDetail
 import com.joelkanyi.platypus.data.remote.mapper.toDomain
+import com.joelkanyi.platypus.data.remote.network.ktorErrorMapper
 import com.joelkanyi.platypus.domain.model.ActivityItem
 import com.joelkanyi.platypus.domain.model.Commit
 import com.joelkanyi.platypus.domain.model.MergeStrategy

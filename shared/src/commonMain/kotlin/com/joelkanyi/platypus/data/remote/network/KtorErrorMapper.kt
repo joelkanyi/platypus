@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.joelkanyi.platypus.data.remote
+package com.joelkanyi.platypus.data.remote.network
 
 import com.joelkanyi.platypus.core.result.NetworkResult
 import io.ktor.client.network.sockets.ConnectTimeoutException

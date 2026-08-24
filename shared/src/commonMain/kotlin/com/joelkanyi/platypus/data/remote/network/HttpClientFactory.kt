@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.joelkanyi.platypus.data.remote
+package com.joelkanyi.platypus.data.remote.network
 
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout

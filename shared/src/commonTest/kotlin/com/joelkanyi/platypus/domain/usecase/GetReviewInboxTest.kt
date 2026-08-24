@@ -15,7 +15,7 @@
  */
 package com.joelkanyi.platypus.domain.usecase
 
-import com.joelkanyi.platypus.data.remote.PlatypusJson
+import com.joelkanyi.platypus.data.remote.network.PlatypusJson
 import com.joelkanyi.platypus.data.repository.DefaultPullRequestRepository
 import com.joelkanyi.platypus.data.repository.FakeAuthRepository
 import com.joelkanyi.platypus.data.repository.FakeWatchlistRepository

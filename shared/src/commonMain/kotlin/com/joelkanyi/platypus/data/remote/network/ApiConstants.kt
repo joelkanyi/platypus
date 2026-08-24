@@ -13,12 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.joelkanyi.platypus.data.remote
+package com.joelkanyi.platypus.data.remote.network
 
-import kotlinx.serialization.json.Json
-
-val PlatypusJson: Json = Json {
-    ignoreUnknownKeys = true
-    coerceInputValues = true
-    explicitNulls = false
-}
+const val BITBUCKET_API_BASE = "https://api.bitbucket.org/2.0"

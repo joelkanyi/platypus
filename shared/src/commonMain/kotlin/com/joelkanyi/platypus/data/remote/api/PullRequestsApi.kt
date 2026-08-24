@@ -15,7 +15,6 @@
  */
 package com.joelkanyi.platypus.data.remote.api
 
-import com.joelkanyi.platypus.data.remote.BITBUCKET_API_BASE
 import com.joelkanyi.platypus.data.remote.dto.ActivityDto
 import com.joelkanyi.platypus.data.remote.dto.CommentContentDto
 import com.joelkanyi.platypus.data.remote.dto.CommentDto
@@ -27,6 +26,7 @@ import com.joelkanyi.platypus.data.remote.dto.DiffStatEntryDto
 import com.joelkanyi.platypus.data.remote.dto.MergeRequestDto
 import com.joelkanyi.platypus.data.remote.dto.PageDto
 import com.joelkanyi.platypus.data.remote.dto.PullRequestDto
+import com.joelkanyi.platypus.data.remote.network.BITBUCKET_API_BASE
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete

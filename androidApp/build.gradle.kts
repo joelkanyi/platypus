@@ -22,13 +22,33 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
-        versionName = "1.0"
+        versionName = "0.0.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            val keystorePath = providers.gradleProperty("PLATYPUS_KEYSTORE_FILE").orNull
+                ?: System.getenv("PLATYPUS_KEYSTORE_FILE")
+            if (keystorePath != null) {
+                storeFile = file(keystorePath)
+                storePassword = providers.gradleProperty("PLATYPUS_KEYSTORE_PASSWORD").orNull
+                    ?: System.getenv("PLATYPUS_KEYSTORE_PASSWORD")
+                keyAlias = providers.gradleProperty("PLATYPUS_KEY_ALIAS").orNull
+                    ?: System.getenv("PLATYPUS_KEY_ALIAS")
+                keyPassword = providers.gradleProperty("PLATYPUS_KEY_PASSWORD").orNull
+                    ?: System.getenv("PLATYPUS_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            val releaseSigning = signingConfigs.getByName("release")
+            signingConfig = if (releaseSigning.storeFile != null) releaseSigning else signingConfigs.getByName("debug")
         }
     }
 

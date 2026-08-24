@@ -28,7 +28,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,25 +38,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.joelkanyi.platypus.app.LocalPlatypusDependencies
-import com.joelkanyi.platypus.core.result.NetworkResult
-import com.joelkanyi.platypus.core.result.userMessage
 import com.joelkanyi.platypus.designsystem.expand
 import com.joelkanyi.platypus.designsystem.formatDuration
 import com.joelkanyi.platypus.designsystem.relativeTime
 import com.joelkanyi.platypus.designsystem.shortDate
-import com.joelkanyi.platypus.domain.model.AccountId
 import com.joelkanyi.platypus.domain.model.Pipeline
 import com.joelkanyi.platypus.domain.model.PipelineStep
-import com.joelkanyi.platypus.domain.model.RepoRef
-import com.joelkanyi.platypus.domain.model.RepoSlug
-import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import com.joelkanyi.platypus.domain.model.rerunRequest
-import com.joelkanyi.platypus.domain.repository.PipelineRepository
 import io.github.joelkanyi.jenga.component.avatar.JengaAvatar
 import io.github.joelkanyi.jenga.component.avatar.JengaAvatarSize
 import io.github.joelkanyi.jenga.component.button.JengaButton
@@ -74,122 +64,6 @@ import io.github.joelkanyi.jenga.component.scaffold.JengaTopAppBar
 import io.github.joelkanyi.jenga.component.state.JengaErrorState
 import io.github.joelkanyi.jenga.component.text.JengaText
 import io.github.joelkanyi.jenga.theme.JengaTheme
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-
-@Immutable
-data class PipelineDetailUiState(
-    val isLoading: Boolean = true,
-    val error: String? = null,
-    val pipeline: Pipeline? = null,
-    val steps: List<PipelineStep> = emptyList(),
-    val actionInProgress: Boolean = false,
-    val actionError: String? = null,
-)
-
-class PipelineDetailViewModel(
-    private val repository: PipelineRepository,
-    private val accountId: String,
-    private val workspace: String,
-    private val repoSlug: String,
-    private val pipelineUuid: String,
-) : ViewModel() {
-
-    private val repoRef = RepoRef(AccountId(accountId), WorkspaceSlug(workspace), RepoSlug(repoSlug))
-
-    private val _uiState = MutableStateFlow(PipelineDetailUiState())
-    val uiState: StateFlow<PipelineDetailUiState> = _uiState.asStateFlow()
-
-    init {
-        load()
-        poll()
-    }
-
-    fun retry() = load()
-
-    fun clearActionError() = _uiState.update { it.copy(actionError = null) }
-
-    fun stop() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(actionInProgress = true, actionError = null) }
-            when (val result = repository.stop(repoRef, pipelineUuid)) {
-                is NetworkResult.Success -> {
-                    _uiState.update { it.copy(actionInProgress = false) }
-                    load()
-                }
-                is NetworkResult.Failure ->
-                    _uiState.update { it.copy(actionInProgress = false, actionError = result.userMessage()) }
-            }
-        }
-    }
-
-    fun rerun(onTriggered: (Pipeline) -> Unit) {
-        val request = _uiState.value.pipeline?.rerunRequest() ?: return
-        viewModelScope.launch {
-            _uiState.update { it.copy(actionInProgress = true, actionError = null) }
-            when (val result = repository.trigger(repoRef, request)) {
-                is NetworkResult.Success -> {
-                    _uiState.update { it.copy(actionInProgress = false) }
-                    onTriggered(result.data)
-                }
-                is NetworkResult.Failure ->
-                    _uiState.update { it.copy(actionInProgress = false, actionError = result.userMessage()) }
-            }
-        }
-    }
-
-    private fun poll() {
-        viewModelScope.launch {
-            while (true) {
-                delay(POLL_MS)
-                val state = _uiState.value
-                if (!state.isLoading && !state.actionInProgress && state.pipeline?.status?.isRunning == true) {
-                    silentReload()
-                }
-            }
-        }
-    }
-
-    private suspend fun silentReload() {
-        val pipeline = repository.pipeline(repoRef, pipelineUuid)
-        if (pipeline is NetworkResult.Success) {
-            _uiState.update { if (it.pipeline == pipeline.data) it else it.copy(pipeline = pipeline.data) }
-        }
-        val steps = repository.steps(repoRef, pipelineUuid)
-        if (steps is NetworkResult.Success) {
-            _uiState.update { if (it.steps == steps.data) it else it.copy(steps = steps.data) }
-        }
-    }
-
-    private fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
-            when (val result = repository.pipeline(repoRef, pipelineUuid)) {
-                is NetworkResult.Success -> {
-                    _uiState.update { it.copy(isLoading = false, pipeline = result.data) }
-                    loadSteps()
-                }
-                is NetworkResult.Failure ->
-                    _uiState.update { it.copy(isLoading = false, error = result.userMessage()) }
-            }
-        }
-    }
-
-    private fun loadSteps() {
-        viewModelScope.launch {
-            val result = repository.steps(repoRef, pipelineUuid)
-            if (result is NetworkResult.Success) _uiState.update { it.copy(steps = result.data) }
-        }
-    }
-
-    private companion object {
-        const val POLL_MS = 10_000L
-    }
-}
 
 @Composable
 fun PipelineDetailScreen(

@@ -78,4 +78,15 @@ class DependencyDirectionTest {
             }
         }
     }
+
+    @Test
+    fun `the navigation shell assembles feature entries and never imports feature screens`() {
+        inLayer("navigation").assertFalse(
+            testName = "navigation must call each feature's entry provider, not import its screens",
+        ) { file ->
+            file.imports.any { import ->
+                import.name.startsWith("$root.feature.") && import.name.substringAfterLast('.').endsWith("Screen")
+            }
+        }
+    }
 }

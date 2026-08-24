@@ -43,12 +43,19 @@ android {
     }
 
     buildTypes {
+        val releaseSigning = signingConfigs.getByName("release")
+        val hasKeystore = releaseSigning.storeFile != null
+
+        getByName("debug") {
+            // Use the same signing identity as release when a keystore is configured, so debug and
+            // release builds share one signature; fall back to the auto debug keystore otherwise.
+            if (hasKeystore) signingConfig = releaseSigning
+        }
         getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            val releaseSigning = signingConfigs.getByName("release")
-            signingConfig = if (releaseSigning.storeFile != null) releaseSigning else signingConfigs.getByName("debug")
+            signingConfig = if (hasKeystore) releaseSigning else signingConfigs.getByName("debug")
         }
     }
 

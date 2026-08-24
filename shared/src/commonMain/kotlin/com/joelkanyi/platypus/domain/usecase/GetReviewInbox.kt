@@ -17,9 +17,13 @@ package com.joelkanyi.platypus.domain.usecase
 
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.userMessage
+import com.joelkanyi.platypus.domain.model.AccountId
 import com.joelkanyi.platypus.domain.model.InboxSourceFailure
 import com.joelkanyi.platypus.domain.model.PullRequest
+import com.joelkanyi.platypus.domain.model.RepoRef
+import com.joelkanyi.platypus.domain.model.RepoSlug
 import com.joelkanyi.platypus.domain.model.ReviewInbox
+import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import com.joelkanyi.platypus.domain.repository.PullRequestRepository
 import com.joelkanyi.platypus.domain.repository.WatchlistRepository
 import kotlinx.coroutines.flow.first
@@ -37,9 +41,7 @@ class GetReviewInbox(
 
         for (repo in watched) {
             val result = pullRequestRepository.pullRequests(
-                accountId = repo.accountId,
-                workspaceSlug = repo.workspaceSlug,
-                repoSlug = repo.repoSlug,
+                repo = RepoRef(AccountId(repo.accountId), WorkspaceSlug(repo.workspaceSlug), RepoSlug(repo.repoSlug)),
                 repoName = repo.name,
             )
             when (result) {

@@ -33,7 +33,13 @@ import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.userMessage
 import com.joelkanyi.platypus.designsystem.PlatypusListSkeleton
 import com.joelkanyi.platypus.designsystem.expand
+import com.joelkanyi.platypus.domain.model.AccountId
 import com.joelkanyi.platypus.domain.model.Commit
+import com.joelkanyi.platypus.domain.model.PrId
+import com.joelkanyi.platypus.domain.model.PrRef
+import com.joelkanyi.platypus.domain.model.RepoRef
+import com.joelkanyi.platypus.domain.model.RepoSlug
+import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import com.joelkanyi.platypus.domain.repository.PullRequestRepository
 import com.joelkanyi.platypus.ui.PlatypusCommitRow
 import io.github.joelkanyi.jenga.component.button.JengaIconButton
@@ -65,6 +71,8 @@ class PrCommitsViewModel(
     private val prId: Long,
 ) : ViewModel() {
 
+    private val prRef = PrRef(RepoRef(AccountId(accountId), WorkspaceSlug(workspace), RepoSlug(repoSlug)), PrId(prId))
+
     private val _uiState = MutableStateFlow(PrCommitsUiState())
     val uiState: StateFlow<PrCommitsUiState> = _uiState.asStateFlow()
 
@@ -77,7 +85,7 @@ class PrCommitsViewModel(
     private fun load() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            when (val result = repository.commits(accountId, workspace, repoSlug, prId)) {
+            when (val result = repository.commits(prRef)) {
                 is NetworkResult.Success -> _uiState.update { it.copy(isLoading = false, commits = result.data) }
                 is NetworkResult.Failure -> _uiState.update { it.copy(isLoading = false, error = result.userMessage()) }
             }

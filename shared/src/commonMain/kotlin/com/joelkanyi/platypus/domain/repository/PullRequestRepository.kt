@@ -18,114 +18,58 @@ package com.joelkanyi.platypus.domain.repository
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.domain.model.ActivityItem
 import com.joelkanyi.platypus.domain.model.Commit
+import com.joelkanyi.platypus.domain.model.MergePair
 import com.joelkanyi.platypus.domain.model.MergeStrategy
 import com.joelkanyi.platypus.domain.model.PrComment
 import com.joelkanyi.platypus.domain.model.PrDiff
+import com.joelkanyi.platypus.domain.model.PrRef
 import com.joelkanyi.platypus.domain.model.PullRequest
 import com.joelkanyi.platypus.domain.model.PullRequestDetail
+import com.joelkanyi.platypus.domain.model.RepoRef
 
 interface PullRequestRepository {
 
     /** Drops the in-memory diff cache. Call on sign-out so no session's diffs linger. */
     fun clearCache()
 
-    suspend fun pullRequests(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        repoName: String,
-    ): NetworkResult<List<PullRequest>>
+    suspend fun pullRequests(repo: RepoRef, repoName: String): NetworkResult<List<PullRequest>>
 
-    suspend fun detail(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
-    ): NetworkResult<PullRequestDetail>
+    suspend fun detail(pr: PrRef): NetworkResult<PullRequestDetail>
 
-    suspend fun comments(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
-    ): NetworkResult<List<PrComment>>
+    suspend fun comments(pr: PrRef): NetworkResult<List<PrComment>>
 
     suspend fun addComment(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
+        pr: PrRef,
         raw: String,
         parentId: Long?,
         inlinePath: String? = null,
         inlineTo: Int? = null,
     ): NetworkResult<PrComment>
 
-    suspend fun activity(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
-    ): NetworkResult<List<ActivityItem>>
+    suspend fun activity(pr: PrRef): NetworkResult<List<ActivityItem>>
 
-    suspend fun commits(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
-    ): NetworkResult<List<Commit>>
+    suspend fun commits(pr: PrRef): NetworkResult<List<Commit>>
 
-    suspend fun resolveComment(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
-        commentId: Long,
-        resolve: Boolean,
-    ): NetworkResult<Unit>
+    suspend fun resolveComment(pr: PrRef, commentId: Long, resolve: Boolean): NetworkResult<Unit>
 
-    suspend fun approve(accountId: String, workspaceSlug: String, repoSlug: String, id: Long): NetworkResult<Unit>
+    suspend fun approve(pr: PrRef): NetworkResult<Unit>
 
-    suspend fun unapprove(accountId: String, workspaceSlug: String, repoSlug: String, id: Long): NetworkResult<Unit>
+    suspend fun unapprove(pr: PrRef): NetworkResult<Unit>
 
-    suspend fun requestChanges(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
-    ): NetworkResult<Unit>
+    suspend fun requestChanges(pr: PrRef): NetworkResult<Unit>
 
-    suspend fun unrequestChanges(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
-    ): NetworkResult<Unit>
+    suspend fun unrequestChanges(pr: PrRef): NetworkResult<Unit>
 
     suspend fun merge(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
+        pr: PrRef,
         strategy: MergeStrategy,
         message: String?,
         closeSourceBranch: Boolean,
     ): NetworkResult<PullRequestDetail>
 
-    suspend fun decline(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
-    ): NetworkResult<PullRequestDetail>
+    suspend fun decline(pr: PrRef): NetworkResult<PullRequestDetail>
 
-    suspend fun diff(accountId: String, workspaceSlug: String, repoSlug: String, id: Long): NetworkResult<PrDiff>
+    suspend fun diff(pr: PrRef): NetworkResult<PrDiff>
 
-    suspend fun hasConflicts(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        sourceCommit: String,
-        destinationCommit: String,
-    ): NetworkResult<Boolean>
+    suspend fun hasConflicts(repo: RepoRef, pair: MergePair): NetworkResult<Boolean>
 }

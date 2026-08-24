@@ -40,8 +40,12 @@ import com.joelkanyi.platypus.app.LocalPlatypusDependencies
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.userMessage
 import com.joelkanyi.platypus.designsystem.PlatypusListRowSkeleton
+import com.joelkanyi.platypus.domain.model.AccountId
 import com.joelkanyi.platypus.domain.model.Pipeline
 import com.joelkanyi.platypus.domain.model.PipelineTriggerRequest
+import com.joelkanyi.platypus.domain.model.RepoRef
+import com.joelkanyi.platypus.domain.model.RepoSlug
+import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import com.joelkanyi.platypus.domain.repository.PipelineRepository
 import io.github.joelkanyi.jenga.component.button.JengaIconButton
 import io.github.joelkanyi.jenga.component.chip.JengaChip
@@ -108,6 +112,8 @@ class PipelineListViewModel(
     private val repoSlug: String,
 ) : ViewModel() {
 
+    private val repoRef = RepoRef(AccountId(accountId), WorkspaceSlug(workspace), RepoSlug(repoSlug))
+
     private val _uiState = MutableStateFlow(PipelineListUiState())
     val uiState: StateFlow<PipelineListUiState> = _uiState.asStateFlow()
 
@@ -131,7 +137,7 @@ class PipelineListViewModel(
     fun trigger(request: PipelineTriggerRequest, onTriggered: (Pipeline) -> Unit) {
         viewModelScope.launch {
             _uiState.update { it.copy(isTriggering = true, triggerError = null) }
-            when (val result = repository.trigger(accountId, workspace, repoSlug, request)) {
+            when (val result = repository.trigger(repoRef, request)) {
                 is NetworkResult.Success -> {
                     _uiState.update { it.copy(isTriggering = false) }
                     refresh()
@@ -156,7 +162,7 @@ class PipelineListViewModel(
     }
 
     private suspend fun silentRefresh() {
-        val result = repository.pipelines(accountId, workspace, repoSlug)
+        val result = repository.pipelines(repoRef)
         if (result is NetworkResult.Success) {
             _uiState.update { current ->
                 if (current.pipelines == result.data) current else current.copy(pipelines = result.data)
@@ -167,7 +173,7 @@ class PipelineListViewModel(
     private fun load(initial: Boolean) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = initial, isRefreshing = !initial, error = null) }
-            when (val result = repository.pipelines(accountId, workspace, repoSlug)) {
+            when (val result = repository.pipelines(repoRef)) {
                 is NetworkResult.Success -> _uiState.update {
                     it.copy(isLoading = false, isRefreshing = false, pipelines = result.data)
                 }

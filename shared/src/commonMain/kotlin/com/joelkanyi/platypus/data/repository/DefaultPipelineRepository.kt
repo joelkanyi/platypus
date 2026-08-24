@@ -25,6 +25,7 @@ import com.joelkanyi.platypus.domain.model.Deployment
 import com.joelkanyi.platypus.domain.model.Pipeline
 import com.joelkanyi.platypus.domain.model.PipelineStep
 import com.joelkanyi.platypus.domain.model.PipelineTriggerRequest
+import com.joelkanyi.platypus.domain.model.RepoRef
 import com.joelkanyi.platypus.domain.model.Schedule
 import com.joelkanyi.platypus.domain.model.TestSummary
 import com.joelkanyi.platypus.domain.repository.AuthRepository
@@ -43,124 +44,126 @@ import kotlinx.coroutines.coroutineScope
 @ContributesBinding(AppScope::class)
 class DefaultPipelineRepository(private val authRepository: AuthRepository) : PipelineRepository {
 
-    override suspend fun pipelines(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-    ): NetworkResult<List<Pipeline>> = withClient(accountId) { client ->
-        val api = client.api()
-        val out = mutableListOf<Pipeline>()
-        var page = api.list(workspaceSlug, repoSlug)
-        var guard = 0
-        while (true) {
-            out += page.values.map { it.toDomain() }
-            val next = page.next
-            if (next == null || ++guard >= MAX_PAGES) break
-            page = api.page(next)
+    override suspend fun pipelines(repo: RepoRef): NetworkResult<List<Pipeline>> {
+        val accountId = repo.accountId.value
+        val workspaceSlug = repo.workspace.value
+        val repoSlug = repo.repoSlug.value
+        return withClient(accountId) { client ->
+            val api = client.api()
+            val out = mutableListOf<Pipeline>()
+            var page = api.list(workspaceSlug, repoSlug)
+            var guard = 0
+            while (true) {
+                out += page.values.map { it.toDomain() }
+                val next = page.next
+                if (next == null || ++guard >= MAX_PAGES) break
+                page = api.page(next)
+            }
+            out
         }
-        out
     }
 
-    override suspend fun pipeline(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        uuid: String,
-    ): NetworkResult<Pipeline> = withClient(accountId) { client ->
-        client.api().get(workspaceSlug, repoSlug, uuid).toDomain()
+    override suspend fun pipeline(repo: RepoRef, uuid: String): NetworkResult<Pipeline> {
+        val accountId = repo.accountId.value
+        val workspaceSlug = repo.workspace.value
+        val repoSlug = repo.repoSlug.value
+        return withClient(accountId) { client ->
+            client.api().get(workspaceSlug, repoSlug, uuid).toDomain()
+        }
     }
 
-    override suspend fun steps(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        uuid: String,
-    ): NetworkResult<List<PipelineStep>> = withClient(accountId) { client ->
-        val api = client.api()
-        val out = mutableListOf<PipelineStep>()
-        var page = api.steps(workspaceSlug, repoSlug, uuid)
-        var guard = 0
-        while (true) {
-            out += page.values.map { it.toDomain() }
-            val next = page.next
-            if (next == null || ++guard >= MAX_PAGES) break
-            page = api.stepsPage(next)
-        }
-        coroutineScope {
-            out.map { step ->
-                async {
-                    val report = runCatching {
-                        api.testReport(workspaceSlug, repoSlug, uuid, step.uuid)
-                    }.getOrNull()
-                    if (report != null && report.numberOfTestCases > 0) {
-                        step.copy(
-                            testSummary = TestSummary(
-                                passed = report.numberOfSuccessfulTestCases,
-                                failed = report.numberOfFailedTestCases + report.numberOfErrorTestCases,
-                                skipped = report.numberOfSkippedTestCases,
-                                total = report.numberOfTestCases,
-                            ),
-                        )
-                    } else {
-                        step
+    override suspend fun steps(repo: RepoRef, uuid: String): NetworkResult<List<PipelineStep>> {
+        val accountId = repo.accountId.value
+        val workspaceSlug = repo.workspace.value
+        val repoSlug = repo.repoSlug.value
+        return withClient(accountId) { client ->
+            val api = client.api()
+            val out = mutableListOf<PipelineStep>()
+            var page = api.steps(workspaceSlug, repoSlug, uuid)
+            var guard = 0
+            while (true) {
+                out += page.values.map { it.toDomain() }
+                val next = page.next
+                if (next == null || ++guard >= MAX_PAGES) break
+                page = api.stepsPage(next)
+            }
+            coroutineScope {
+                out.map { step ->
+                    async {
+                        val report = runCatching {
+                            api.testReport(workspaceSlug, repoSlug, uuid, step.uuid)
+                        }.getOrNull()
+                        if (report != null && report.numberOfTestCases > 0) {
+                            step.copy(
+                                testSummary = TestSummary(
+                                    passed = report.numberOfSuccessfulTestCases,
+                                    failed = report.numberOfFailedTestCases + report.numberOfErrorTestCases,
+                                    skipped = report.numberOfSkippedTestCases,
+                                    total = report.numberOfTestCases,
+                                ),
+                            )
+                        } else {
+                            step
+                        }
                     }
-                }
-            }.awaitAll()
+                }.awaitAll()
+            }
         }
     }
 
-    override suspend fun stepLog(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        pipelineUuid: String,
-        stepUuid: String,
-    ): NetworkResult<String> = withClient(accountId) { client ->
-        client.api().stepLog(workspaceSlug, repoSlug, pipelineUuid, stepUuid)
-    }
-
-    override suspend fun trigger(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        request: PipelineTriggerRequest,
-    ): NetworkResult<Pipeline> = withClient(accountId) { client ->
-        client.api().trigger(workspaceSlug, repoSlug, request.toDto()).toDomain()
-    }
-
-    override suspend fun stop(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        uuid: String,
-    ): NetworkResult<Unit> = withClient(accountId) { client ->
-        client.api().stop(workspaceSlug, repoSlug, uuid)
-    }
-
-    override suspend fun deployments(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-    ): NetworkResult<List<Deployment>> = withClient(accountId) { client ->
-        val api = client.api()
-        val out = mutableListOf<Deployment>()
-        var page = api.deployments(workspaceSlug, repoSlug)
-        var guard = 0
-        while (true) {
-            out += page.values.map { it.toDomain() }
-            val next = page.next
-            if (next == null || ++guard >= MAX_PAGES) break
-            page = api.deploymentsPage(next)
+    override suspend fun stepLog(repo: RepoRef, pipelineUuid: String, stepUuid: String): NetworkResult<String> {
+        val accountId = repo.accountId.value
+        val workspaceSlug = repo.workspace.value
+        val repoSlug = repo.repoSlug.value
+        return withClient(accountId) { client ->
+            client.api().stepLog(workspaceSlug, repoSlug, pipelineUuid, stepUuid)
         }
-        out
     }
 
-    override suspend fun schedules(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-    ): NetworkResult<List<Schedule>> = withClient(accountId) { client ->
-        client.api().schedules(workspaceSlug, repoSlug).values.map { it.toDomain() }
+    override suspend fun trigger(repo: RepoRef, request: PipelineTriggerRequest): NetworkResult<Pipeline> {
+        val accountId = repo.accountId.value
+        val workspaceSlug = repo.workspace.value
+        val repoSlug = repo.repoSlug.value
+        return withClient(accountId) { client ->
+            client.api().trigger(workspaceSlug, repoSlug, request.toDto()).toDomain()
+        }
+    }
+
+    override suspend fun stop(repo: RepoRef, uuid: String): NetworkResult<Unit> {
+        val accountId = repo.accountId.value
+        val workspaceSlug = repo.workspace.value
+        val repoSlug = repo.repoSlug.value
+        return withClient(accountId) { client ->
+            client.api().stop(workspaceSlug, repoSlug, uuid)
+        }
+    }
+
+    override suspend fun deployments(repo: RepoRef): NetworkResult<List<Deployment>> {
+        val accountId = repo.accountId.value
+        val workspaceSlug = repo.workspace.value
+        val repoSlug = repo.repoSlug.value
+        return withClient(accountId) { client ->
+            val api = client.api()
+            val out = mutableListOf<Deployment>()
+            var page = api.deployments(workspaceSlug, repoSlug)
+            var guard = 0
+            while (true) {
+                out += page.values.map { it.toDomain() }
+                val next = page.next
+                if (next == null || ++guard >= MAX_PAGES) break
+                page = api.deploymentsPage(next)
+            }
+            out
+        }
+    }
+
+    override suspend fun schedules(repo: RepoRef): NetworkResult<List<Schedule>> {
+        val accountId = repo.accountId.value
+        val workspaceSlug = repo.workspace.value
+        val repoSlug = repo.repoSlug.value
+        return withClient(accountId) { client ->
+            client.api().schedules(workspaceSlug, repoSlug).values.map { it.toDomain() }
+        }
     }
 
     private suspend inline fun <T> withClient(

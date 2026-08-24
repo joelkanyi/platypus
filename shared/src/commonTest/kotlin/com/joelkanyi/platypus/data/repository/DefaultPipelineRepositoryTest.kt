@@ -18,11 +18,15 @@ package com.joelkanyi.platypus.data.repository
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.data.remote.network.PlatypusJson
 import com.joelkanyi.platypus.domain.model.Account
+import com.joelkanyi.platypus.domain.model.AccountId
 import com.joelkanyi.platypus.domain.model.AuthMode
 import com.joelkanyi.platypus.domain.model.BitbucketUser
 import com.joelkanyi.platypus.domain.model.PipelineStatus
 import com.joelkanyi.platypus.domain.model.PipelineTriggerRequest
 import com.joelkanyi.platypus.domain.model.RefType
+import com.joelkanyi.platypus.domain.model.RepoRef
+import com.joelkanyi.platypus.domain.model.RepoSlug
+import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandler
@@ -65,6 +69,8 @@ private const val STEPS =
 
 private const val TRIGGERED = """{"uuid":"{p9}","build_number":43,"state":{"name":"PENDING"}}"""
 
+private val repoRef = RepoRef(AccountId("1"), WorkspaceSlug("acme"), RepoSlug("api"))
+
 class DefaultPipelineRepositoryTest {
 
     private fun repository(handler: MockRequestHandler): DefaultPipelineRepository {
@@ -96,7 +102,7 @@ class DefaultPipelineRepositoryTest {
 
     @Test
     fun pipelines_parses_list() = runTest {
-        val result = repository(router).pipelines("1", "acme", "api")
+        val result = repository(router).pipelines(repoRef)
         assertIs<NetworkResult.Success<*>>(result)
         val data = (result as NetworkResult.Success).data
         assertEquals(2, data.size)
@@ -106,7 +112,7 @@ class DefaultPipelineRepositoryTest {
 
     @Test
     fun steps_parses_list() = runTest {
-        val result = repository(router).steps("1", "acme", "api", "{p1}")
+        val result = repository(router).steps(repoRef, "{p1}")
         assertIs<NetworkResult.Success<*>>(result)
         val data = (result as NetworkResult.Success).data
         assertEquals(2, data.size)
@@ -116,7 +122,7 @@ class DefaultPipelineRepositoryTest {
 
     @Test
     fun step_log_returns_text() = runTest {
-        val result = repository(router).stepLog("1", "acme", "api", "{p1}", "{s1}")
+        val result = repository(router).stepLog(repoRef, "{p1}", "{s1}")
         assertIs<NetworkResult.Success<*>>(result)
         assertTrue((result as NetworkResult.Success).data.contains("BUILD SUCCESSFUL"))
     }
@@ -124,14 +130,14 @@ class DefaultPipelineRepositoryTest {
     @Test
     fun trigger_returns_new_pipeline() = runTest {
         val request = PipelineTriggerRequest(refType = RefType.BRANCH, refName = "main")
-        val result = repository(router).trigger("1", "acme", "api", request)
+        val result = repository(router).trigger(repoRef, request)
         assertIs<NetworkResult.Success<*>>(result)
         assertEquals(43, (result as NetworkResult.Success).data.buildNumber)
     }
 
     @Test
     fun stop_succeeds() = runTest {
-        val result = repository(router).stop("1", "acme", "api", "{p1}")
+        val result = repository(router).stop(repoRef, "{p1}")
         assertIs<NetworkResult.Success<*>>(result)
     }
 }

@@ -89,4 +89,19 @@ class DependencyDirectionTest {
             }
         }
     }
+
+    @Test
+    fun `data-layer wire types never leak outside data`() {
+        val nonData = files.filterNot {
+            val name = it.packagee?.name.orEmpty()
+            name == "$root.data" || name.startsWith("$root.data.")
+        }
+        nonData.assertFalse(
+            testName = "DTOs and API clients are data internals; only repositories may use them",
+        ) { file ->
+            file.imports.any { import ->
+                import.name.startsWith("$root.data.remote.dto") || import.name.startsWith("$root.data.remote.api")
+            }
+        }
+    }
 }

@@ -34,7 +34,6 @@ internal fun highlightedText(line: CodeLine, matchColor: Color): AnnotatedString
     }
 }
 
-/** Removes the common leading indentation shared by every non-blank line so snippets read flush-left. */
 internal fun dedent(lines: List<CodeLine>): List<CodeLine> {
     if (lines.isEmpty()) return lines
     val commonIndent = lines.mapNotNull { line ->

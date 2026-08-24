@@ -19,8 +19,9 @@ import androidx.compose.runtime.Composable
 import com.joelkanyi.platypus.domain.model.Commit
 import com.joelkanyi.platypus.preview.PlatypusPreview
 import com.joelkanyi.platypus.preview.PlatypusThemePreviews
+import kotlinx.collections.immutable.persistentListOf
 
-private val samplePrCommits = listOf(
+private val samplePrCommits = persistentListOf(
     Commit("a1b2c3d4e5", "Add retry to token refresh", "Grace Njeri", "2026-08-20T09:00:00+00:00"),
     Commit("f6g7h8i9j0", "Fix crash on empty workspace", "Peter Otieno", "2026-08-19T14:00:00+00:00"),
 )
@@ -56,7 +57,7 @@ private fun PrCommitsLoadingPreview() {
 private fun PrCommitsEmptyPreview() {
     PlatypusPreview {
         PrCommitsContent(
-            state = PrCommitsUiState(isLoading = false, commits = emptyList()),
+            state = PrCommitsUiState(isLoading = false, commits = persistentListOf()),
             onOpenCommit = {},
             onBack = {},
             onRetry = {},

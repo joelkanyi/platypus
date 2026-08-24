@@ -26,6 +26,7 @@ import com.joelkanyi.platypus.domain.model.RepoSlug
 import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import com.joelkanyi.platypus.domain.model.rerunRequest
 import com.joelkanyi.platypus.domain.repository.PipelineRepository
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -103,7 +104,7 @@ class PipelineDetailViewModel(
         }
         val steps = repository.steps(repoRef, pipelineUuid)
         if (steps is NetworkResult.Success) {
-            _uiState.update { if (it.steps == steps.data) it else it.copy(steps = steps.data) }
+            _uiState.update { if (it.steps == steps.data) it else it.copy(steps = steps.data.toImmutableList()) }
         }
     }
 
@@ -124,7 +125,7 @@ class PipelineDetailViewModel(
     private fun loadSteps() {
         viewModelScope.launch {
             val result = repository.steps(repoRef, pipelineUuid)
-            if (result is NetworkResult.Success) _uiState.update { it.copy(steps = result.data) }
+            if (result is NetworkResult.Success) _uiState.update { it.copy(steps = result.data.toImmutableList()) }
         }
     }
 

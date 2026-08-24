@@ -22,6 +22,8 @@ import com.joelkanyi.platypus.domain.model.WatchedRepo
 import com.joelkanyi.platypus.domain.repository.InboxCache
 import com.joelkanyi.platypus.domain.repository.WatchlistRepository
 import com.joelkanyi.platypus.domain.usecase.GetReviewInbox
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -50,7 +52,7 @@ class InboxViewModel(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        pullRequests = cached.pullRequests,
+                        pullRequests = cached.pullRequests.toImmutableList(),
                         lastUpdatedEpochMs = cached.updatedAtEpochMs,
                     )
                 }
@@ -68,8 +70,8 @@ class InboxViewModel(
                                 isLoading = false,
                                 isRefreshing = false,
                                 hasWatchlist = false,
-                                pullRequests = emptyList(),
-                                failures = emptyList(),
+                                pullRequests = persistentListOf(),
+                                failures = persistentListOf(),
                                 lastUpdatedEpochMs = null,
                             )
                         }
@@ -105,8 +107,8 @@ class InboxViewModel(
                 isLoading = false,
                 isRefreshing = false,
                 hasWatchlist = true,
-                pullRequests = inbox.pullRequests,
-                failures = inbox.failures,
+                pullRequests = inbox.pullRequests.toImmutableList(),
+                failures = inbox.failures.toImmutableList(),
                 lastUpdatedEpochMs = now,
             )
         }

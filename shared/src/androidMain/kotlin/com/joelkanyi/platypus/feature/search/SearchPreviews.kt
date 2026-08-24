@@ -21,6 +21,7 @@ import com.joelkanyi.platypus.domain.model.CodeSearchResult
 import com.joelkanyi.platypus.domain.model.CodeSegment
 import com.joelkanyi.platypus.preview.PlatypusPreview
 import com.joelkanyi.platypus.preview.PlatypusThemePreviews
+import kotlinx.collections.immutable.persistentListOf
 
 private val sampleWorkspace = SearchWorkspace(
     accountId = "acc-1",
@@ -33,7 +34,7 @@ private val sampleWorkspace = SearchWorkspace(
 private fun line(number: Int, vararg segments: Pair<String, Boolean>): CodeLine =
     CodeLine(segments.map { CodeSegment(it.first, it.second) }, lineNumber = number)
 
-private val sampleCode = listOf(
+private val sampleCode = persistentListOf(
     CodeSearchResult(
         workspaceSlug = "acme",
         repoSlug = "api-gateway",
@@ -41,11 +42,11 @@ private val sampleCode = listOf(
         path = "src/main/kotlin/auth/TokenStore.kt",
         commitHash = "a1b2c3d4e5f6",
         matchCount = 4,
-        snippet = listOf(
+        snippet = persistentListOf(
             line(12, "    fun refresh(" to false, "token" to true, ": String) {" to false),
             line(18, "        val next = " to false, "token" to true, ".rotate()" to false),
         ),
-        pathSegments = emptyList(),
+        pathSegments = persistentListOf(),
     ),
     CodeSearchResult(
         workspaceSlug = "acme",
@@ -54,14 +55,14 @@ private val sampleCode = listOf(
         path = "internal/token.go",
         commitHash = "0f9e8d7c",
         matchCount = 1,
-        snippet = listOf(line(7, "var " to false, "token" to true, " = load()" to false)),
-        pathSegments = emptyList(),
+        snippet = persistentListOf(line(7, "var " to false, "token" to true, " = load()" to false)),
+        pathSegments = persistentListOf(),
     ),
 )
 
 private fun baseState() = SearchUiState(
     isLoadingWorkspaces = false,
-    workspaces = listOf(sampleWorkspace),
+    workspaces = persistentListOf(sampleWorkspace),
     selected = sampleWorkspace,
     query = "token",
 )

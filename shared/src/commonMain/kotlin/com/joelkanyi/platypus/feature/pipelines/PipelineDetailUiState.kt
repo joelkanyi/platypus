@@ -18,13 +18,15 @@ package com.joelkanyi.platypus.feature.pipelines
 import androidx.compose.runtime.Immutable
 import com.joelkanyi.platypus.domain.model.Pipeline
 import com.joelkanyi.platypus.domain.model.PipelineStep
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
 data class PipelineDetailUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val pipeline: Pipeline? = null,
-    val steps: List<PipelineStep> = emptyList(),
+    val steps: ImmutableList<PipelineStep> = persistentListOf(),
     val actionInProgress: Boolean = false,
     val actionError: String? = null,
 )

@@ -24,6 +24,7 @@ import com.joelkanyi.platypus.domain.model.PrState
 import com.joelkanyi.platypus.domain.model.PullRequestDetail
 import com.joelkanyi.platypus.preview.PlatypusPreview
 import com.joelkanyi.platypus.preview.PlatypusThemePreviews
+import kotlinx.collections.immutable.persistentListOf
 
 private fun detail(state: PrState = PrState.OPEN, myApproval: PrApproval = PrApproval.NONE) = PullRequestDetail(
     id = 142,
@@ -41,7 +42,7 @@ private fun detail(state: PrState = PrState.OPEN, myApproval: PrApproval = PrApp
     updatedOn = "2026-08-21T09:00:00+00:00",
     webUrl = "https://bitbucket.org/acme/api/pull-requests/142",
     closeSourceBranch = true,
-    reviewers = listOf(
+    reviewers = persistentListOf(
         PrReviewer("{joel}", "Joel Kanyi", null, PrApproval.APPROVED),
         PrReviewer("{peter}", "Peter Otieno", null, PrApproval.CHANGES_REQUESTED),
         PrReviewer("{asha}", "Asha Mwangi", null, PrApproval.NONE),
@@ -66,7 +67,7 @@ private fun sampleComment(id: Long, author: String, body: String, date: String, 
     resolved = false,
 )
 
-private val sampleActivity = listOf(
+private val sampleActivity = persistentListOf(
     ActivityItem.Approved("Joel Kanyi", null, "2026-08-21T08:00:00+00:00"),
     ActivityItem.Commented(sampleComment(1, "Peter Otieno", "Can we cap the backoff?", "2026-08-21T09:10:00+00:00")),
     ActivityItem.Commented(sampleComment(2, "Grace Njeri", "Done, capped at 2s.", "2026-08-21T09:20:00+00:00", 1)),

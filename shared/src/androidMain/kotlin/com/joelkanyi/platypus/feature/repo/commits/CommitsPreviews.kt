@@ -21,8 +21,9 @@ import com.joelkanyi.platypus.domain.model.Commit
 import com.joelkanyi.platypus.domain.model.CommitDetail
 import com.joelkanyi.platypus.preview.PlatypusPreview
 import com.joelkanyi.platypus.preview.PlatypusThemePreviews
+import kotlinx.collections.immutable.persistentListOf
 
-private val sampleCommits = listOf(
+private val sampleCommits = persistentListOf(
     Commit("a1b2c3d4e5", "Add retry to token refresh", "Grace Njeri", "2026-08-20T09:00:00+00:00"),
     Commit(
         "f6g7h8i9j0",
@@ -68,7 +69,7 @@ private fun CommitsEmptyPreview() {
     PlatypusPreview {
         CommitsContent(
             ref = "main",
-            state = CommitsUiState(isLoading = false, commits = emptyList()),
+            state = CommitsUiState(isLoading = false, commits = persistentListOf()),
             onBack = {},
             onRetry = {},
             onLoadMore = {},
@@ -83,7 +84,7 @@ private fun CommitsErrorPreview() {
     PlatypusPreview {
         CommitsContent(
             ref = "main",
-            state = CommitsUiState(isLoading = false, error = "Network unavailable", commits = emptyList()),
+            state = CommitsUiState(isLoading = false, error = "Network unavailable", commits = persistentListOf()),
             onBack = {},
             onRetry = {},
             onLoadMore = {},
@@ -132,7 +133,7 @@ private fun CommitDetailContentPreview() {
                 isLoading = false,
                 detail = CommitDetail(
                     commit = sampleCommits.first(),
-                    diffLines = listOf(
+                    diffLines = persistentListOf(
                         "diff --git a/App.kt b/App.kt",
                         "@@ -1,4 +1,5 @@",
                         " fun main() {",

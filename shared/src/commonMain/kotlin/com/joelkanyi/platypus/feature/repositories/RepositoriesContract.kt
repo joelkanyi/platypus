@@ -20,6 +20,8 @@ import com.joelkanyi.platypus.domain.model.RepoTab
 import com.joelkanyi.platypus.domain.model.Repository
 import com.joelkanyi.platypus.domain.model.WatchedRepo
 import com.joelkanyi.platypus.domain.model.Workspace
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
 data class WorkspaceOption(val accountId: String, val accountLabel: String, val workspace: Workspace) {
@@ -32,18 +34,18 @@ data class RepoRow(val repo: Repository, val watched: Boolean)
 @Immutable
 data class RepositoriesUiState(
     val tab: RepoTab = RepoTab.WATCHING,
-    val watched: List<WatchedRepo> = emptyList(),
+    val watched: ImmutableList<WatchedRepo> = persistentListOf(),
     val watchedCount: Int = 0,
     val isLoadingWorkspaces: Boolean = true,
     val workspacesError: String? = null,
-    val workspaces: List<WorkspaceOption> = emptyList(),
+    val workspaces: ImmutableList<WorkspaceOption> = persistentListOf(),
     val selected: WorkspaceOption? = null,
     val multiAccount: Boolean = false,
     val query: String = "",
     val isLoadingRepos: Boolean = false,
     val isPaginating: Boolean = false,
     val reposError: String? = null,
-    val repos: List<RepoRow> = emptyList(),
+    val repos: ImmutableList<RepoRow> = persistentListOf(),
     val nextCursor: String? = null,
 ) {
     val canLoadMore: Boolean get() = nextCursor != null && !isPaginating && !isLoadingRepos

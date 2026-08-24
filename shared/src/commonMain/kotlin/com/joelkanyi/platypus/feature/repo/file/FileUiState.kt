@@ -17,6 +17,8 @@ package com.joelkanyi.platypus.feature.repo.file
 
 import androidx.compose.runtime.Immutable
 import com.joelkanyi.platypus.domain.model.RepoFile
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
 data class FileUiState(
@@ -25,7 +27,7 @@ data class FileUiState(
     val file: RepoFile? = null,
     val findActive: Boolean = false,
     val findQuery: String = "",
-    val matches: List<Int> = emptyList(),
+    val matches: ImmutableList<Int> = persistentListOf(),
     val matchIndex: Int = 0,
     val outlineOpen: Boolean = false,
     val isMarkdown: Boolean = false,

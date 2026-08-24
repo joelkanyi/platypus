@@ -24,6 +24,8 @@ import com.joelkanyi.platypus.domain.model.RepoRef
 import com.joelkanyi.platypus.domain.model.RepoSlug
 import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import com.joelkanyi.platypus.domain.repository.RepoContentRepository
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -61,21 +63,21 @@ class FileViewerViewModel(
 
     fun toggleFind() = _uiState.update {
         if (it.findActive) {
-            it.copy(findActive = false, findQuery = "", matches = emptyList(), matchIndex = 0)
+            it.copy(findActive = false, findQuery = "", matches = persistentListOf(), matchIndex = 0)
         } else {
             it.copy(findActive = true)
         }
     }
 
     fun onFindQuery(query: String) = _uiState.update { state ->
-        val matches = FileFind.matchingLines(query, state.file?.lines ?: emptyList())
+        val matches = FileFind.matchingLines(query, state.file?.lines ?: emptyList()).toImmutableList()
         state.copy(findQuery = query, matches = matches, matchIndex = 0)
     }
 
     fun toggleOutline() = _uiState.update { it.copy(outlineOpen = !it.outlineOpen) }
 
     fun jumpTo(line: Int) = _uiState.update {
-        it.copy(outlineOpen = false, matches = listOf(line), matchIndex = 0)
+        it.copy(outlineOpen = false, matches = persistentListOf(line), matchIndex = 0)
     }
 
     fun nextMatch() = _uiState.update { it.copy(matchIndex = FileFind.nextIndex(it.matchIndex, it.matches.size)) }

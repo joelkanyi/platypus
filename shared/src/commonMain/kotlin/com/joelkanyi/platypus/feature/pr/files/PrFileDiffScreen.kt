@@ -72,6 +72,9 @@ import io.github.joelkanyi.jenga.component.state.JengaErrorState
 import io.github.joelkanyi.jenga.component.text.JengaText
 import io.github.joelkanyi.jenga.component.textfield.JengaTextField
 import io.github.joelkanyi.jenga.theme.JengaTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -83,7 +86,7 @@ data class PrFileDiffUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val file: PrDiffFile? = null,
-    val comments: List<PrComment> = emptyList(),
+    val comments: ImmutableList<PrComment> = persistentListOf(),
     val composerLine: Int? = null,
     val draft: String = "",
     val posting: Boolean = false,
@@ -134,7 +137,7 @@ class PrFileDiffViewModel(
 
     private suspend fun loadComments() {
         val all = repository.comments(prRef).getOrNull() ?: return
-        _uiState.update { it.copy(comments = all.filter { c -> c.inlinePath == path }) }
+        _uiState.update { it.copy(comments = all.filter { c -> c.inlinePath == path }.toImmutableList()) }
     }
 
     fun postComment() {

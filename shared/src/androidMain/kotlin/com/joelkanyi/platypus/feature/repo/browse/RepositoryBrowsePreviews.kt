@@ -20,8 +20,9 @@ import com.joelkanyi.platypus.domain.model.SrcEntry
 import com.joelkanyi.platypus.domain.model.SrcEntryType
 import com.joelkanyi.platypus.preview.PlatypusPreview
 import com.joelkanyi.platypus.preview.PlatypusThemePreviews
+import kotlinx.collections.immutable.persistentListOf
 
-private val sampleEntries = listOf(
+private val sampleEntries = persistentListOf(
     SrcEntry("commission/src", SrcEntryType.DIRECTORY, 0),
     SrcEntry("commission/build.gradle.kts", SrcEntryType.FILE, 3_400),
     SrcEntry("commission/.gitignore", SrcEntryType.FILE, 6),

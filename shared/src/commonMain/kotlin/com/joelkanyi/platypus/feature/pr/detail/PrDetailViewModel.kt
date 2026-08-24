@@ -33,6 +33,7 @@ import com.joelkanyi.platypus.domain.model.RepoRef
 import com.joelkanyi.platypus.domain.model.RepoSlug
 import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import com.joelkanyi.platypus.domain.repository.PullRequestRepository
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -104,7 +105,7 @@ class PrDetailViewModel(
 
     private suspend fun loadActivity() {
         val activity = repository.activity(prRef).getOrNull() ?: return
-        _uiState.update { it.copy(activity = activity.sortedByDescending { item -> item.date }) }
+        _uiState.update { it.copy(activity = activity.sortedByDescending { item -> item.date }.toImmutableList()) }
     }
 
     private fun loadConflicts(detail: PullRequestDetail) {

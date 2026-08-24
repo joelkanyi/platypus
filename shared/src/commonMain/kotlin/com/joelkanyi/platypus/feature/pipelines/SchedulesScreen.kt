@@ -50,6 +50,9 @@ import io.github.joelkanyi.jenga.component.state.JengaEmptyState
 import io.github.joelkanyi.jenga.component.state.JengaErrorState
 import io.github.joelkanyi.jenga.component.status.JengaStatusPill
 import io.github.joelkanyi.jenga.theme.JengaTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -61,7 +64,7 @@ data class SchedulesUiState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val error: String? = null,
-    val schedules: List<Schedule> = emptyList(),
+    val schedules: ImmutableList<Schedule> = persistentListOf(),
 )
 
 class SchedulesViewModel(
@@ -89,7 +92,7 @@ class SchedulesViewModel(
             _uiState.update { it.copy(isLoading = initial, isRefreshing = !initial, error = null) }
             when (val result = repository.schedules(repoRef)) {
                 is NetworkResult.Success -> _uiState.update {
-                    it.copy(isLoading = false, isRefreshing = false, schedules = result.data)
+                    it.copy(isLoading = false, isRefreshing = false, schedules = result.data.toImmutableList())
                 }
                 is NetworkResult.Failure -> _uiState.update {
                     it.copy(isLoading = false, isRefreshing = false, error = result.userMessage())

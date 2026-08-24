@@ -50,6 +50,9 @@ import io.github.joelkanyi.jenga.component.scaffold.JengaTopAppBar
 import io.github.joelkanyi.jenga.component.state.JengaEmptyState
 import io.github.joelkanyi.jenga.component.state.JengaErrorState
 import io.github.joelkanyi.jenga.theme.JengaTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -60,7 +63,7 @@ import kotlinx.coroutines.launch
 data class PrCommitsUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
-    val commits: List<Commit> = emptyList(),
+    val commits: ImmutableList<Commit> = persistentListOf(),
 )
 
 class PrCommitsViewModel(
@@ -86,7 +89,9 @@ class PrCommitsViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             when (val result = repository.commits(prRef)) {
-                is NetworkResult.Success -> _uiState.update { it.copy(isLoading = false, commits = result.data) }
+                is NetworkResult.Success -> _uiState.update {
+                    it.copy(isLoading = false, commits = result.data.toImmutableList())
+                }
                 is NetworkResult.Failure -> _uiState.update { it.copy(isLoading = false, error = result.userMessage()) }
             }
         }

@@ -51,6 +51,9 @@ import io.github.joelkanyi.jenga.component.scaffold.JengaTopAppBar
 import io.github.joelkanyi.jenga.component.state.JengaEmptyState
 import io.github.joelkanyi.jenga.component.state.JengaErrorState
 import io.github.joelkanyi.jenga.theme.JengaTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -62,7 +65,7 @@ data class CommitsUiState(
     val isLoading: Boolean = true,
     val isPaginating: Boolean = false,
     val error: String? = null,
-    val commits: List<Commit> = emptyList(),
+    val commits: ImmutableList<Commit> = persistentListOf(),
     val nextCursor: String? = null,
 ) {
     val canLoadMore: Boolean get() = nextCursor != null && !isPaginating && !isLoading
@@ -97,10 +100,11 @@ class CommitsViewModel(
             val cursor = if (reset) null else _uiState.value.nextCursor
             when (val result = repoContentRepository.commits(repoRef, ref, cursor)) {
                 is NetworkResult.Success -> _uiState.update { state ->
+                    val merged = if (reset) result.data.commits else state.commits + result.data.commits
                     state.copy(
                         isLoading = false,
                         isPaginating = false,
-                        commits = if (reset) result.data.commits else state.commits + result.data.commits,
+                        commits = merged.toImmutableList(),
                         nextCursor = result.data.next,
                     )
                 }

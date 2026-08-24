@@ -63,6 +63,9 @@ import io.github.joelkanyi.jenga.component.search.JengaSearchField
 import io.github.joelkanyi.jenga.component.state.JengaEmptyState
 import io.github.joelkanyi.jenga.component.state.JengaErrorState
 import io.github.joelkanyi.jenga.theme.JengaTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -77,11 +80,11 @@ data class BrowseUiState(
     val path: String = "",
     val isLoading: Boolean = true,
     val error: String? = null,
-    val entries: List<SrcEntry> = emptyList(),
+    val entries: ImmutableList<SrcEntry> = persistentListOf(),
     val query: String = "",
     val searchLoading: Boolean = false,
     val searchError: String? = null,
-    val results: List<String> = emptyList(),
+    val results: ImmutableList<String> = persistentListOf(),
 ) {
     val searching: Boolean get() = query.isNotBlank()
 }
@@ -112,7 +115,7 @@ class RepositoryBrowseViewModel(
     /** Drill into a folder / breadcrumb / ".." IN PLACE, without pushing a new screen. */
     fun navigateTo(path: String) {
         searchJob?.cancel()
-        _uiState.update { it.copy(path = path, query = "", results = emptyList(), searchError = null) }
+        _uiState.update { it.copy(path = path, query = "", results = persistentListOf(), searchError = null) }
         load()
     }
 
@@ -120,7 +123,7 @@ class RepositoryBrowseViewModel(
     fun switchBranch(ref: String) {
         allPaths = null
         searchJob?.cancel()
-        _uiState.update { it.copy(ref = ref, path = "", query = "", results = emptyList(), searchError = null) }
+        _uiState.update { it.copy(ref = ref, path = "", query = "", results = persistentListOf(), searchError = null) }
         load()
     }
 
@@ -128,7 +131,7 @@ class RepositoryBrowseViewModel(
         _uiState.update { it.copy(query = query) }
         searchJob?.cancel()
         if (query.isBlank()) {
-            _uiState.update { it.copy(results = emptyList(), searchError = null) }
+            _uiState.update { it.copy(results = persistentListOf(), searchError = null) }
             return
         }
         searchJob = viewModelScope.launch {
@@ -148,7 +151,7 @@ class RepositoryBrowseViewModel(
                 }
             }
         }
-        _uiState.update { it.copy(searchLoading = false, results = fuzzyFilter(query, paths)) }
+        _uiState.update { it.copy(searchLoading = false, results = fuzzyFilter(query, paths).toImmutableList()) }
     }
 
     private fun load() {
@@ -158,7 +161,7 @@ class RepositoryBrowseViewModel(
             _uiState.update { it.copy(isLoading = true, error = null) }
             when (val result = repoContentRepository.directory(repoRef, ref, path)) {
                 is NetworkResult.Success ->
-                    _uiState.update { it.copy(isLoading = false, entries = result.data.entries) }
+                    _uiState.update { it.copy(isLoading = false, entries = result.data.entries.toImmutableList()) }
                 is NetworkResult.Failure ->
                     _uiState.update { it.copy(isLoading = false, error = result.userMessage()) }
             }

@@ -21,6 +21,7 @@ import com.joelkanyi.platypus.data.remote.api.PullRequestsApi
 import com.joelkanyi.platypus.data.remote.mapper.parsePrDiff
 import com.joelkanyi.platypus.data.remote.mapper.toDetail
 import com.joelkanyi.platypus.data.remote.mapper.toDomain
+import com.joelkanyi.platypus.data.remote.network.collectPaged
 import com.joelkanyi.platypus.data.remote.network.ktorErrorMapper
 import com.joelkanyi.platypus.domain.model.ActivityItem
 import com.joelkanyi.platypus.domain.model.Commit
@@ -57,16 +58,10 @@ class DefaultPullRequestRepository(private val authRepository: AuthRepository) :
         val api = client.api()
         val me = me(accountId)
         val label = accountLabel(accountId)
-        val out = mutableListOf<PullRequest>()
-        var page = api.open(workspaceSlug, repoSlug)
-        var guard = 0
-        while (true) {
-            out += page.values.map { it.toDomain(me, accountId, workspaceSlug, repoSlug, repoName, label) }
-            val next = page.next
-            if (next == null || ++guard >= MAX_PAGES) break
-            page = api.page(next)
-        }
-        out
+        collectPaged(
+            firstPage = { api.open(workspaceSlug, repoSlug) },
+            nextPage = { api.page(it) },
+        ).map { it.toDomain(me, accountId, workspaceSlug, repoSlug, repoName, label) }
     }
 
     override suspend fun detail(
@@ -85,16 +80,10 @@ class DefaultPullRequestRepository(private val authRepository: AuthRepository) :
         id: Long,
     ): NetworkResult<List<PrComment>> = withClient(accountId) { client ->
         val api = client.api()
-        val out = mutableListOf<PrComment>()
-        var page = api.comments(workspaceSlug, repoSlug, id)
-        var guard = 0
-        while (true) {
-            out += page.values.map { it.toDomain() }
-            val next = page.next
-            if (next == null || ++guard >= MAX_PAGES) break
-            page = api.commentsPage(next)
-        }
-        out.filterNot { it.deleted }
+        collectPaged(
+            firstPage = { api.comments(workspaceSlug, repoSlug, id) },
+            nextPage = { api.commentsPage(it) },
+        ).map { it.toDomain() }.filterNot { it.deleted }
     }
 
     override suspend fun addComment(
@@ -117,16 +106,10 @@ class DefaultPullRequestRepository(private val authRepository: AuthRepository) :
         id: Long,
     ): NetworkResult<List<ActivityItem>> = withClient(accountId) { client ->
         val api = client.api()
-        val out = mutableListOf<ActivityItem>()
-        var page = api.activity(workspaceSlug, repoSlug, id)
-        var guard = 0
-        while (true) {
-            out += page.values.mapNotNull { it.toDomain() }
-            val next = page.next
-            if (next == null || ++guard >= MAX_PAGES) break
-            page = api.activityPage(next)
-        }
-        out
+        collectPaged(
+            firstPage = { api.activity(workspaceSlug, repoSlug, id) },
+            nextPage = { api.activityPage(it) },
+        ).mapNotNull { it.toDomain() }
     }
 
     override suspend fun commits(
@@ -136,16 +119,10 @@ class DefaultPullRequestRepository(private val authRepository: AuthRepository) :
         id: Long,
     ): NetworkResult<List<Commit>> = withClient(accountId) { client ->
         val api = client.api()
-        val out = mutableListOf<Commit>()
-        var page = api.commits(workspaceSlug, repoSlug, id)
-        var guard = 0
-        while (true) {
-            out += page.values.map { it.toDomain() }
-            val next = page.next
-            if (next == null || ++guard >= MAX_PAGES) break
-            page = api.commitsPage(next)
-        }
-        out
+        collectPaged(
+            firstPage = { api.commits(workspaceSlug, repoSlug, id) },
+            nextPage = { api.commitsPage(it) },
+        ).map { it.toDomain() }
     }
 
     override suspend fun resolveComment(

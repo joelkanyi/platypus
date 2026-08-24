@@ -17,6 +17,8 @@ package com.joelkanyi.platypus.feature.search
 
 import androidx.compose.runtime.Immutable
 import com.joelkanyi.platypus.domain.model.CodeSearchResult
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
 data class SearchWorkspace(
@@ -48,12 +50,12 @@ data class SearchUiState(
     val repoScope: RepoScope? = null,
     val isLoadingWorkspaces: Boolean = true,
     val workspacesError: String? = null,
-    val workspaces: List<SearchWorkspace> = emptyList(),
+    val workspaces: ImmutableList<SearchWorkspace> = persistentListOf(),
     val selected: SearchWorkspace? = null,
     val showWorkspacePicker: Boolean = false,
     val query: String = "",
     val status: SearchStatus = SearchStatus.Idle,
-    val results: List<CodeSearchResult> = emptyList(),
+    val results: ImmutableList<CodeSearchResult> = persistentListOf(),
     val totalFiles: Int? = null,
     val next: String? = null,
     val loadingMore: Boolean = false,

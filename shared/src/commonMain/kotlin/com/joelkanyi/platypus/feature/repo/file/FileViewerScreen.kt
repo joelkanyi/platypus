@@ -30,7 +30,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -38,24 +37,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.joelkanyi.platypus.app.LocalPlatypusDependencies
-import com.joelkanyi.platypus.core.result.NetworkResult
-import com.joelkanyi.platypus.core.result.userMessage
+import com.joelkanyi.platypus.core.syntax.highlighterFor
+import com.joelkanyi.platypus.core.syntax.outlineOf
 import com.joelkanyi.platypus.designsystem.PlatypusBreadcrumb
 import com.joelkanyi.platypus.designsystem.PlatypusCodeView
 import com.joelkanyi.platypus.designsystem.PlatypusMarkdown
 import com.joelkanyi.platypus.designsystem.crumbsFor
 import com.joelkanyi.platypus.designsystem.highlightLine
 import com.joelkanyi.platypus.designsystem.rememberSyntaxColors
-import com.joelkanyi.platypus.designsystem.toSp
 import com.joelkanyi.platypus.domain.model.RepoFile
-import com.joelkanyi.platypus.domain.repository.RepoContentRepository
-import com.joelkanyi.platypus.syntax.highlighterFor
-import com.joelkanyi.platypus.syntax.outlineOf
+import com.joelkanyi.platypus.ui.toSp
 import io.github.joelkanyi.jenga.component.button.JengaIconButton
 import io.github.joelkanyi.jenga.component.feedback.JengaBottomSheet
 import io.github.joelkanyi.jenga.component.icon.JengaIcon
@@ -68,107 +62,7 @@ import io.github.joelkanyi.jenga.component.state.JengaEmptyState
 import io.github.joelkanyi.jenga.component.state.JengaErrorState
 import io.github.joelkanyi.jenga.component.text.JengaText
 import io.github.joelkanyi.jenga.theme.JengaTheme
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-
-@Immutable
-data class FileUiState(
-    val isLoading: Boolean = true,
-    val error: String? = null,
-    val file: RepoFile? = null,
-    val findActive: Boolean = false,
-    val findQuery: String = "",
-    val matches: List<Int> = emptyList(),
-    val matchIndex: Int = 0,
-    val outlineOpen: Boolean = false,
-    val isMarkdown: Boolean = false,
-    val preview: Boolean = false,
-    val defaultBranch: String? = null,
-) {
-    val currentMatchLine: Int? get() = matches.getOrNull(matchIndex)
-}
-
-class FileViewerViewModel(
-    private val repoContentRepository: RepoContentRepository,
-    private val accountId: String,
-    private val workspace: String,
-    private val repoSlug: String,
-    private val ref: String,
-    private val path: String,
-    renderMarkdownDefault: Boolean,
-    private val fromSearch: Boolean = false,
-) : ViewModel() {
-
-    private val isMarkdown = path.substringAfterLast('.', "").lowercase() in MARKDOWN_EXTENSIONS
-
-    private val _uiState =
-        MutableStateFlow(FileUiState(isMarkdown = isMarkdown, preview = isMarkdown && renderMarkdownDefault))
-    val uiState: StateFlow<FileUiState> = _uiState.asStateFlow()
-
-    init {
-        load()
-    }
-
-    fun retry() = load()
-
-    fun togglePreview() = _uiState.update { it.copy(preview = !it.preview) }
-
-    fun toggleFind() = _uiState.update {
-        if (it.findActive) {
-            it.copy(findActive = false, findQuery = "", matches = emptyList(), matchIndex = 0)
-        } else {
-            it.copy(findActive = true)
-        }
-    }
-
-    fun onFindQuery(query: String) = _uiState.update { state ->
-        val lines = state.file?.lines ?: emptyList()
-        val jumpLine = query.removePrefix(":").toIntOrNull()?.takeIf { query.startsWith(":") }
-        val matches = when {
-            query.isBlank() -> emptyList()
-            jumpLine != null -> listOf((jumpLine - 1).coerceIn(0, (lines.size - 1).coerceAtLeast(0)))
-            else -> lines.indices.filter { lines[it].contains(query, ignoreCase = true) }
-        }
-        state.copy(findQuery = query, matches = matches, matchIndex = 0)
-    }
-
-    fun toggleOutline() = _uiState.update { it.copy(outlineOpen = !it.outlineOpen) }
-
-    fun jumpTo(line: Int) = _uiState.update {
-        it.copy(outlineOpen = false, matches = listOf(line), matchIndex = 0)
-    }
-
-    fun nextMatch() = _uiState.update {
-        if (it.matches.isEmpty()) it else it.copy(matchIndex = (it.matchIndex + 1) % it.matches.size)
-    }
-
-    fun previousMatch() = _uiState.update {
-        if (it.matches.isEmpty()) it else it.copy(matchIndex = (it.matchIndex - 1 + it.matches.size) % it.matches.size)
-    }
-
-    private fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
-            when (val result = repoContentRepository.file(accountId, workspace, repoSlug, ref, path)) {
-                is NetworkResult.Success -> _uiState.update { it.copy(isLoading = false, file = result.data) }
-                is NetworkResult.Failure -> _uiState.update { it.copy(isLoading = false, error = result.userMessage()) }
-            }
-        }
-        if (fromSearch) loadDefaultBranch()
-    }
-
-    private fun loadDefaultBranch() {
-        viewModelScope.launch {
-            val result = repoContentRepository.repository(accountId, workspace, repoSlug)
-            if (result is NetworkResult.Success) {
-                _uiState.update { it.copy(defaultBranch = result.data.defaultBranch) }
-            }
-        }
-    }
-}
 
 @Composable
 fun FileViewerScreen(
@@ -537,5 +431,3 @@ private fun FindBar(
         }
     }
 }
-
-private val MARKDOWN_EXTENSIONS = setOf("md", "markdown", "mdown", "mkd")

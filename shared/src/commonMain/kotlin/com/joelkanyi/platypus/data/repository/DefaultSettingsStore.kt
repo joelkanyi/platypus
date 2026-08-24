@@ -16,9 +16,9 @@
 package com.joelkanyi.platypus.data.repository
 
 import com.joelkanyi.platypus.core.concurrency.DispatcherProvider
-import com.joelkanyi.platypus.data.auth.SecureStore
-import com.joelkanyi.platypus.data.remote.PlatypusJson
+import com.joelkanyi.platypus.data.remote.network.PlatypusJson
 import com.joelkanyi.platypus.domain.model.AppSettings
+import com.joelkanyi.platypus.domain.repository.SecureStore
 import com.joelkanyi.platypus.domain.repository.SettingsStore
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding

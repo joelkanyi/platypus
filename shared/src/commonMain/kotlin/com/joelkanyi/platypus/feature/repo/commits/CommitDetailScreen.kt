@@ -37,9 +37,13 @@ import com.joelkanyi.platypus.designsystem.PlatypusDiffView
 import com.joelkanyi.platypus.designsystem.PlatypusListRowSkeleton
 import com.joelkanyi.platypus.designsystem.PlatypusSkeletonLine
 import com.joelkanyi.platypus.designsystem.parseDiffRows
-import com.joelkanyi.platypus.designsystem.toSp
+import com.joelkanyi.platypus.domain.model.AccountId
 import com.joelkanyi.platypus.domain.model.CommitDetail
+import com.joelkanyi.platypus.domain.model.RepoRef
+import com.joelkanyi.platypus.domain.model.RepoSlug
+import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import com.joelkanyi.platypus.domain.repository.RepoContentRepository
+import com.joelkanyi.platypus.ui.toSp
 import io.github.joelkanyi.jenga.component.button.JengaIconButton
 import io.github.joelkanyi.jenga.component.card.JengaCard
 import io.github.joelkanyi.jenga.component.icon.JengaIcon
@@ -70,6 +74,8 @@ class CommitDetailViewModel(
     private val hash: String,
 ) : ViewModel() {
 
+    private val repoRef = RepoRef(AccountId(accountId), WorkspaceSlug(workspace), RepoSlug(repoSlug))
+
     private val _uiState = MutableStateFlow(CommitDetailUiState())
     val uiState: StateFlow<CommitDetailUiState> = _uiState.asStateFlow()
 
@@ -82,7 +88,7 @@ class CommitDetailViewModel(
     private fun load() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            when (val result = repoContentRepository.commitDetail(accountId, workspace, repoSlug, hash)) {
+            when (val result = repoContentRepository.commitDetail(repoRef, hash)) {
                 is NetworkResult.Success -> _uiState.update { it.copy(isLoading = false, detail = result.data) }
                 is NetworkResult.Failure -> _uiState.update { it.copy(isLoading = false, error = result.userMessage()) }
             }

@@ -23,6 +23,7 @@ import com.joelkanyi.platypus.domain.model.PipelineStep
 import com.joelkanyi.platypus.domain.model.RefType
 import com.joelkanyi.platypus.preview.PlatypusPreview
 import com.joelkanyi.platypus.preview.PlatypusThemePreviews
+import kotlinx.collections.immutable.persistentListOf
 
 private fun pipeline(build: Long, status: PipelineStatus) = Pipeline(
     uuid = "{$build}",
@@ -42,14 +43,14 @@ private fun pipeline(build: Long, status: PipelineStatus) = Pipeline(
     durationSeconds = 244,
 )
 
-private val samplePipelines = listOf(
+private val samplePipelines = persistentListOf(
     pipeline(42, PipelineStatus.SUCCESSFUL),
     pipeline(41, PipelineStatus.FAILED),
     pipeline(40, PipelineStatus.IN_PROGRESS),
     pipeline(39, PipelineStatus.STOPPED),
 )
 
-private val sampleSteps = listOf(
+private val sampleSteps = persistentListOf(
     PipelineStep("{s1}", "Build", PipelineStatus.SUCCESSFUL, null, null, 120),
     PipelineStep("{s2}", "Unit Tests", PipelineStatus.FAILED, null, null, 90),
     PipelineStep("{s3}", "Deploy", PipelineStatus.PENDING, null, null, 0),
@@ -78,7 +79,7 @@ private fun PipelineListEmptyPreview() {
     PlatypusPreview {
         PipelineListContent(
             repoName = "API Gateway",
-            state = PipelineListUiState(isLoading = false, pipelines = emptyList()),
+            state = PipelineListUiState(isLoading = false, pipelines = persistentListOf()),
             onBack = {},
             onRetry = {},
             onRefresh = {},

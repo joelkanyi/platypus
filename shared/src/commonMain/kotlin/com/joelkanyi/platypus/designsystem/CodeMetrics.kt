@@ -15,16 +15,6 @@
  */
 package com.joelkanyi.platypus.designsystem
 
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.sp
-import com.joelkanyi.platypus.domain.model.CodeFontSize
-
-fun CodeFontSize.toSp(): TextUnit = when (this) {
-    CodeFontSize.SMALL -> 12.sp
-    CodeFontSize.MEDIUM -> 13.sp
-    CodeFontSize.LARGE -> 15.sp
-}
-
 /**
  * Shared monospace layout ratios used by the code viewer and the diff view so their line height and
  * horizontal-scroll width math stay identical. [CHAR_ADVANCE_RATIO] approximates the width of one

@@ -21,8 +21,9 @@ import com.joelkanyi.platypus.domain.model.DeploymentStatus
 import com.joelkanyi.platypus.domain.model.Schedule
 import com.joelkanyi.platypus.preview.PlatypusPreview
 import com.joelkanyi.platypus.preview.PlatypusThemePreviews
+import kotlinx.collections.immutable.persistentListOf
 
-private val sampleDeployments = listOf(
+private val sampleDeployments = persistentListOf(
     Deployment(
         uuid = "{d1}",
         environmentName = "Production",
@@ -47,7 +48,7 @@ private val sampleDeployments = listOf(
     ),
 )
 
-private val sampleSchedules = listOf(
+private val sampleSchedules = persistentListOf(
     Schedule(uuid = "{s1}", enabled = true, refName = "main", selectorPattern = "nightly", cronPattern = "0 0 * * *"),
     Schedule(uuid = "{s2}", enabled = false, refName = "develop", selectorPattern = null, cronPattern = "0 6 * * 1"),
 )

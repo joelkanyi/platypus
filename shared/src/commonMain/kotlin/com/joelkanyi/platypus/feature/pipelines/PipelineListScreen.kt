@@ -40,8 +40,12 @@ import com.joelkanyi.platypus.app.LocalPlatypusDependencies
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.userMessage
 import com.joelkanyi.platypus.designsystem.PlatypusListRowSkeleton
+import com.joelkanyi.platypus.domain.model.AccountId
 import com.joelkanyi.platypus.domain.model.Pipeline
 import com.joelkanyi.platypus.domain.model.PipelineTriggerRequest
+import com.joelkanyi.platypus.domain.model.RepoRef
+import com.joelkanyi.platypus.domain.model.RepoSlug
+import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import com.joelkanyi.platypus.domain.repository.PipelineRepository
 import io.github.joelkanyi.jenga.component.button.JengaIconButton
 import io.github.joelkanyi.jenga.component.chip.JengaChip
@@ -56,6 +60,9 @@ import io.github.joelkanyi.jenga.component.state.JengaEmptyState
 import io.github.joelkanyi.jenga.component.state.JengaErrorState
 import io.github.joelkanyi.jenga.component.tabs.JengaSegmentedControl
 import io.github.joelkanyi.jenga.theme.JengaTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -83,22 +90,23 @@ data class PipelineListUiState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val error: String? = null,
-    val pipelines: List<Pipeline> = emptyList(),
+    val pipelines: ImmutableList<Pipeline> = persistentListOf(),
     val filter: PipelineListFilter = PipelineListFilter.ALL,
     val branchFilter: String? = null,
     val triggerFilter: String? = null,
     val isTriggering: Boolean = false,
     val triggerError: String? = null,
 ) {
-    val visible: List<Pipeline> get() = pipelines.filter {
+    val visible: ImmutableList<Pipeline> get() = pipelines.filter {
         filter.matches(it) &&
             (branchFilter == null || it.refName == branchFilter) &&
             (triggerFilter == null || triggerLabel(it) == triggerFilter)
-    }
+    }.toImmutableList()
 
-    val branches: List<String> get() = pipelines.mapNotNull { it.refName?.takeIf { r -> r.isNotBlank() } }.distinct()
+    val branches: ImmutableList<String> get() =
+        pipelines.mapNotNull { it.refName?.takeIf { r -> r.isNotBlank() } }.distinct().toImmutableList()
 
-    val triggers: List<String> get() = pipelines.map { triggerLabel(it) }.distinct()
+    val triggers: ImmutableList<String> get() = pipelines.map { triggerLabel(it) }.distinct().toImmutableList()
 }
 
 class PipelineListViewModel(
@@ -107,6 +115,8 @@ class PipelineListViewModel(
     private val workspace: String,
     private val repoSlug: String,
 ) : ViewModel() {
+
+    private val repoRef = RepoRef(AccountId(accountId), WorkspaceSlug(workspace), RepoSlug(repoSlug))
 
     private val _uiState = MutableStateFlow(PipelineListUiState())
     val uiState: StateFlow<PipelineListUiState> = _uiState.asStateFlow()
@@ -131,7 +141,7 @@ class PipelineListViewModel(
     fun trigger(request: PipelineTriggerRequest, onTriggered: (Pipeline) -> Unit) {
         viewModelScope.launch {
             _uiState.update { it.copy(isTriggering = true, triggerError = null) }
-            when (val result = repository.trigger(accountId, workspace, repoSlug, request)) {
+            when (val result = repository.trigger(repoRef, request)) {
                 is NetworkResult.Success -> {
                     _uiState.update { it.copy(isTriggering = false) }
                     refresh()
@@ -156,10 +166,16 @@ class PipelineListViewModel(
     }
 
     private suspend fun silentRefresh() {
-        val result = repository.pipelines(accountId, workspace, repoSlug)
+        val result = repository.pipelines(repoRef)
         if (result is NetworkResult.Success) {
             _uiState.update { current ->
-                if (current.pipelines == result.data) current else current.copy(pipelines = result.data)
+                if (current.pipelines ==
+                    result.data
+                ) {
+                    current
+                } else {
+                    current.copy(pipelines = result.data.toImmutableList())
+                }
             }
         }
     }
@@ -167,9 +183,9 @@ class PipelineListViewModel(
     private fun load(initial: Boolean) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = initial, isRefreshing = !initial, error = null) }
-            when (val result = repository.pipelines(accountId, workspace, repoSlug)) {
+            when (val result = repository.pipelines(repoRef)) {
                 is NetworkResult.Success -> _uiState.update {
-                    it.copy(isLoading = false, isRefreshing = false, pipelines = result.data)
+                    it.copy(isLoading = false, isRefreshing = false, pipelines = result.data.toImmutableList())
                 }
                 is NetworkResult.Failure -> _uiState.update {
                     it.copy(isLoading = false, isRefreshing = false, error = result.userMessage())

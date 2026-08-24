@@ -24,6 +24,8 @@ import com.joelkanyi.platypus.domain.model.Repository
 import com.joelkanyi.platypus.domain.model.WatchedRepo
 import com.joelkanyi.platypus.domain.repository.AuthRepository
 import com.joelkanyi.platypus.domain.repository.WatchlistRepository
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -68,9 +70,9 @@ class RepositoriesViewModel(
                 allWatched = watched
                 _uiState.update { state ->
                     state.copy(
-                        watched = watched,
+                        watched = watched.toImmutableList(),
                         watchedCount = watched.size,
-                        repos = state.repos.map { it.copy(watched = isWatched(it.repo)) },
+                        repos = state.repos.map { it.copy(watched = isWatched(it.repo)) }.toImmutableList(),
                     )
                 }
             }
@@ -102,7 +104,12 @@ class RepositoriesViewModel(
                 return@launch
             }
             _uiState.update {
-                it.copy(isLoadingWorkspaces = false, workspaces = options, multiAccount = accounts.size > 1)
+                it.copy(
+                    isLoadingWorkspaces = false,
+                    workspaces = options.toImmutableList(),
+                    multiAccount =
+                    accounts.size > 1,
+                )
             }
             select(options.first())
         }
@@ -111,7 +118,7 @@ class RepositoriesViewModel(
     private fun select(option: WorkspaceOption) {
         if (_uiState.value.selected?.id == option.id) return
         _uiState.update {
-            it.copy(selected = option, query = "", repos = emptyList(), nextCursor = null, reposError = null)
+            it.copy(selected = option, query = "", repos = persistentListOf(), nextCursor = null, reposError = null)
         }
         browse(option, reset = true)
     }
@@ -147,7 +154,7 @@ class RepositoriesViewModel(
                         state.copy(
                             isLoadingRepos = false,
                             isPaginating = false,
-                            repos = if (reset) rows else state.repos + rows,
+                            repos = (if (reset) rows else state.repos + rows).toImmutableList(),
                             nextCursor = result.data.next,
                         )
                     }

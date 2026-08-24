@@ -16,7 +16,7 @@
 package com.joelkanyi.platypus.data.repository
 
 import com.joelkanyi.platypus.core.result.NetworkResult
-import com.joelkanyi.platypus.data.remote.PlatypusJson
+import com.joelkanyi.platypus.data.remote.network.PlatypusJson
 import com.joelkanyi.platypus.domain.model.Repository
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine

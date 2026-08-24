@@ -45,8 +45,12 @@ import com.joelkanyi.platypus.app.LocalPlatypusDependencies
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.userMessage
 import com.joelkanyi.platypus.designsystem.PlatypusCodeView
-import com.joelkanyi.platypus.designsystem.toSp
+import com.joelkanyi.platypus.domain.model.AccountId
+import com.joelkanyi.platypus.domain.model.RepoRef
+import com.joelkanyi.platypus.domain.model.RepoSlug
+import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import com.joelkanyi.platypus.domain.repository.PipelineRepository
+import com.joelkanyi.platypus.ui.toSp
 import io.github.joelkanyi.jenga.component.button.JengaIconButton
 import io.github.joelkanyi.jenga.component.chip.JengaChip
 import io.github.joelkanyi.jenga.component.divider.JengaDivider
@@ -81,6 +85,8 @@ class PipelineStepLogViewModel(
     private val stepUuid: String,
 ) : ViewModel() {
 
+    private val repoRef = RepoRef(AccountId(accountId), WorkspaceSlug(workspace), RepoSlug(repoSlug))
+
     private val _uiState = MutableStateFlow(StepLogUiState())
     val uiState: StateFlow<StepLogUiState> = _uiState.asStateFlow()
 
@@ -93,7 +99,7 @@ class PipelineStepLogViewModel(
     private fun load() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            when (val result = repository.stepLog(accountId, workspace, repoSlug, pipelineUuid, stepUuid)) {
+            when (val result = repository.stepLog(repoRef, pipelineUuid, stepUuid)) {
                 is NetworkResult.Success -> {
                     _uiState.update { it.copy(isLoading = false, raw = result.data) }
                     poll()
@@ -108,7 +114,7 @@ class PipelineStepLogViewModel(
         viewModelScope.launch {
             while (true) {
                 delay(POLL_MS)
-                val result = repository.stepLog(accountId, workspace, repoSlug, pipelineUuid, stepUuid)
+                val result = repository.stepLog(repoRef, pipelineUuid, stepUuid)
                 if (result !is NetworkResult.Success) continue
                 if (result.data == _uiState.value.raw) break
                 _uiState.update { it.copy(raw = result.data) }

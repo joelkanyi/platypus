@@ -20,11 +20,20 @@ import androidx.lifecycle.viewModelScope
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.getOrNull
 import com.joelkanyi.platypus.core.result.userMessage
+import com.joelkanyi.platypus.domain.model.AccountId
+import com.joelkanyi.platypus.domain.model.CommitHash
+import com.joelkanyi.platypus.domain.model.MergePair
 import com.joelkanyi.platypus.domain.model.MergeStrategy
 import com.joelkanyi.platypus.domain.model.PrApproval
 import com.joelkanyi.platypus.domain.model.PrComment
+import com.joelkanyi.platypus.domain.model.PrId
+import com.joelkanyi.platypus.domain.model.PrRef
 import com.joelkanyi.platypus.domain.model.PullRequestDetail
+import com.joelkanyi.platypus.domain.model.RepoRef
+import com.joelkanyi.platypus.domain.model.RepoSlug
+import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import com.joelkanyi.platypus.domain.repository.PullRequestRepository
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,6 +49,8 @@ class PrDetailViewModel(
     initialMergeStrategy: MergeStrategy,
     private val defaultCloseSourceBranch: Boolean,
 ) : ViewModel() {
+
+    private val prRef = PrRef(RepoRef(AccountId(accountId), WorkspaceSlug(workspace), RepoSlug(repoSlug)), PrId(prId))
 
     private val _uiState = MutableStateFlow(PrDetailUiState(mergeStrategy = initialMergeStrategy))
     val uiState: StateFlow<PrDetailUiState> = _uiState.asStateFlow()
@@ -80,7 +91,7 @@ class PrDetailViewModel(
     private fun load() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            when (val result = repository.detail(accountId, workspace, repoSlug, prId)) {
+            when (val result = repository.detail(prRef)) {
                 is NetworkResult.Success -> {
                     _uiState.update { it.copy(isLoading = false, detail = result.data) }
                     loadActivity()
@@ -93,19 +104,16 @@ class PrDetailViewModel(
     }
 
     private suspend fun loadActivity() {
-        val activity = repository.activity(accountId, workspace, repoSlug, prId).getOrNull() ?: return
-        _uiState.update { it.copy(activity = activity.sortedByDescending { item -> item.date }) }
+        val activity = repository.activity(prRef).getOrNull() ?: return
+        _uiState.update { it.copy(activity = activity.sortedByDescending { item -> item.date }.toImmutableList()) }
     }
 
     private fun loadConflicts(detail: PullRequestDetail) {
         if (!detail.isOpen) return
         viewModelScope.launch {
             val conflicts = repository.hasConflicts(
-                accountId = accountId,
-                workspaceSlug = workspace,
-                repoSlug = repoSlug,
-                sourceCommit = detail.sourceCommit,
-                destinationCommit = detail.destinationCommit,
+                repo = prRef.repo,
+                pair = MergePair(CommitHash(detail.sourceCommit), CommitHash(detail.destinationCommit)),
             ).getOrNull() ?: return@launch
             _uiState.update { it.copy(hasConflicts = conflicts) }
         }
@@ -113,7 +121,7 @@ class PrDetailViewModel(
 
     private fun refreshDetail() {
         viewModelScope.launch {
-            repository.detail(accountId, workspace, repoSlug, prId).getOrNull()?.let { fresh ->
+            repository.detail(prRef).getOrNull()?.let { fresh ->
                 _uiState.update { it.copy(detail = fresh) }
             }
             loadActivity()
@@ -123,10 +131,7 @@ class PrDetailViewModel(
     private fun resolve(comment: PrComment) {
         viewModelScope.launch {
             val result = repository.resolveComment(
-                accountId = accountId,
-                workspaceSlug = workspace,
-                repoSlug = repoSlug,
-                id = prId,
+                pr = prRef,
                 commentId = comment.id,
                 resolve = !comment.resolved,
             )
@@ -145,9 +150,9 @@ class PrDetailViewModel(
         setMyApproval(if (approving) PrApproval.APPROVED else PrApproval.NONE)
         viewModelScope.launch {
             val result = if (approving) {
-                repository.approve(accountId, workspace, repoSlug, prId)
+                repository.approve(prRef)
             } else {
-                repository.unapprove(accountId, workspace, repoSlug, prId)
+                repository.unapprove(prRef)
             }
             when (result) {
                 is NetworkResult.Success -> refreshDetail()
@@ -167,9 +172,9 @@ class PrDetailViewModel(
         setMyApproval(if (requesting) PrApproval.CHANGES_REQUESTED else PrApproval.NONE)
         viewModelScope.launch {
             val result = if (requesting) {
-                repository.requestChanges(accountId, workspace, repoSlug, prId)
+                repository.requestChanges(prRef)
             } else {
-                repository.unrequestChanges(accountId, workspace, repoSlug, prId)
+                repository.unrequestChanges(prRef)
             }
             when (result) {
                 is NetworkResult.Success -> refreshDetail()
@@ -187,7 +192,7 @@ class PrDetailViewModel(
         if (raw.isEmpty() || state.postingComment) return
         _uiState.update { it.copy(postingComment = true) }
         viewModelScope.launch {
-            val result = repository.addComment(accountId, workspace, repoSlug, prId, raw, state.replyingTo?.id)
+            val result = repository.addComment(prRef, raw, state.replyingTo?.id)
             when (result) {
                 is NetworkResult.Success -> {
                     _uiState.update {
@@ -212,10 +217,7 @@ class PrDetailViewModel(
         _uiState.update { it.copy(actionInProgress = true, showMergeSheet = false) }
         viewModelScope.launch {
             val result = repository.merge(
-                accountId = accountId,
-                workspaceSlug = workspace,
-                repoSlug = repoSlug,
-                id = prId,
+                pr = prRef,
                 strategy = state.mergeStrategy,
                 message = null,
                 closeSourceBranch = state.closeSourceBranch,
@@ -227,7 +229,7 @@ class PrDetailViewModel(
     private fun decline() {
         _uiState.update { it.copy(actionInProgress = true, showDeclineDialog = false) }
         viewModelScope.launch {
-            applyTerminalResult(repository.decline(accountId, workspace, repoSlug, prId))
+            applyTerminalResult(repository.decline(prRef))
         }
     }
 

@@ -33,9 +33,13 @@ import com.joelkanyi.platypus.app.LocalPlatypusDependencies
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.userMessage
 import com.joelkanyi.platypus.designsystem.PlatypusListRowSkeleton
-import com.joelkanyi.platypus.designsystem.PlatypusPullRequestRow
+import com.joelkanyi.platypus.domain.model.AccountId
 import com.joelkanyi.platypus.domain.model.PullRequest
+import com.joelkanyi.platypus.domain.model.RepoRef
+import com.joelkanyi.platypus.domain.model.RepoSlug
+import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import com.joelkanyi.platypus.domain.repository.PullRequestRepository
+import com.joelkanyi.platypus.ui.PlatypusPullRequestRow
 import io.github.joelkanyi.jenga.component.button.JengaIconButton
 import io.github.joelkanyi.jenga.component.icon.JengaIcon
 import io.github.joelkanyi.jenga.component.icon.JengaIcons
@@ -45,6 +49,9 @@ import io.github.joelkanyi.jenga.component.scaffold.JengaTopAppBar
 import io.github.joelkanyi.jenga.component.state.JengaEmptyState
 import io.github.joelkanyi.jenga.component.state.JengaErrorState
 import io.github.joelkanyi.jenga.theme.JengaTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -56,7 +63,7 @@ data class RepoPullRequestsUiState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val error: String? = null,
-    val pullRequests: List<PullRequest> = emptyList(),
+    val pullRequests: ImmutableList<PullRequest> = persistentListOf(),
 )
 
 class RepoPullRequestsViewModel(
@@ -66,6 +73,8 @@ class RepoPullRequestsViewModel(
     private val repoSlug: String,
     private val repoName: String,
 ) : ViewModel() {
+
+    private val repoRef = RepoRef(AccountId(accountId), WorkspaceSlug(workspace), RepoSlug(repoSlug))
 
     private val _uiState = MutableStateFlow(RepoPullRequestsUiState())
     val uiState: StateFlow<RepoPullRequestsUiState> = _uiState.asStateFlow()
@@ -81,9 +90,9 @@ class RepoPullRequestsViewModel(
     private fun load(initial: Boolean) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = initial, isRefreshing = !initial, error = null) }
-            when (val result = repository.pullRequests(accountId, workspace, repoSlug, repoName)) {
+            when (val result = repository.pullRequests(repoRef, repoName)) {
                 is NetworkResult.Success -> _uiState.update {
-                    it.copy(isLoading = false, isRefreshing = false, pullRequests = result.data)
+                    it.copy(isLoading = false, isRefreshing = false, pullRequests = result.data.toImmutableList())
                 }
                 is NetworkResult.Failure -> _uiState.update {
                     it.copy(isLoading = false, isRefreshing = false, error = result.userMessage())

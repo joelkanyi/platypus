@@ -22,7 +22,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
 import com.joelkanyi.platypus.app.PlatypusApp
-import com.joelkanyi.platypus.data.auth.PlatypusActivityHolder
+import com.joelkanyi.platypus.data.repository.PlatypusActivityHolder
 import com.joelkanyi.platypus.di.AndroidDependencies
 
 class MainActivity : FragmentActivity() {

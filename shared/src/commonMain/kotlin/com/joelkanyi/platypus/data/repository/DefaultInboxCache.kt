@@ -15,12 +15,12 @@
  */
 package com.joelkanyi.platypus.data.repository
 
-import com.joelkanyi.platypus.data.auth.SecureStore
-import com.joelkanyi.platypus.data.remote.PlatypusJson
+import com.joelkanyi.platypus.data.remote.network.PlatypusJson
 import com.joelkanyi.platypus.domain.model.PrRelationship
 import com.joelkanyi.platypus.domain.model.PullRequest
 import com.joelkanyi.platypus.domain.repository.CachedInbox
 import com.joelkanyi.platypus.domain.repository.InboxCache
+import com.joelkanyi.platypus.domain.repository.SecureStore
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject

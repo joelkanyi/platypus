@@ -15,13 +15,13 @@
  */
 package com.joelkanyi.platypus.di
 
-import com.joelkanyi.platypus.data.auth.Biometrics
-import com.joelkanyi.platypus.data.auth.IosBiometrics
-import com.joelkanyi.platypus.data.auth.OAuthDeepLinks
+import com.joelkanyi.platypus.app.OAuthDeepLinks
 import com.joelkanyi.platypus.data.local.PlatypusDatabase
 import com.joelkanyi.platypus.data.local.createPlatypusDatabase
 import com.joelkanyi.platypus.data.local.platypusDatabaseBuilder
+import com.joelkanyi.platypus.data.repository.IosBiometrics
 import com.joelkanyi.platypus.domain.repository.AuthRepository
+import com.joelkanyi.platypus.domain.repository.Biometrics
 import com.joelkanyi.platypus.domain.repository.InboxCache
 import com.joelkanyi.platypus.domain.repository.PipelineRepository
 import com.joelkanyi.platypus.domain.repository.PullRequestRepository

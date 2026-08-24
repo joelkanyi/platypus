@@ -33,10 +33,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.joelkanyi.platypus.app.LocalPlatypusDependencies
 import com.joelkanyi.platypus.designsystem.PlatypusListRowSkeleton
-import com.joelkanyi.platypus.designsystem.PlatypusPullRequestRow
 import com.joelkanyi.platypus.domain.model.InboxFilter
 import com.joelkanyi.platypus.domain.model.PullRequest
 import com.joelkanyi.platypus.domain.usecase.GetReviewInbox
+import com.joelkanyi.platypus.ui.PlatypusPullRequestRow
 import io.github.joelkanyi.jenga.component.chip.JengaChip
 import io.github.joelkanyi.jenga.component.refresh.JengaPullToRefresh
 import io.github.joelkanyi.jenga.component.scaffold.JengaScaffold
@@ -53,7 +53,7 @@ fun InboxScreen(
 ) {
     val dependencies = LocalPlatypusDependencies.current
     val useCase = remember(dependencies) {
-        GetReviewInbox(dependencies.authRepository, dependencies.watchlistRepository)
+        GetReviewInbox(dependencies.watchlistRepository, dependencies.pullRequestRepository)
     }
     val viewModel = viewModel {
         InboxViewModel(

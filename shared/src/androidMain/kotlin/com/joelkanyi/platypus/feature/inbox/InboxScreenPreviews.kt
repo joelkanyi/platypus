@@ -21,6 +21,7 @@ import com.joelkanyi.platypus.domain.model.PrRelationship
 import com.joelkanyi.platypus.domain.model.PullRequest
 import com.joelkanyi.platypus.preview.PlatypusPreview
 import com.joelkanyi.platypus.preview.PlatypusThemePreviews
+import kotlinx.collections.immutable.persistentListOf
 
 private fun pr(
     id: Long,
@@ -47,7 +48,7 @@ private fun pr(
     repoName = repo,
 )
 
-private val samplePullRequests = listOf(
+private val samplePullRequests = persistentListOf(
     pr(101, "Add retry to token refresh", "Grace Njeri", PrRelationship.TO_REVIEW, 3),
     pr(102, "Fix null crash on empty workspace", "Peter Otieno", PrRelationship.TO_REVIEW, 0),
     pr(103, "Bump Ktor to 3.5.1", "Joel Kanyi", PrRelationship.MINE, 5, repo = "Mobile"),
@@ -76,7 +77,7 @@ private fun InboxAllPreview() {
                 isLoading = false,
                 filter = InboxFilter.ALL,
                 pullRequests = samplePullRequests,
-                failures = emptyList(),
+                failures = persistentListOf(),
             ),
             onEvent = {},
             onOpenPullRequest = {},

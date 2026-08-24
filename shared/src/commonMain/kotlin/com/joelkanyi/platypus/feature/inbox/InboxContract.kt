@@ -20,6 +20,9 @@ import com.joelkanyi.platypus.domain.model.InboxFilter
 import com.joelkanyi.platypus.domain.model.InboxSourceFailure
 import com.joelkanyi.platypus.domain.model.PrRelationship
 import com.joelkanyi.platypus.domain.model.PullRequest
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 @Immutable
 data class InboxUiState(
@@ -27,20 +30,20 @@ data class InboxUiState(
     val isRefreshing: Boolean = false,
     val hasWatchlist: Boolean = true,
     val filter: InboxFilter = InboxFilter.TO_REVIEW,
-    val pullRequests: List<PullRequest> = emptyList(),
-    val failures: List<InboxSourceFailure> = emptyList(),
+    val pullRequests: ImmutableList<PullRequest> = persistentListOf(),
+    val failures: ImmutableList<InboxSourceFailure> = persistentListOf(),
     val lastUpdatedEpochMs: Long? = null,
 ) {
     val toReviewCount: Int get() = pullRequests.count { it.relationship == PrRelationship.TO_REVIEW }
 
     val mineCount: Int get() = pullRequests.count { it.relationship == PrRelationship.MINE }
 
-    val visible: List<PullRequest>
+    val visible: ImmutableList<PullRequest>
         get() = when (filter) {
             InboxFilter.TO_REVIEW -> pullRequests.filter { it.relationship == PrRelationship.TO_REVIEW }
             InboxFilter.MINE -> pullRequests.filter { it.relationship == PrRelationship.MINE }
             InboxFilter.ALL -> pullRequests
-        }
+        }.toImmutableList()
 }
 
 sealed interface InboxUiEvent {

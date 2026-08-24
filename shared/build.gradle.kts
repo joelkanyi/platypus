@@ -59,6 +59,7 @@ kotlin {
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.collections.immutable)
 
             api(libs.room.runtime)
             implementation(libs.sqlite.bundled)
@@ -78,6 +79,9 @@ kotlin {
             implementation(libs.turbine)
             implementation(libs.ktor.client.mock)
         }
+        getByName("androidHostTest").dependencies {
+            implementation(libs.konsist)
+        }
     }
 }
 
@@ -88,6 +92,15 @@ compose.resources {
 
 room {
     schemaDirectory("$projectDir/schemas")
+}
+
+// Run with -PcomposeReports=true to emit Compose stability/recomposition reports under build/compose_reports.
+composeCompiler {
+    if (providers.gradleProperty("composeReports").orNull == "true") {
+        val reports = layout.buildDirectory.dir("compose_reports")
+        reportsDestination.set(reports)
+        metricsDestination.set(reports)
+    }
 }
 
 dependencies {

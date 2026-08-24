@@ -44,10 +44,14 @@ import com.joelkanyi.platypus.designsystem.PlatypusBreadcrumb
 import com.joelkanyi.platypus.designsystem.PlatypusIcons
 import com.joelkanyi.platypus.designsystem.crumbsFor
 import com.joelkanyi.platypus.designsystem.formatByteSize
+import com.joelkanyi.platypus.domain.model.AccountId
+import com.joelkanyi.platypus.domain.model.RepoRef
+import com.joelkanyi.platypus.domain.model.RepoSlug
 import com.joelkanyi.platypus.domain.model.SrcEntry
 import com.joelkanyi.platypus.domain.model.SrcEntryType
+import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import com.joelkanyi.platypus.domain.repository.RepoContentRepository
-import com.joelkanyi.platypus.feature.repo.branches.BranchesSheet
+import com.joelkanyi.platypus.ui.BranchesSheet
 import io.github.joelkanyi.jenga.component.button.JengaIconButton
 import io.github.joelkanyi.jenga.component.chip.JengaChip
 import io.github.joelkanyi.jenga.component.icon.JengaIcon
@@ -59,6 +63,9 @@ import io.github.joelkanyi.jenga.component.search.JengaSearchField
 import io.github.joelkanyi.jenga.component.state.JengaEmptyState
 import io.github.joelkanyi.jenga.component.state.JengaErrorState
 import io.github.joelkanyi.jenga.theme.JengaTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -73,11 +80,11 @@ data class BrowseUiState(
     val path: String = "",
     val isLoading: Boolean = true,
     val error: String? = null,
-    val entries: List<SrcEntry> = emptyList(),
+    val entries: ImmutableList<SrcEntry> = persistentListOf(),
     val query: String = "",
     val searchLoading: Boolean = false,
     val searchError: String? = null,
-    val results: List<String> = emptyList(),
+    val results: ImmutableList<String> = persistentListOf(),
 ) {
     val searching: Boolean get() = query.isNotBlank()
 }
@@ -90,6 +97,8 @@ class RepositoryBrowseViewModel(
     initialRef: String,
     initialPath: String,
 ) : ViewModel() {
+
+    private val repoRef = RepoRef(AccountId(accountId), WorkspaceSlug(workspace), RepoSlug(repoSlug))
 
     private val _uiState = MutableStateFlow(BrowseUiState(ref = initialRef, path = initialPath))
     val uiState: StateFlow<BrowseUiState> = _uiState.asStateFlow()
@@ -106,7 +115,7 @@ class RepositoryBrowseViewModel(
     /** Drill into a folder / breadcrumb / ".." IN PLACE, without pushing a new screen. */
     fun navigateTo(path: String) {
         searchJob?.cancel()
-        _uiState.update { it.copy(path = path, query = "", results = emptyList(), searchError = null) }
+        _uiState.update { it.copy(path = path, query = "", results = persistentListOf(), searchError = null) }
         load()
     }
 
@@ -114,7 +123,7 @@ class RepositoryBrowseViewModel(
     fun switchBranch(ref: String) {
         allPaths = null
         searchJob?.cancel()
-        _uiState.update { it.copy(ref = ref, path = "", query = "", results = emptyList(), searchError = null) }
+        _uiState.update { it.copy(ref = ref, path = "", query = "", results = persistentListOf(), searchError = null) }
         load()
     }
 
@@ -122,7 +131,7 @@ class RepositoryBrowseViewModel(
         _uiState.update { it.copy(query = query) }
         searchJob?.cancel()
         if (query.isBlank()) {
-            _uiState.update { it.copy(results = emptyList(), searchError = null) }
+            _uiState.update { it.copy(results = persistentListOf(), searchError = null) }
             return
         }
         searchJob = viewModelScope.launch {
@@ -134,7 +143,7 @@ class RepositoryBrowseViewModel(
     private suspend fun search(query: String) {
         val paths = allPaths ?: run {
             _uiState.update { it.copy(searchLoading = true, searchError = null) }
-            when (val result = repoContentRepository.paths(accountId, workspace, repoSlug, _uiState.value.ref)) {
+            when (val result = repoContentRepository.paths(repoRef, _uiState.value.ref)) {
                 is NetworkResult.Success -> result.data.also { allPaths = it }
                 is NetworkResult.Failure -> {
                     _uiState.update { it.copy(searchLoading = false, searchError = result.userMessage()) }
@@ -142,7 +151,7 @@ class RepositoryBrowseViewModel(
                 }
             }
         }
-        _uiState.update { it.copy(searchLoading = false, results = fuzzyFilter(query, paths)) }
+        _uiState.update { it.copy(searchLoading = false, results = fuzzyFilter(query, paths).toImmutableList()) }
     }
 
     private fun load() {
@@ -150,9 +159,9 @@ class RepositoryBrowseViewModel(
         val path = _uiState.value.path
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            when (val result = repoContentRepository.directory(accountId, workspace, repoSlug, ref, path)) {
+            when (val result = repoContentRepository.directory(repoRef, ref, path)) {
                 is NetworkResult.Success ->
-                    _uiState.update { it.copy(isLoading = false, entries = result.data.entries) }
+                    _uiState.update { it.copy(isLoading = false, entries = result.data.entries.toImmutableList()) }
                 is NetworkResult.Failure ->
                     _uiState.update { it.copy(isLoading = false, error = result.userMessage()) }
             }

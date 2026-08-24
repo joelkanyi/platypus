@@ -18,17 +18,21 @@ package com.joelkanyi.platypus.data.repository
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.safeApiCall
 import com.joelkanyi.platypus.data.remote.api.PullRequestsApi
-import com.joelkanyi.platypus.data.remote.ktorErrorMapper
 import com.joelkanyi.platypus.data.remote.mapper.parsePrDiff
 import com.joelkanyi.platypus.data.remote.mapper.toDetail
 import com.joelkanyi.platypus.data.remote.mapper.toDomain
+import com.joelkanyi.platypus.data.remote.network.collectPaged
+import com.joelkanyi.platypus.data.remote.network.ktorErrorMapper
 import com.joelkanyi.platypus.domain.model.ActivityItem
 import com.joelkanyi.platypus.domain.model.Commit
+import com.joelkanyi.platypus.domain.model.MergePair
 import com.joelkanyi.platypus.domain.model.MergeStrategy
 import com.joelkanyi.platypus.domain.model.PrComment
 import com.joelkanyi.platypus.domain.model.PrDiff
+import com.joelkanyi.platypus.domain.model.PrRef
 import com.joelkanyi.platypus.domain.model.PullRequest
 import com.joelkanyi.platypus.domain.model.PullRequestDetail
+import com.joelkanyi.platypus.domain.model.RepoRef
 import com.joelkanyi.platypus.domain.repository.AuthRepository
 import com.joelkanyi.platypus.domain.repository.PullRequestRepository
 import dev.zacsweers.metro.AppScope
@@ -48,179 +52,159 @@ class DefaultPullRequestRepository(private val authRepository: AuthRepository) :
         diffCache.clear()
     }
 
-    override suspend fun pullRequests(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        repoName: String,
-    ): NetworkResult<List<PullRequest>> = withClient(accountId) { client ->
-        val api = client.api()
-        val me = me(accountId)
-        val label = accountLabel(accountId)
-        val out = mutableListOf<PullRequest>()
-        var page = api.open(workspaceSlug, repoSlug)
-        var guard = 0
-        while (true) {
-            out += page.values.map { it.toDomain(me, accountId, workspaceSlug, repoSlug, repoName, label) }
-            val next = page.next
-            if (next == null || ++guard >= MAX_PAGES) break
-            page = api.page(next)
+    override suspend fun pullRequests(repo: RepoRef, repoName: String): NetworkResult<List<PullRequest>> {
+        val accountId = repo.accountId.value
+        val workspaceSlug = repo.workspace.value
+        val repoSlug = repo.repoSlug.value
+        return withClient(accountId) { client ->
+            val api = client.api()
+            val me = me(accountId)
+            val label = accountLabel(accountId)
+            collectPaged(
+                firstPage = { api.open(workspaceSlug, repoSlug) },
+                nextPage = { api.page(it) },
+            ).map { it.toDomain(me, accountId, workspaceSlug, repoSlug, repoName, label) }
         }
-        out
     }
 
-    override suspend fun detail(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
-    ): NetworkResult<PullRequestDetail> = withClient(accountId) { client ->
-        client.api().detail(workspaceSlug, repoSlug, id).toDetail(me(accountId), accountId, workspaceSlug, repoSlug)
+    override suspend fun detail(pr: PrRef): NetworkResult<PullRequestDetail> {
+        val accountId = pr.repo.accountId.value
+        val workspaceSlug = pr.repo.workspace.value
+        val repoSlug = pr.repo.repoSlug.value
+        val id = pr.id.value
+        return withClient(accountId) { client ->
+            client.api().detail(workspaceSlug, repoSlug, id).toDetail(me(accountId), accountId, workspaceSlug, repoSlug)
+        }
     }
 
-    override suspend fun comments(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
-    ): NetworkResult<List<PrComment>> = withClient(accountId) { client ->
-        val api = client.api()
-        val out = mutableListOf<PrComment>()
-        var page = api.comments(workspaceSlug, repoSlug, id)
-        var guard = 0
-        while (true) {
-            out += page.values.map { it.toDomain() }
-            val next = page.next
-            if (next == null || ++guard >= MAX_PAGES) break
-            page = api.commentsPage(next)
+    override suspend fun comments(pr: PrRef): NetworkResult<List<PrComment>> {
+        val workspaceSlug = pr.repo.workspace.value
+        val repoSlug = pr.repo.repoSlug.value
+        val id = pr.id.value
+        return withClient(pr.repo.accountId.value) { client ->
+            val api = client.api()
+            collectPaged(
+                firstPage = { api.comments(workspaceSlug, repoSlug, id) },
+                nextPage = { api.commentsPage(it) },
+            ).map { it.toDomain() }.filterNot { it.deleted }
         }
-        out.filterNot { it.deleted }
     }
 
     override suspend fun addComment(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
+        pr: PrRef,
         raw: String,
         parentId: Long?,
         inlinePath: String?,
         inlineTo: Int?,
-    ): NetworkResult<PrComment> = withClient(accountId) { client ->
-        client.api().addComment(workspaceSlug, repoSlug, id, raw, parentId, inlinePath, inlineTo).toDomain()
-    }
-
-    override suspend fun activity(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
-    ): NetworkResult<List<ActivityItem>> = withClient(accountId) { client ->
-        val api = client.api()
-        val out = mutableListOf<ActivityItem>()
-        var page = api.activity(workspaceSlug, repoSlug, id)
-        var guard = 0
-        while (true) {
-            out += page.values.mapNotNull { it.toDomain() }
-            val next = page.next
-            if (next == null || ++guard >= MAX_PAGES) break
-            page = api.activityPage(next)
-        }
-        out
-    }
-
-    override suspend fun commits(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
-    ): NetworkResult<List<Commit>> = withClient(accountId) { client ->
-        val api = client.api()
-        val out = mutableListOf<Commit>()
-        var page = api.commits(workspaceSlug, repoSlug, id)
-        var guard = 0
-        while (true) {
-            out += page.values.map { it.toDomain() }
-            val next = page.next
-            if (next == null || ++guard >= MAX_PAGES) break
-            page = api.commitsPage(next)
-        }
-        out
-    }
-
-    override suspend fun resolveComment(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
-        commentId: Long,
-        resolve: Boolean,
-    ): NetworkResult<Unit> = withClient(accountId) { client ->
-        if (resolve) {
-            client.api().resolveComment(workspaceSlug, repoSlug, id, commentId)
-        } else {
-            client.api().unresolveComment(workspaceSlug, repoSlug, id, commentId)
+    ): NetworkResult<PrComment> {
+        val workspaceSlug = pr.repo.workspace.value
+        val repoSlug = pr.repo.repoSlug.value
+        val id = pr.id.value
+        return withClient(pr.repo.accountId.value) { client ->
+            client.api().addComment(workspaceSlug, repoSlug, id, raw, parentId, inlinePath, inlineTo).toDomain()
         }
     }
 
-    override suspend fun approve(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
-    ): NetworkResult<Unit> = withClient(accountId) { it.api().approve(workspaceSlug, repoSlug, id) }
+    override suspend fun activity(pr: PrRef): NetworkResult<List<ActivityItem>> {
+        val workspaceSlug = pr.repo.workspace.value
+        val repoSlug = pr.repo.repoSlug.value
+        val id = pr.id.value
+        return withClient(pr.repo.accountId.value) { client ->
+            val api = client.api()
+            collectPaged(
+                firstPage = { api.activity(workspaceSlug, repoSlug, id) },
+                nextPage = { api.activityPage(it) },
+            ).mapNotNull { it.toDomain() }
+        }
+    }
 
-    override suspend fun unapprove(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
-    ): NetworkResult<Unit> = withClient(accountId) { it.api().unapprove(workspaceSlug, repoSlug, id) }
+    override suspend fun commits(pr: PrRef): NetworkResult<List<Commit>> {
+        val workspaceSlug = pr.repo.workspace.value
+        val repoSlug = pr.repo.repoSlug.value
+        val id = pr.id.value
+        return withClient(pr.repo.accountId.value) { client ->
+            val api = client.api()
+            collectPaged(
+                firstPage = { api.commits(workspaceSlug, repoSlug, id) },
+                nextPage = { api.commitsPage(it) },
+            ).map { it.toDomain() }
+        }
+    }
 
-    override suspend fun requestChanges(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
-    ): NetworkResult<Unit> = withClient(accountId) { it.api().requestChanges(workspaceSlug, repoSlug, id) }
+    override suspend fun resolveComment(pr: PrRef, commentId: Long, resolve: Boolean): NetworkResult<Unit> {
+        val workspaceSlug = pr.repo.workspace.value
+        val repoSlug = pr.repo.repoSlug.value
+        val id = pr.id.value
+        return withClient(pr.repo.accountId.value) { client ->
+            if (resolve) {
+                client.api().resolveComment(workspaceSlug, repoSlug, id, commentId)
+            } else {
+                client.api().unresolveComment(workspaceSlug, repoSlug, id, commentId)
+            }
+        }
+    }
 
-    override suspend fun unrequestChanges(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
-    ): NetworkResult<Unit> = withClient(accountId) { it.api().unrequestChanges(workspaceSlug, repoSlug, id) }
+    override suspend fun approve(pr: PrRef): NetworkResult<Unit> {
+        val workspaceSlug = pr.repo.workspace.value
+        val repoSlug = pr.repo.repoSlug.value
+        val id = pr.id.value
+        return withClient(pr.repo.accountId.value) { it.api().approve(workspaceSlug, repoSlug, id) }
+    }
+
+    override suspend fun unapprove(pr: PrRef): NetworkResult<Unit> {
+        val workspaceSlug = pr.repo.workspace.value
+        val repoSlug = pr.repo.repoSlug.value
+        val id = pr.id.value
+        return withClient(pr.repo.accountId.value) { it.api().unapprove(workspaceSlug, repoSlug, id) }
+    }
+
+    override suspend fun requestChanges(pr: PrRef): NetworkResult<Unit> {
+        val workspaceSlug = pr.repo.workspace.value
+        val repoSlug = pr.repo.repoSlug.value
+        val id = pr.id.value
+        return withClient(pr.repo.accountId.value) { it.api().requestChanges(workspaceSlug, repoSlug, id) }
+    }
+
+    override suspend fun unrequestChanges(pr: PrRef): NetworkResult<Unit> {
+        val workspaceSlug = pr.repo.workspace.value
+        val repoSlug = pr.repo.repoSlug.value
+        val id = pr.id.value
+        return withClient(pr.repo.accountId.value) { it.api().unrequestChanges(workspaceSlug, repoSlug, id) }
+    }
 
     override suspend fun merge(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
+        pr: PrRef,
         strategy: MergeStrategy,
         message: String?,
         closeSourceBranch: Boolean,
-    ): NetworkResult<PullRequestDetail> = withClient(accountId) { client ->
-        client.api()
-            .merge(workspaceSlug, repoSlug, id, strategy.wire, message, closeSourceBranch)
-            .toDetail(me(accountId), accountId, workspaceSlug, repoSlug)
+    ): NetworkResult<PullRequestDetail> {
+        val accountId = pr.repo.accountId.value
+        val workspaceSlug = pr.repo.workspace.value
+        val repoSlug = pr.repo.repoSlug.value
+        val id = pr.id.value
+        return withClient(accountId) { client ->
+            client.api()
+                .merge(workspaceSlug, repoSlug, id, strategy.wire, message, closeSourceBranch)
+                .toDetail(me(accountId), accountId, workspaceSlug, repoSlug)
+        }
     }
 
-    override suspend fun decline(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
-    ): NetworkResult<PullRequestDetail> = withClient(accountId) { client ->
-        client.api().decline(workspaceSlug, repoSlug, id)
-            .toDetail(me(accountId), accountId, workspaceSlug, repoSlug)
+    override suspend fun decline(pr: PrRef): NetworkResult<PullRequestDetail> {
+        val accountId = pr.repo.accountId.value
+        val workspaceSlug = pr.repo.workspace.value
+        val repoSlug = pr.repo.repoSlug.value
+        val id = pr.id.value
+        return withClient(accountId) { client ->
+            client.api().decline(workspaceSlug, repoSlug, id)
+                .toDetail(me(accountId), accountId, workspaceSlug, repoSlug)
+        }
     }
 
-    override suspend fun diff(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        id: Long,
-    ): NetworkResult<PrDiff> {
+    override suspend fun diff(pr: PrRef): NetworkResult<PrDiff> {
+        val accountId = pr.repo.accountId.value
+        val workspaceSlug = pr.repo.workspace.value
+        val repoSlug = pr.repo.repoSlug.value
+        val id = pr.id.value
         val key = "$accountId/$workspaceSlug/$repoSlug/$id"
         diffCache[key]?.let { return NetworkResult.Success(it) }
         return withClient(accountId) { client ->
@@ -228,15 +212,13 @@ class DefaultPullRequestRepository(private val authRepository: AuthRepository) :
         }
     }
 
-    override suspend fun hasConflicts(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        sourceCommit: String,
-        destinationCommit: String,
-    ): NetworkResult<Boolean> {
+    override suspend fun hasConflicts(repo: RepoRef, pair: MergePair): NetworkResult<Boolean> {
+        val sourceCommit = pair.source.value
+        val destinationCommit = pair.destination.value
         if (sourceCommit.isBlank() || destinationCommit.isBlank()) return NetworkResult.Success(false)
-        return withClient(accountId) { client ->
+        val workspaceSlug = repo.workspace.value
+        val repoSlug = repo.repoSlug.value
+        return withClient(repo.accountId.value) { client ->
             val api = client.api()
             val spec = "$sourceCommit..$destinationCommit"
             var page = api.diffstat(workspaceSlug, repoSlug, spec)

@@ -21,6 +21,8 @@ import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.userMessage
 import com.joelkanyi.platypus.domain.repository.AuthRepository
 import com.joelkanyi.platypus.domain.repository.SearchRepository
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -88,7 +90,9 @@ class SearchViewModel(
                 _uiState.update { it.copy(isLoadingWorkspaces = false, workspacesError = lastError) }
                 return@launch
             }
-            _uiState.update { it.copy(isLoadingWorkspaces = false, workspaces = options, selected = options.first()) }
+            _uiState.update {
+                it.copy(isLoadingWorkspaces = false, workspaces = options.toImmutableList(), selected = options.first())
+            }
         }
     }
 
@@ -99,7 +103,7 @@ class SearchViewModel(
                 selected = workspace,
                 showWorkspacePicker = false,
                 status = SearchStatus.Idle,
-                results = emptyList(),
+                results = persistentListOf(),
                 next = null,
             )
         }
@@ -110,7 +114,7 @@ class SearchViewModel(
         searchJob?.cancel()
         _uiState.update { it.copy(query = query) }
         if (query.trim().length < MIN_QUERY) {
-            _uiState.update { it.copy(status = SearchStatus.Idle, results = emptyList(), next = null) }
+            _uiState.update { it.copy(status = SearchStatus.Idle, results = persistentListOf(), next = null) }
             return
         }
         searchJob = viewModelScope.launch {
@@ -124,13 +128,13 @@ class SearchViewModel(
         val workspace = workspaceSlug() ?: return
         val userQuery = _uiState.value.query.trim()
         if (userQuery.length < MIN_QUERY) {
-            _uiState.update { it.copy(status = SearchStatus.Idle, results = emptyList(), next = null) }
+            _uiState.update { it.copy(status = SearchStatus.Idle, results = persistentListOf(), next = null) }
             return
         }
         if (!force && _uiState.value.status == SearchStatus.RateLimited) return
         val scopeKey = scopeKey()
         searchJob?.cancel()
-        _uiState.update { it.copy(status = SearchStatus.Loading, results = emptyList(), next = null) }
+        _uiState.update { it.copy(status = SearchStatus.Loading, results = persistentListOf(), next = null) }
         searchJob = viewModelScope.launch {
             val result = searchRepository.code(account, workspace, effectiveQuery(userQuery))
             if (!isCurrent(userQuery, scopeKey)) return@launch
@@ -138,7 +142,7 @@ class SearchViewModel(
                 is NetworkResult.Success -> _uiState.update {
                     it.copy(
                         status = if (result.data.items.isEmpty()) SearchStatus.NoResults else SearchStatus.Loaded,
-                        results = result.data.items,
+                        results = result.data.items.toImmutableList(),
                         totalFiles = result.data.totalFiles,
                         next = result.data.next,
                     )
@@ -169,7 +173,11 @@ class SearchViewModel(
             if (!isCurrent(userQuery, scopeKey)) return@launch
             when (result) {
                 is NetworkResult.Success -> _uiState.update {
-                    it.copy(results = it.results + result.data.items, next = result.data.next, loadingMore = false)
+                    it.copy(
+                        results = (it.results + result.data.items).toImmutableList(),
+                        next = result.data.next,
+                        loadingMore = false,
+                    )
                 }
                 is NetworkResult.Failure -> _uiState.update { it.copy(loadingMore = false, loadMoreError = true) }
             }

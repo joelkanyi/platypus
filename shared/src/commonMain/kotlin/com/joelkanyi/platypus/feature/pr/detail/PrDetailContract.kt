@@ -21,6 +21,8 @@ import com.joelkanyi.platypus.domain.model.MergeStrategy
 import com.joelkanyi.platypus.domain.model.PrApproval
 import com.joelkanyi.platypus.domain.model.PrComment
 import com.joelkanyi.platypus.domain.model.PullRequestDetail
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
 data class PrDetailUiState(
@@ -28,7 +30,7 @@ data class PrDetailUiState(
     val error: String? = null,
     val detail: PullRequestDetail? = null,
     val hasConflicts: Boolean = false,
-    val activity: List<ActivityItem> = emptyList(),
+    val activity: ImmutableList<ActivityItem> = persistentListOf(),
     val commentDraft: String = "",
     val replyingTo: PrComment? = null,
     val postingComment: Boolean = false,

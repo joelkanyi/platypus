@@ -22,6 +22,7 @@ import com.joelkanyi.platypus.domain.model.WatchedRepo
 import com.joelkanyi.platypus.domain.model.Workspace
 import com.joelkanyi.platypus.preview.PlatypusPreview
 import com.joelkanyi.platypus.preview.PlatypusThemePreviews
+import kotlinx.collections.immutable.persistentListOf
 
 private val sampleWorkspace = Workspace("{w}", "acme", "Acme Corp", null)
 private val sampleOption = WorkspaceOption("1", "Joel Kanyi", sampleWorkspace)
@@ -36,7 +37,7 @@ private fun watched(slug: String, name: String, workspace: String = "acme") = Wa
     avatarUrl = null,
 )
 
-private val sampleWatched = listOf(
+private val sampleWatched = persistentListOf(
     watched("api-gateway", "API Gateway"),
     watched("mobile", "Mobile"),
     watched("billing", "Billing", workspace = "beta"),
@@ -53,7 +54,7 @@ private fun repo(slug: String, name: String, private: Boolean) = Repository(
     avatarUrl = null,
 )
 
-private val sampleRepos = listOf(
+private val sampleRepos = persistentListOf(
     RepoRow(repo("api-gateway", "API Gateway", true), watched = true),
     RepoRow(repo("web-app", "Web App", false), watched = false),
     RepoRow(repo("infra", "Infrastructure", true), watched = false),
@@ -69,7 +70,7 @@ private fun RepositoriesWatchingPreview() {
                 watched = sampleWatched,
                 watchedCount = sampleWatched.size,
                 isLoadingWorkspaces = false,
-                workspaces = listOf(sampleOption),
+                workspaces = persistentListOf(sampleOption),
                 selected = sampleOption,
             ),
             onEvent = {},
@@ -97,7 +98,7 @@ private fun RepositoriesBrowsePreview() {
                 tab = RepoTab.BROWSE,
                 watchedCount = 3,
                 isLoadingWorkspaces = false,
-                workspaces = listOf(sampleOption),
+                workspaces = persistentListOf(sampleOption),
                 selected = sampleOption,
                 repos = sampleRepos,
             ),

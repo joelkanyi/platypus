@@ -16,13 +16,21 @@
 package com.joelkanyi.platypus.data.repository
 
 import com.joelkanyi.platypus.core.result.NetworkResult
-import com.joelkanyi.platypus.data.remote.PlatypusJson
+import com.joelkanyi.platypus.data.remote.network.PlatypusJson
 import com.joelkanyi.platypus.domain.model.Account
+import com.joelkanyi.platypus.domain.model.AccountId
 import com.joelkanyi.platypus.domain.model.AuthMode
 import com.joelkanyi.platypus.domain.model.BitbucketUser
+import com.joelkanyi.platypus.domain.model.CommitHash
+import com.joelkanyi.platypus.domain.model.MergePair
 import com.joelkanyi.platypus.domain.model.MergeStrategy
 import com.joelkanyi.platypus.domain.model.PrApproval
+import com.joelkanyi.platypus.domain.model.PrId
+import com.joelkanyi.platypus.domain.model.PrRef
 import com.joelkanyi.platypus.domain.model.PrState
+import com.joelkanyi.platypus.domain.model.RepoRef
+import com.joelkanyi.platypus.domain.model.RepoSlug
+import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandler
@@ -47,6 +55,9 @@ private val account = Account(
     user = BitbucketUser(uuid = ME, accountId = "a-1", nickname = "joel", displayName = "Joel", avatarUrl = null),
     mode = AuthMode.API_TOKEN,
 )
+
+private val repoRef = RepoRef(AccountId("1"), WorkspaceSlug("acme"), RepoSlug("api"))
+private val prRef = PrRef(repoRef, PrId(7))
 
 private const val DETAIL =
     """{"id":7,"title":"Add feature","state":"OPEN",""" +
@@ -97,7 +108,7 @@ class DefaultPullRequestRepositoryTest {
 
     @Test
     fun detailMapsFromApi() = runTest {
-        val result = repository(router).detail("1", "acme", "api", 7)
+        val result = repository(router).detail(prRef)
         val detail = assertIs<NetworkResult.Success<*>>(
             result,
         ).data as com.joelkanyi.platypus.domain.model.PullRequestDetail
@@ -108,20 +119,20 @@ class DefaultPullRequestRepositoryTest {
 
     @Test
     fun commentsFilterDeleted() = runTest {
-        val result = repository(router).comments("1", "acme", "api", 7)
+        val result = repository(router).comments(prRef)
         val comments = assertIs<NetworkResult.Success<*>>(result).data as List<*>
         assertEquals(1, comments.size)
     }
 
     @Test
     fun approveSucceeds() = runTest {
-        val result = repository(router).approve("1", "acme", "api", 7)
+        val result = repository(router).approve(prRef)
         assertIs<NetworkResult.Success<Unit>>(result)
     }
 
     @Test
     fun mergeReturnsUpdatedDetail() = runTest {
-        val result = repository(router).merge("1", "acme", "api", 7, MergeStrategy.SQUASH, null, true)
+        val result = repository(router).merge(prRef, MergeStrategy.SQUASH, null, true)
         val detail = assertIs<NetworkResult.Success<*>>(
             result,
         ).data as com.joelkanyi.platypus.domain.model.PullRequestDetail
@@ -130,26 +141,26 @@ class DefaultPullRequestRepositoryTest {
 
     @Test
     fun hasConflictsTrueWhenDiffstatReportsConflict() = runTest {
-        val result = repository(router).hasConflicts("1", "acme", "api", "conflictA", "b")
+        val result = repository(router).hasConflicts(repoRef, MergePair(CommitHash("conflictA"), CommitHash("b")))
         assertEquals(true, assertIs<NetworkResult.Success<Boolean>>(result).data)
     }
 
     @Test
     fun hasConflictsFalseWhenDiffstatClean() = runTest {
-        val result = repository(router).hasConflicts("1", "acme", "api", "cleanA", "b")
+        val result = repository(router).hasConflicts(repoRef, MergePair(CommitHash("cleanA"), CommitHash("b")))
         assertEquals(false, assertIs<NetworkResult.Success<Boolean>>(result).data)
     }
 
     @Test
     fun hasConflictsFalseWhenCommitsMissing() = runTest {
-        val result = repository(router).hasConflicts("1", "acme", "api", "", "b")
+        val result = repository(router).hasConflicts(repoRef, MergePair(CommitHash(""), CommitHash("b")))
         assertEquals(false, assertIs<NetworkResult.Success<Boolean>>(result).data)
     }
 
     @Test
     fun failsWhenSignedOut() = runTest {
         val repo = DefaultPullRequestRepository(FakeAuthRepository(client = null, accounts = listOf(account)))
-        val result = repo.detail("1", "acme", "api", 7)
+        val result = repo.detail(prRef)
         val failure = assertIs<NetworkResult.Failure.Http>(result)
         assertTrue(failure.code == 401)
     }

@@ -20,48 +20,24 @@ import com.joelkanyi.platypus.domain.model.Deployment
 import com.joelkanyi.platypus.domain.model.Pipeline
 import com.joelkanyi.platypus.domain.model.PipelineStep
 import com.joelkanyi.platypus.domain.model.PipelineTriggerRequest
+import com.joelkanyi.platypus.domain.model.RepoRef
 import com.joelkanyi.platypus.domain.model.Schedule
 
 interface PipelineRepository {
 
-    suspend fun pipelines(accountId: String, workspaceSlug: String, repoSlug: String): NetworkResult<List<Pipeline>>
+    suspend fun pipelines(repo: RepoRef): NetworkResult<List<Pipeline>>
 
-    suspend fun pipeline(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        uuid: String,
-    ): NetworkResult<Pipeline>
+    suspend fun pipeline(repo: RepoRef, uuid: String): NetworkResult<Pipeline>
 
-    suspend fun steps(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        uuid: String,
-    ): NetworkResult<List<PipelineStep>>
+    suspend fun steps(repo: RepoRef, uuid: String): NetworkResult<List<PipelineStep>>
 
-    suspend fun stepLog(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        pipelineUuid: String,
-        stepUuid: String,
-    ): NetworkResult<String>
+    suspend fun stepLog(repo: RepoRef, pipelineUuid: String, stepUuid: String): NetworkResult<String>
 
-    suspend fun trigger(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        request: PipelineTriggerRequest,
-    ): NetworkResult<Pipeline>
+    suspend fun trigger(repo: RepoRef, request: PipelineTriggerRequest): NetworkResult<Pipeline>
 
-    suspend fun stop(accountId: String, workspaceSlug: String, repoSlug: String, uuid: String): NetworkResult<Unit>
+    suspend fun stop(repo: RepoRef, uuid: String): NetworkResult<Unit>
 
-    suspend fun deployments(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-    ): NetworkResult<List<Deployment>>
+    suspend fun deployments(repo: RepoRef): NetworkResult<List<Deployment>>
 
-    suspend fun schedules(accountId: String, workspaceSlug: String, repoSlug: String): NetworkResult<List<Schedule>>
+    suspend fun schedules(repo: RepoRef): NetworkResult<List<Schedule>>
 }

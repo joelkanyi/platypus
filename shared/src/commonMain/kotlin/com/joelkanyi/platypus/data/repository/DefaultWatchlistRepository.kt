@@ -74,4 +74,8 @@ class DefaultWatchlistRepository(
     override suspend fun unwatch(accountId: String, workspaceSlug: String, repoSlug: String) {
         watchedRepoDao.delete(accountId, workspaceSlug, repoSlug)
     }
+
+    override suspend fun clearAccount(accountId: String) {
+        watchedRepoDao.deleteByAccount(accountId)
+    }
 }

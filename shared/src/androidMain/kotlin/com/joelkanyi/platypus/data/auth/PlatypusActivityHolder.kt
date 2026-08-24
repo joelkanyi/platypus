@@ -13,16 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.joelkanyi.platypus.domain.repository
+package com.joelkanyi.platypus.data.auth
 
-import com.joelkanyi.platypus.domain.model.PullRequest
+import androidx.fragment.app.FragmentActivity
 
-data class CachedInbox(val pullRequests: List<PullRequest>, val updatedAtEpochMs: Long)
-
-interface InboxCache {
-    suspend fun load(): CachedInbox?
-
-    suspend fun save(pullRequests: List<PullRequest>, updatedAtEpochMs: Long)
-
-    suspend fun clear()
+object PlatypusActivityHolder {
+    var activity: FragmentActivity? = null
 }

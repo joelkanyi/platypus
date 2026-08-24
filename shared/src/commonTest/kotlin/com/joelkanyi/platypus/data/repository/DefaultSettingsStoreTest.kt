@@ -57,12 +57,13 @@ class DefaultSettingsStoreTest {
         val dispatchers = TestDispatchers(UnconfinedTestDispatcher(testScheduler))
         val store = DefaultSettingsStore(backing, dispatchers)
 
-        store.update(AppSettings(theme = ThemeMode.DARK, wrapCode = true))
+        store.update(AppSettings(theme = ThemeMode.DARK, wrapCode = true, appLockEnabled = true))
         assertEquals(ThemeMode.DARK, store.settings.value.theme)
 
         val reloaded = DefaultSettingsStore(backing, dispatchers)
         testScheduler.advanceUntilIdle()
         assertEquals(ThemeMode.DARK, reloaded.settings.value.theme)
         assertEquals(true, reloaded.settings.value.wrapCode)
+        assertEquals(true, reloaded.settings.value.appLockEnabled)
     }
 }

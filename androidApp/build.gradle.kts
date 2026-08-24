@@ -22,13 +22,40 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
-        versionName = "1.0"
+        versionName = "0.0.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            val keystorePath = providers.gradleProperty("PLATYPUS_KEYSTORE_FILE").orNull
+                ?: System.getenv("PLATYPUS_KEYSTORE_FILE")
+            if (keystorePath != null) {
+                storeFile = file(keystorePath)
+                storePassword = providers.gradleProperty("PLATYPUS_KEYSTORE_PASSWORD").orNull
+                    ?: System.getenv("PLATYPUS_KEYSTORE_PASSWORD")
+                keyAlias = providers.gradleProperty("PLATYPUS_KEY_ALIAS").orNull
+                    ?: System.getenv("PLATYPUS_KEY_ALIAS")
+                keyPassword = providers.gradleProperty("PLATYPUS_KEY_PASSWORD").orNull
+                    ?: System.getenv("PLATYPUS_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
+        val releaseSigning = signingConfigs.getByName("release")
+        val hasKeystore = releaseSigning.storeFile != null
+
+        getByName("debug") {
+            // Use the same signing identity as release when a keystore is configured, so debug and
+            // release builds share one signature; fall back to the auto debug keystore otherwise.
+            if (hasKeystore) signingConfig = releaseSigning
+        }
         getByName("release") {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = if (hasKeystore) releaseSigning else signingConfigs.getByName("debug")
         }
     }
 
@@ -44,6 +71,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.splashscreen)
+    implementation(libs.androidx.biometric)
     implementation(libs.kotlinx.coroutines.core)
 
     implementation(libs.compose.uiToolingPreview)

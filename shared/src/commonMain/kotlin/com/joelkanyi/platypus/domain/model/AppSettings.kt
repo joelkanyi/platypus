@@ -39,4 +39,5 @@ data class AppSettings(
     val defaultReposTab: RepoTab = RepoTab.WATCHING,
     val defaultMergeStrategy: MergeStrategy = MergeStrategy.MERGE_COMMIT,
     val closeSourceBranchOnMerge: Boolean = false,
+    val appLockEnabled: Boolean = false,
 )

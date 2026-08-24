@@ -46,6 +46,10 @@ class DefaultInboxCache(private val secureStore: SecureStore) : InboxCache {
         secureStore.set(KEY, PlatypusJson.encodeToString(envelope))
     }
 
+    override suspend fun clear() {
+        secureStore.remove(KEY)
+    }
+
     private companion object {
         const val KEY = "inbox_cache_v1"
     }

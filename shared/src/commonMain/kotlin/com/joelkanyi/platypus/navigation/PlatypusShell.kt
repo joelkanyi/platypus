@@ -26,6 +26,8 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import com.joelkanyi.platypus.app.LocalPlatypusDependencies
 import com.joelkanyi.platypus.feature.inbox.InboxScreen
+import com.joelkanyi.platypus.feature.legal.PrivacyScreen
+import com.joelkanyi.platypus.feature.legal.TermsScreen
 import com.joelkanyi.platypus.feature.pipelines.DeploymentsScreen
 import com.joelkanyi.platypus.feature.pipelines.PipelineDetailScreen
 import com.joelkanyi.platypus.feature.pipelines.PipelineListScreen
@@ -84,7 +86,15 @@ fun PlatypusShell() {
         entry<ProfileKey> {
             ProfileScreen(onOpenSettings = { navigator.navigate(SettingsKey) })
         }
-        entry<SettingsKey> { SettingsScreen(onBack = navigator::goBack) }
+        entry<SettingsKey> {
+            SettingsScreen(
+                onBack = navigator::goBack,
+                onOpenPrivacy = { navigator.navigate(PrivacyKey) },
+                onOpenTerms = { navigator.navigate(TermsKey) },
+            )
+        }
+        entry<PrivacyKey> { PrivacyScreen(onBack = navigator::goBack) }
+        entry<TermsKey> { TermsScreen(onBack = navigator::goBack) }
         entry<SearchKey> { key ->
             SearchScreen(
                 accountId = key.accountId,

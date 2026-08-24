@@ -13,16 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.joelkanyi.platypus.domain.repository
+package com.joelkanyi.platypus.feature.legal
 
-import com.joelkanyi.platypus.domain.model.PullRequest
+import androidx.compose.runtime.Composable
+import com.joelkanyi.platypus.preview.PlatypusPreview
+import com.joelkanyi.platypus.preview.PlatypusThemePreviews
 
-data class CachedInbox(val pullRequests: List<PullRequest>, val updatedAtEpochMs: Long)
+@PlatypusThemePreviews
+@Composable
+private fun PrivacyScreenPreview() {
+    PlatypusPreview { PrivacyScreen(onBack = {}) }
+}
 
-interface InboxCache {
-    suspend fun load(): CachedInbox?
-
-    suspend fun save(pullRequests: List<PullRequest>, updatedAtEpochMs: Long)
-
-    suspend fun clear()
+@PlatypusThemePreviews
+@Composable
+private fun TermsScreenPreview() {
+    PlatypusPreview { TermsScreen(onBack = {}) }
 }

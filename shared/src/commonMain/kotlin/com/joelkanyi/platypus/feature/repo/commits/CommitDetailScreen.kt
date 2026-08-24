@@ -34,6 +34,8 @@ import com.joelkanyi.platypus.app.LocalPlatypusDependencies
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.userMessage
 import com.joelkanyi.platypus.designsystem.PlatypusDiffView
+import com.joelkanyi.platypus.designsystem.PlatypusListRowSkeleton
+import com.joelkanyi.platypus.designsystem.PlatypusSkeletonLine
 import com.joelkanyi.platypus.designsystem.parseDiffRows
 import com.joelkanyi.platypus.designsystem.toSp
 import com.joelkanyi.platypus.domain.model.CommitDetail
@@ -174,7 +176,17 @@ internal fun CommitDetailContent(
                 )
             }
 
-            else -> Unit
+            else -> Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = spacing.lg, vertical = spacing.sm),
+                verticalArrangement = Arrangement.spacedBy(spacing.sm),
+            ) {
+                PlatypusSkeletonLine(widthFraction = 0.9f)
+                PlatypusSkeletonLine(widthFraction = 0.5f)
+                repeat(6) { PlatypusListRowSkeleton() }
+            }
         }
     }
 }

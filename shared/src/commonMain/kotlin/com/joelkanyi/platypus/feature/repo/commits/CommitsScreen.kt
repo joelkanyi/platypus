@@ -33,6 +33,7 @@ import com.joelkanyi.platypus.app.LocalPlatypusDependencies
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.userMessage
 import com.joelkanyi.platypus.designsystem.PlatypusCommitRow
+import com.joelkanyi.platypus.designsystem.PlatypusListRowSkeleton
 import com.joelkanyi.platypus.designsystem.expand
 import com.joelkanyi.platypus.domain.model.Commit
 import com.joelkanyi.platypus.domain.repository.RepoContentRepository
@@ -43,6 +44,7 @@ import io.github.joelkanyi.jenga.component.icon.JengaIcon
 import io.github.joelkanyi.jenga.component.icon.JengaIcons
 import io.github.joelkanyi.jenga.component.scaffold.JengaScaffold
 import io.github.joelkanyi.jenga.component.scaffold.JengaTopAppBar
+import io.github.joelkanyi.jenga.component.state.JengaEmptyState
 import io.github.joelkanyi.jenga.component.state.JengaErrorState
 import io.github.joelkanyi.jenga.theme.JengaTheme
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -171,17 +173,31 @@ internal fun CommitsContent(
                 contentPadding = innerPadding.expand(horizontal = spacing.lg, vertical = spacing.sm),
                 verticalArrangement = Arrangement.spacedBy(spacing.xs),
             ) {
-                items(state.commits, key = { it.hash }) { commit ->
-                    PlatypusCommitRow(commit = commit, onClick = { onOpenCommit(commit.hash) })
-                }
-                if (state.nextCursor != null) {
-                    item {
-                        JengaButton(
-                            text = if (state.isPaginating) "Loading..." else "Load more",
-                            onClick = onLoadMore,
-                            variant = JengaButtonVariant.Outline,
-                            modifier = Modifier.fillMaxWidth().padding(top = spacing.sm),
+                when {
+                    state.isLoading -> items(8) { PlatypusListRowSkeleton() }
+
+                    state.commits.isEmpty() -> item {
+                        JengaEmptyState(
+                            title = "No commits",
+                            description = "This branch has no commits yet.",
+                            modifier = Modifier.fillParentMaxSize(),
                         )
+                    }
+
+                    else -> {
+                        items(state.commits, key = { it.hash }) { commit ->
+                            PlatypusCommitRow(commit = commit, onClick = { onOpenCommit(commit.hash) })
+                        }
+                        if (state.nextCursor != null) {
+                            item {
+                                JengaButton(
+                                    text = if (state.isPaginating) "Loading..." else "Load more",
+                                    onClick = onLoadMore,
+                                    variant = JengaButtonVariant.Outline,
+                                    modifier = Modifier.fillMaxWidth().padding(top = spacing.sm),
+                                )
+                            }
+                        }
                     }
                 }
             }

@@ -16,6 +16,7 @@
 package com.joelkanyi.platypus.di
 
 import android.content.Context
+import com.joelkanyi.platypus.data.auth.AndroidBiometrics
 import com.joelkanyi.platypus.data.auth.Biometrics
 import com.joelkanyi.platypus.data.auth.OAuthDeepLinks
 import com.joelkanyi.platypus.data.local.PlatypusDatabase
@@ -52,6 +53,10 @@ interface AppGraph {
     @Provides
     @SingleIn(AppScope::class)
     fun database(context: Context): PlatypusDatabase = createPlatypusDatabase(platypusDatabaseBuilder(context))
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun biometrics(context: Context): Biometrics = AndroidBiometrics(context)
 
     @DependencyGraph.Factory
     interface Factory {

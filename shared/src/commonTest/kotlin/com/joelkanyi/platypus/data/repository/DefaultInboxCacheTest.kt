@@ -75,6 +75,14 @@ class DefaultInboxCacheTest {
     }
 
     @Test
+    fun clearRemovesCache() = runTest {
+        val cache = DefaultInboxCache(InMemorySecureStore())
+        cache.save(listOf(pr(1, PrRelationship.MINE)), updatedAtEpochMs = 1L)
+        cache.clear()
+        assertNull(cache.load())
+    }
+
+    @Test
     fun corruptDataLoadsAsNull() = runTest {
         val store = InMemorySecureStore()
         store.set("inbox_cache_v1", "not json")

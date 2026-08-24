@@ -17,8 +17,6 @@ package com.joelkanyi.platypus.di
 
 import com.joelkanyi.platypus.data.auth.AccountStore
 import com.joelkanyi.platypus.data.auth.AuthConfig
-import com.joelkanyi.platypus.data.auth.Biometrics
-import com.joelkanyi.platypus.data.auth.NoopBiometrics
 import com.joelkanyi.platypus.data.auth.PlatypusConfig
 import com.joelkanyi.platypus.data.auth.createAuthRepository
 import com.joelkanyi.platypus.data.local.PlatypusDatabase
@@ -35,8 +33,6 @@ import dev.zacsweers.metro.SingleIn
 object SharedBindings {
 
     @Provides fun authConfig(): AuthConfig = PlatypusConfig.auth
-
-    @Provides fun biometrics(): Biometrics = NoopBiometrics
 
     @Provides fun watchedRepoDao(database: PlatypusDatabase): WatchedRepoDao = database.watchedRepoDao()
 

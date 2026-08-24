@@ -36,6 +36,10 @@ data class SearchKey(
 
 @Serializable data object SettingsKey : PlatypusKey
 
+@Serializable data object PrivacyKey : PlatypusKey
+
+@Serializable data object TermsKey : PlatypusKey
+
 @Serializable
 data class PullRequestKey(
     val accountId: String,

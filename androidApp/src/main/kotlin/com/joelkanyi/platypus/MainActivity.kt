@@ -17,14 +17,15 @@ package com.joelkanyi.platypus
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.fragment.app.FragmentActivity
 import com.joelkanyi.platypus.app.PlatypusApp
+import com.joelkanyi.platypus.data.auth.PlatypusActivityHolder
 import com.joelkanyi.platypus.di.AndroidDependencies
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
     private lateinit var dependencies: AndroidDependencies
 
@@ -33,6 +34,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
+        PlatypusActivityHolder.activity = this
         val app = application as PlatypusApplication
         dependencies = AndroidDependencies(graph = app.appGraph, appContext = applicationContext)
         handleDeepLink(intent)
@@ -40,6 +42,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             PlatypusApp(dependencies)
         }
+    }
+
+    override fun onDestroy() {
+        if (PlatypusActivityHolder.activity === this) PlatypusActivityHolder.activity = null
+        super.onDestroy()
     }
 
     override fun onNewIntent(intent: Intent) {

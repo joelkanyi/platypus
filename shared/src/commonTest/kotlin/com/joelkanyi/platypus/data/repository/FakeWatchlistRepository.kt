@@ -40,4 +40,6 @@ class FakeWatchlistRepository(private val watched: List<WatchedRepo>) : Watchlis
     override suspend fun watch(accountId: String, repo: Repository) = Unit
 
     override suspend fun unwatch(accountId: String, workspaceSlug: String, repoSlug: String) = Unit
+
+    override suspend fun clearAccount(accountId: String) = Unit
 }

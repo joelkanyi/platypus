@@ -119,4 +119,18 @@ class DefaultWatchlistRepositoryTest {
         assertTrue(repo.watched("1").first().isEmpty())
         assertTrue(repo.watchedAll().first().isEmpty())
     }
+
+    @Test
+    fun clearAccountRemovesOnlyThatAccount() = runTest {
+        val dao = FakeWatchedRepoDao()
+        val repo = repository(dao, client = null)
+
+        repo.watch("1", sampleRepo("api"))
+        repo.watch("2", sampleRepo("web"))
+
+        repo.clearAccount("1")
+
+        assertTrue(repo.watched("1").first().isEmpty())
+        assertEquals(listOf("web"), repo.watchedAll().first().map { it.repoSlug })
+    }
 }

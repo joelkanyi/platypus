@@ -22,27 +22,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.joelkanyi.platypus.app.LocalPlatypusDependencies
-import com.joelkanyi.platypus.core.result.NetworkResult
-import com.joelkanyi.platypus.core.result.getOrNull
-import com.joelkanyi.platypus.core.result.userMessage
 import com.joelkanyi.platypus.designsystem.PlatypusIcons
 import com.joelkanyi.platypus.designsystem.PlatypusMarkdown
 import com.joelkanyi.platypus.designsystem.expand
 import com.joelkanyi.platypus.designsystem.formatByteSize
 import com.joelkanyi.platypus.domain.model.RepositoryDetail
-import com.joelkanyi.platypus.domain.model.SrcEntryType
-import com.joelkanyi.platypus.domain.repository.RepoContentRepository
 import com.joelkanyi.platypus.ui.BranchesSheet
 import io.github.joelkanyi.jenga.component.button.JengaIconButton
 import io.github.joelkanyi.jenga.component.card.JengaCard
@@ -55,64 +47,6 @@ import io.github.joelkanyi.jenga.component.scaffold.JengaTopAppBar
 import io.github.joelkanyi.jenga.component.state.JengaErrorState
 import io.github.joelkanyi.jenga.component.text.JengaText
 import io.github.joelkanyi.jenga.theme.JengaTheme
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-
-@Immutable
-data class OverviewUiState(
-    val isLoading: Boolean = true,
-    val error: String? = null,
-    val detail: RepositoryDetail? = null,
-    val readme: String? = null,
-)
-
-class RepositoryOverviewViewModel(
-    private val repoContentRepository: RepoContentRepository,
-    private val accountId: String,
-    private val workspace: String,
-    private val repoSlug: String,
-) : ViewModel() {
-
-    private val _uiState = MutableStateFlow(OverviewUiState())
-    val uiState: StateFlow<OverviewUiState> = _uiState.asStateFlow()
-
-    init {
-        load()
-    }
-
-    fun retry() = load()
-
-    private fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
-            when (val result = repoContentRepository.repository(accountId, workspace, repoSlug)) {
-                is NetworkResult.Success -> {
-                    _uiState.update { it.copy(isLoading = false, detail = result.data) }
-                    loadReadme(result.data.defaultBranch)
-                }
-                is NetworkResult.Failure ->
-                    _uiState.update { it.copy(isLoading = false, error = result.userMessage()) }
-            }
-        }
-    }
-
-    private fun loadReadme(ref: String) {
-        viewModelScope.launch {
-            val root = repoContentRepository.directory(accountId, workspace, repoSlug, ref, "").getOrNull()
-                ?: return@launch
-            val readme = root.entries.firstOrNull {
-                it.type == SrcEntryType.FILE && it.name.lowercase().startsWith("readme")
-            } ?: return@launch
-            val file = repoContentRepository.file(accountId, workspace, repoSlug, ref, readme.path).getOrNull()
-            if (file != null && file.renderable) {
-                _uiState.update { it.copy(readme = file.lines.joinToString("\n")) }
-            }
-        }
-    }
-}
 
 @Composable
 fun RepositoryOverviewScreen(

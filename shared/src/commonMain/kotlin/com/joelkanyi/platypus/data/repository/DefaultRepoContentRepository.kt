@@ -25,6 +25,7 @@ import com.joelkanyi.platypus.domain.model.CommitDetail
 import com.joelkanyi.platypus.domain.model.CommitPage
 import com.joelkanyi.platypus.domain.model.DirectoryListing
 import com.joelkanyi.platypus.domain.model.RepoFile
+import com.joelkanyi.platypus.domain.model.RepoRef
 import com.joelkanyi.platypus.domain.model.RepositoryDetail
 import com.joelkanyi.platypus.domain.model.SrcEntry
 import com.joelkanyi.platypus.domain.model.SrcEntryType
@@ -50,11 +51,10 @@ class DefaultRepoContentRepository(private val authRepository: AuthRepository) :
         pathsCache.clear()
     }
 
-    override suspend fun repository(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-    ): NetworkResult<RepositoryDetail> {
+    override suspend fun repository(repo: RepoRef): NetworkResult<RepositoryDetail> {
+        val accountId = repo.accountId.value
+        val workspaceSlug = repo.workspace.value
+        val repoSlug = repo.repoSlug.value
         val client = authRepository.authenticatedClient(accountId)
             ?: return NetworkResult.Failure.Http(401, SIGNED_OUT)
         return safeApiCall(::ktorErrorMapper) {
@@ -62,13 +62,10 @@ class DefaultRepoContentRepository(private val authRepository: AuthRepository) :
         }
     }
 
-    override suspend fun directory(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        ref: String,
-        path: String,
-    ): NetworkResult<DirectoryListing> {
+    override suspend fun directory(repo: RepoRef, ref: String, path: String): NetworkResult<DirectoryListing> {
+        val accountId = repo.accountId.value
+        val workspaceSlug = repo.workspace.value
+        val repoSlug = repo.repoSlug.value
         val key = cacheKey(accountId, workspaceSlug, repoSlug, ref, path)
         directoryCache[key]?.let { return NetworkResult.Success(it) }
         val client = authRepository.authenticatedClient(accountId)
@@ -91,13 +88,10 @@ class DefaultRepoContentRepository(private val authRepository: AuthRepository) :
         }
     }
 
-    override suspend fun file(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        ref: String,
-        path: String,
-    ): NetworkResult<RepoFile> {
+    override suspend fun file(repo: RepoRef, ref: String, path: String): NetworkResult<RepoFile> {
+        val accountId = repo.accountId.value
+        val workspaceSlug = repo.workspace.value
+        val repoSlug = repo.repoSlug.value
         val key = cacheKey(accountId, workspaceSlug, repoSlug, ref, path)
         fileCache[key]?.let { return NetworkResult.Success(it) }
         val client = authRepository.authenticatedClient(accountId)
@@ -123,12 +117,10 @@ class DefaultRepoContentRepository(private val authRepository: AuthRepository) :
         }
     }
 
-    override suspend fun paths(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        ref: String,
-    ): NetworkResult<List<String>> {
+    override suspend fun paths(repo: RepoRef, ref: String): NetworkResult<List<String>> {
+        val accountId = repo.accountId.value
+        val workspaceSlug = repo.workspace.value
+        val repoSlug = repo.repoSlug.value
         val key = cacheKey(accountId, workspaceSlug, repoSlug, ref, "")
         pathsCache[key]?.let { return NetworkResult.Success(it) }
         val client = authRepository.authenticatedClient(accountId)
@@ -148,11 +140,10 @@ class DefaultRepoContentRepository(private val authRepository: AuthRepository) :
         }
     }
 
-    override suspend fun branches(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-    ): NetworkResult<List<Branch>> {
+    override suspend fun branches(repo: RepoRef): NetworkResult<List<Branch>> {
+        val accountId = repo.accountId.value
+        val workspaceSlug = repo.workspace.value
+        val repoSlug = repo.repoSlug.value
         val client = authRepository.authenticatedClient(accountId)
             ?: return NetworkResult.Failure.Http(401, SIGNED_OUT)
         return safeApiCall(::ktorErrorMapper) {
@@ -170,13 +161,10 @@ class DefaultRepoContentRepository(private val authRepository: AuthRepository) :
         }
     }
 
-    override suspend fun commits(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        ref: String,
-        cursor: String?,
-    ): NetworkResult<CommitPage> {
+    override suspend fun commits(repo: RepoRef, ref: String, cursor: String?): NetworkResult<CommitPage> {
+        val accountId = repo.accountId.value
+        val workspaceSlug = repo.workspace.value
+        val repoSlug = repo.repoSlug.value
         val client = authRepository.authenticatedClient(accountId)
             ?: return NetworkResult.Failure.Http(401, SIGNED_OUT)
         return safeApiCall(::ktorErrorMapper) {
@@ -194,12 +182,10 @@ class DefaultRepoContentRepository(private val authRepository: AuthRepository) :
         }
     }
 
-    override suspend fun commitDetail(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        hash: String,
-    ): NetworkResult<CommitDetail> {
+    override suspend fun commitDetail(repo: RepoRef, hash: String): NetworkResult<CommitDetail> {
+        val accountId = repo.accountId.value
+        val workspaceSlug = repo.workspace.value
+        val repoSlug = repo.repoSlug.value
         val client = authRepository.authenticatedClient(accountId)
             ?: return NetworkResult.Failure.Http(401, SIGNED_OUT)
         return safeApiCall(::ktorErrorMapper) {

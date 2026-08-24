@@ -34,7 +34,11 @@ import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.userMessage
 import com.joelkanyi.platypus.designsystem.PlatypusListRowSkeleton
 import com.joelkanyi.platypus.designsystem.expand
+import com.joelkanyi.platypus.domain.model.AccountId
 import com.joelkanyi.platypus.domain.model.Commit
+import com.joelkanyi.platypus.domain.model.RepoRef
+import com.joelkanyi.platypus.domain.model.RepoSlug
+import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import com.joelkanyi.platypus.domain.repository.RepoContentRepository
 import com.joelkanyi.platypus.ui.PlatypusCommitRow
 import io.github.joelkanyi.jenga.component.button.JengaButton
@@ -72,6 +76,8 @@ class CommitsViewModel(
     private val ref: String,
 ) : ViewModel() {
 
+    private val repoRef = RepoRef(AccountId(accountId), WorkspaceSlug(workspace), RepoSlug(repoSlug))
+
     private val _uiState = MutableStateFlow(CommitsUiState())
     val uiState: StateFlow<CommitsUiState> = _uiState.asStateFlow()
 
@@ -89,7 +95,7 @@ class CommitsViewModel(
         viewModelScope.launch {
             _uiState.update { if (reset) it.copy(isLoading = true, error = null) else it.copy(isPaginating = true) }
             val cursor = if (reset) null else _uiState.value.nextCursor
-            when (val result = repoContentRepository.commits(accountId, workspace, repoSlug, ref, cursor)) {
+            when (val result = repoContentRepository.commits(repoRef, ref, cursor)) {
                 is NetworkResult.Success -> _uiState.update { state ->
                     state.copy(
                         isLoading = false,

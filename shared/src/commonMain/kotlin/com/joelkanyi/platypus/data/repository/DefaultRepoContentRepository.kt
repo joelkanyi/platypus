@@ -19,6 +19,7 @@ import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.safeApiCall
 import com.joelkanyi.platypus.data.remote.api.RepoContentApi
 import com.joelkanyi.platypus.data.remote.mapper.toDomain
+import com.joelkanyi.platypus.data.remote.network.collectPaged
 import com.joelkanyi.platypus.data.remote.network.ktorErrorMapper
 import com.joelkanyi.platypus.domain.model.Branch
 import com.joelkanyi.platypus.domain.model.CommitDetail
@@ -27,7 +28,6 @@ import com.joelkanyi.platypus.domain.model.DirectoryListing
 import com.joelkanyi.platypus.domain.model.RepoFile
 import com.joelkanyi.platypus.domain.model.RepoRef
 import com.joelkanyi.platypus.domain.model.RepositoryDetail
-import com.joelkanyi.platypus.domain.model.SrcEntry
 import com.joelkanyi.platypus.domain.model.SrcEntryType
 import com.joelkanyi.platypus.domain.repository.AuthRepository
 import com.joelkanyi.platypus.domain.repository.RepoContentRepository
@@ -72,15 +72,10 @@ class DefaultRepoContentRepository(private val authRepository: AuthRepository) :
             ?: return NetworkResult.Failure.Http(401, SIGNED_OUT)
         return safeApiCall(::ktorErrorMapper) {
             val api = RepoContentApi(client)
-            val entries = mutableListOf<SrcEntry>()
-            var page = api.directory(workspaceSlug, repoSlug, ref, path)
-            var guard = 0
-            while (true) {
-                entries += page.values.map { it.toDomain() }
-                val next = page.next
-                if (next == null || ++guard >= MAX_PAGES) break
-                page = api.directoryPage(next)
-            }
+            val entries = collectPaged(
+                firstPage = { api.directory(workspaceSlug, repoSlug, ref, path) },
+                nextPage = { api.directoryPage(it) },
+            ).map { it.toDomain() }
             val sorted = entries.sortedWith(
                 compareBy({ it.type != SrcEntryType.DIRECTORY }, { it.name.lowercase() }),
             )
@@ -127,15 +122,11 @@ class DefaultRepoContentRepository(private val authRepository: AuthRepository) :
             ?: return NetworkResult.Failure.Http(401, SIGNED_OUT)
         return safeApiCall(::ktorErrorMapper) {
             val api = RepoContentApi(client)
-            val out = mutableListOf<String>()
-            var page = api.paths(workspaceSlug, repoSlug, ref)
-            var guard = 0
-            while (true) {
-                out += page.values.filter { it.type == "commit_file" }.map { it.path }
-                val next = page.next
-                if (next == null || ++guard >= MAX_PATH_PAGES) break
-                page = api.pathsPage(next)
-            }
+            val out = collectPaged(
+                maxPages = MAX_PATH_PAGES,
+                firstPage = { api.paths(workspaceSlug, repoSlug, ref) },
+                nextPage = { api.pathsPage(it) },
+            ).filter { it.type == "commit_file" }.map { it.path }
             out.also { pathsCache[key] = it }
         }
     }
@@ -148,16 +139,10 @@ class DefaultRepoContentRepository(private val authRepository: AuthRepository) :
             ?: return NetworkResult.Failure.Http(401, SIGNED_OUT)
         return safeApiCall(::ktorErrorMapper) {
             val api = RepoContentApi(client)
-            val out = mutableListOf<Branch>()
-            var page = api.branches(workspaceSlug, repoSlug)
-            var guard = 0
-            while (true) {
-                out += page.values.map { it.toDomain() }
-                val next = page.next
-                if (next == null || ++guard >= MAX_PAGES) break
-                page = api.branchesPage(next)
-            }
-            out
+            collectPaged(
+                firstPage = { api.branches(workspaceSlug, repoSlug) },
+                nextPage = { api.branchesPage(it) },
+            ).map { it.toDomain() }
         }
     }
 
@@ -207,7 +192,6 @@ class DefaultRepoContentRepository(private val authRepository: AuthRepository) :
 
     private companion object {
         const val SIGNED_OUT = "This account is signed out."
-        const val MAX_PAGES = 10
         const val MAX_PATH_PAGES = 50
         const val MAX_DIFF_LINES = 3_000
         const val MAX_LINES = 1_000

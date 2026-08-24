@@ -20,6 +20,7 @@ import com.joelkanyi.platypus.core.result.safeApiCall
 import com.joelkanyi.platypus.data.remote.api.PipelinesApi
 import com.joelkanyi.platypus.data.remote.mapper.toDomain
 import com.joelkanyi.platypus.data.remote.mapper.toDto
+import com.joelkanyi.platypus.data.remote.network.collectPaged
 import com.joelkanyi.platypus.data.remote.network.ktorErrorMapper
 import com.joelkanyi.platypus.domain.model.Deployment
 import com.joelkanyi.platypus.domain.model.Pipeline
@@ -50,16 +51,10 @@ class DefaultPipelineRepository(private val authRepository: AuthRepository) : Pi
         val repoSlug = repo.repoSlug.value
         return withClient(accountId) { client ->
             val api = client.api()
-            val out = mutableListOf<Pipeline>()
-            var page = api.list(workspaceSlug, repoSlug)
-            var guard = 0
-            while (true) {
-                out += page.values.map { it.toDomain() }
-                val next = page.next
-                if (next == null || ++guard >= MAX_PAGES) break
-                page = api.page(next)
-            }
-            out
+            collectPaged(
+                firstPage = { api.list(workspaceSlug, repoSlug) },
+                nextPage = { api.page(it) },
+            ).map { it.toDomain() }
         }
     }
 
@@ -78,15 +73,10 @@ class DefaultPipelineRepository(private val authRepository: AuthRepository) : Pi
         val repoSlug = repo.repoSlug.value
         return withClient(accountId) { client ->
             val api = client.api()
-            val out = mutableListOf<PipelineStep>()
-            var page = api.steps(workspaceSlug, repoSlug, uuid)
-            var guard = 0
-            while (true) {
-                out += page.values.map { it.toDomain() }
-                val next = page.next
-                if (next == null || ++guard >= MAX_PAGES) break
-                page = api.stepsPage(next)
-            }
+            val out = collectPaged(
+                firstPage = { api.steps(workspaceSlug, repoSlug, uuid) },
+                nextPage = { api.stepsPage(it) },
+            ).map { it.toDomain() }
             coroutineScope {
                 out.map { step ->
                     async {
@@ -144,16 +134,10 @@ class DefaultPipelineRepository(private val authRepository: AuthRepository) : Pi
         val repoSlug = repo.repoSlug.value
         return withClient(accountId) { client ->
             val api = client.api()
-            val out = mutableListOf<Deployment>()
-            var page = api.deployments(workspaceSlug, repoSlug)
-            var guard = 0
-            while (true) {
-                out += page.values.map { it.toDomain() }
-                val next = page.next
-                if (next == null || ++guard >= MAX_PAGES) break
-                page = api.deploymentsPage(next)
-            }
-            out
+            collectPaged(
+                firstPage = { api.deployments(workspaceSlug, repoSlug) },
+                nextPage = { api.deploymentsPage(it) },
+            ).map { it.toDomain() }
         }
     }
 
@@ -179,6 +163,5 @@ class DefaultPipelineRepository(private val authRepository: AuthRepository) : Pi
 
     private companion object {
         const val SIGNED_OUT = "This account is signed out."
-        const val MAX_PAGES = 10
     }
 }

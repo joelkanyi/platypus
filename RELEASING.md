@@ -58,10 +58,17 @@ proves the keep rules are complete.
 3. Complete the store listing, content rating, and data-safety form (no analytics or tracking; data
    stays on device), then roll out.
 
-## iOS: App Store (manual)
+## iOS (deferred for v1)
 
-1. In Xcode, set your Apple Developer team and signing for the `iosApp` target.
-2. Product > Archive, then distribute through the Organizer to App Store Connect.
-3. Submit for TestFlight or App Store review.
+Platypus is a Kotlin Multiplatform app; the iOS target compiles and runs in the iOS
+Simulator (Xcode), which keeps the shared code healthy. Shipping iOS to devices or users is
+not set up for v1:
 
-iOS is distributed through the App Store only; GitHub Releases carry the Android artifacts.
+- Running on a physical iPhone needs a signed build (a free Apple ID allows a 7-day
+  on-device build; there is no unsigned sideload like Android).
+- Public distribution (App Store, TestFlight, Ad Hoc) requires the Apple Developer Program
+  ($99/year).
+
+Until a device and a Developer Program membership are available, v1 ships as an Android app
+(GitHub Releases, optionally Play). The iOS target stays buildable so it is ready when that
+changes.

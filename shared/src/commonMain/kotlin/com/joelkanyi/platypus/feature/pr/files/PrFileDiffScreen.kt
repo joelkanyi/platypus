@@ -45,8 +45,14 @@ import com.joelkanyi.platypus.core.result.userMessage
 import com.joelkanyi.platypus.designsystem.PlatypusDiffView
 import com.joelkanyi.platypus.designsystem.PlatypusMarkdown
 import com.joelkanyi.platypus.designsystem.parseDiffRows
+import com.joelkanyi.platypus.domain.model.AccountId
 import com.joelkanyi.platypus.domain.model.PrComment
 import com.joelkanyi.platypus.domain.model.PrDiffFile
+import com.joelkanyi.platypus.domain.model.PrId
+import com.joelkanyi.platypus.domain.model.PrRef
+import com.joelkanyi.platypus.domain.model.RepoRef
+import com.joelkanyi.platypus.domain.model.RepoSlug
+import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import com.joelkanyi.platypus.domain.repository.PullRequestRepository
 import com.joelkanyi.platypus.ui.toSp
 import io.github.joelkanyi.jenga.component.avatar.JengaAvatar
@@ -93,6 +99,8 @@ class PrFileDiffViewModel(
     private val path: String,
 ) : ViewModel() {
 
+    private val prRef = PrRef(RepoRef(AccountId(accountId), WorkspaceSlug(workspace), RepoSlug(repoSlug)), PrId(prId))
+
     private val _uiState = MutableStateFlow(PrFileDiffUiState())
     val uiState: StateFlow<PrFileDiffUiState> = _uiState.asStateFlow()
 
@@ -113,7 +121,7 @@ class PrFileDiffViewModel(
     private fun load() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            when (val result = repository.diff(accountId, workspace, repoSlug, prId)) {
+            when (val result = repository.diff(prRef)) {
                 is NetworkResult.Success ->
                     _uiState.update {
                         it.copy(isLoading = false, file = result.data.files.firstOrNull { f -> f.path == path })
@@ -125,7 +133,7 @@ class PrFileDiffViewModel(
     }
 
     private suspend fun loadComments() {
-        val all = repository.comments(accountId, workspace, repoSlug, prId).getOrNull() ?: return
+        val all = repository.comments(prRef).getOrNull() ?: return
         _uiState.update { it.copy(comments = all.filter { c -> c.inlinePath == path }) }
     }
 
@@ -137,10 +145,7 @@ class PrFileDiffViewModel(
         _uiState.update { it.copy(posting = true) }
         viewModelScope.launch {
             val result = repository.addComment(
-                accountId = accountId,
-                workspaceSlug = workspace,
-                repoSlug = repoSlug,
-                id = prId,
+                pr = prRef,
                 raw = raw,
                 parentId = null,
                 inlinePath = path,

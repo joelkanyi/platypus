@@ -36,9 +36,15 @@ import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.userMessage
 import com.joelkanyi.platypus.designsystem.PlatypusListSkeleton
 import com.joelkanyi.platypus.designsystem.expand
+import com.joelkanyi.platypus.domain.model.AccountId
 import com.joelkanyi.platypus.domain.model.DiffFileStatus
 import com.joelkanyi.platypus.domain.model.PrDiff
 import com.joelkanyi.platypus.domain.model.PrDiffFile
+import com.joelkanyi.platypus.domain.model.PrId
+import com.joelkanyi.platypus.domain.model.PrRef
+import com.joelkanyi.platypus.domain.model.RepoRef
+import com.joelkanyi.platypus.domain.model.RepoSlug
+import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import com.joelkanyi.platypus.domain.repository.PullRequestRepository
 import io.github.joelkanyi.jenga.component.badge.JengaBadge
 import io.github.joelkanyi.jenga.component.badge.JengaBadgeTone
@@ -69,6 +75,8 @@ class FilesChangedViewModel(
     private val prId: Long,
 ) : ViewModel() {
 
+    private val prRef = PrRef(RepoRef(AccountId(accountId), WorkspaceSlug(workspace), RepoSlug(repoSlug)), PrId(prId))
+
     private val _uiState = MutableStateFlow(FilesChangedUiState())
     val uiState: StateFlow<FilesChangedUiState> = _uiState.asStateFlow()
 
@@ -81,7 +89,7 @@ class FilesChangedViewModel(
     private fun load() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            when (val result = repository.diff(accountId, workspace, repoSlug, prId)) {
+            when (val result = repository.diff(prRef)) {
                 is NetworkResult.Success -> _uiState.update { it.copy(isLoading = false, diff = result.data) }
                 is NetworkResult.Failure -> _uiState.update { it.copy(isLoading = false, error = result.userMessage()) }
             }

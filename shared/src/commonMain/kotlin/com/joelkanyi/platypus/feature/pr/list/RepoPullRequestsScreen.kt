@@ -33,7 +33,11 @@ import com.joelkanyi.platypus.app.LocalPlatypusDependencies
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.userMessage
 import com.joelkanyi.platypus.designsystem.PlatypusListRowSkeleton
+import com.joelkanyi.platypus.domain.model.AccountId
 import com.joelkanyi.platypus.domain.model.PullRequest
+import com.joelkanyi.platypus.domain.model.RepoRef
+import com.joelkanyi.platypus.domain.model.RepoSlug
+import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import com.joelkanyi.platypus.domain.repository.PullRequestRepository
 import com.joelkanyi.platypus.ui.PlatypusPullRequestRow
 import io.github.joelkanyi.jenga.component.button.JengaIconButton
@@ -67,6 +71,8 @@ class RepoPullRequestsViewModel(
     private val repoName: String,
 ) : ViewModel() {
 
+    private val repoRef = RepoRef(AccountId(accountId), WorkspaceSlug(workspace), RepoSlug(repoSlug))
+
     private val _uiState = MutableStateFlow(RepoPullRequestsUiState())
     val uiState: StateFlow<RepoPullRequestsUiState> = _uiState.asStateFlow()
 
@@ -81,7 +87,7 @@ class RepoPullRequestsViewModel(
     private fun load(initial: Boolean) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = initial, isRefreshing = !initial, error = null) }
-            when (val result = repository.pullRequests(accountId, workspace, repoSlug, repoName)) {
+            when (val result = repository.pullRequests(repoRef, repoName)) {
                 is NetworkResult.Success -> _uiState.update {
                     it.copy(isLoading = false, isRefreshing = false, pullRequests = result.data)
                 }

@@ -53,7 +53,11 @@ import com.joelkanyi.platypus.designsystem.PlatypusMarkdown
 import com.joelkanyi.platypus.designsystem.crumbsFor
 import com.joelkanyi.platypus.designsystem.highlightLine
 import com.joelkanyi.platypus.designsystem.rememberSyntaxColors
+import com.joelkanyi.platypus.domain.model.AccountId
 import com.joelkanyi.platypus.domain.model.RepoFile
+import com.joelkanyi.platypus.domain.model.RepoRef
+import com.joelkanyi.platypus.domain.model.RepoSlug
+import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import com.joelkanyi.platypus.domain.repository.RepoContentRepository
 import com.joelkanyi.platypus.ui.toSp
 import io.github.joelkanyi.jenga.component.button.JengaIconButton
@@ -104,6 +108,8 @@ class FileViewerViewModel(
 
     private val isMarkdown = path.substringAfterLast('.', "").lowercase() in MARKDOWN_EXTENSIONS
 
+    private val repoRef = RepoRef(AccountId(accountId), WorkspaceSlug(workspace), RepoSlug(repoSlug))
+
     private val _uiState =
         MutableStateFlow(FileUiState(isMarkdown = isMarkdown, preview = isMarkdown && renderMarkdownDefault))
     val uiState: StateFlow<FileUiState> = _uiState.asStateFlow()
@@ -152,7 +158,7 @@ class FileViewerViewModel(
     private fun load() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            when (val result = repoContentRepository.file(accountId, workspace, repoSlug, ref, path)) {
+            when (val result = repoContentRepository.file(repoRef, ref, path)) {
                 is NetworkResult.Success -> _uiState.update { it.copy(isLoading = false, file = result.data) }
                 is NetworkResult.Failure -> _uiState.update { it.copy(isLoading = false, error = result.userMessage()) }
             }
@@ -162,7 +168,7 @@ class FileViewerViewModel(
 
     private fun loadDefaultBranch() {
         viewModelScope.launch {
-            val result = repoContentRepository.repository(accountId, workspace, repoSlug)
+            val result = repoContentRepository.repository(repoRef)
             if (result is NetworkResult.Success) {
                 _uiState.update { it.copy(defaultBranch = result.data.defaultBranch) }
             }

@@ -21,6 +21,7 @@ import com.joelkanyi.platypus.domain.model.CommitDetail
 import com.joelkanyi.platypus.domain.model.CommitPage
 import com.joelkanyi.platypus.domain.model.DirectoryListing
 import com.joelkanyi.platypus.domain.model.RepoFile
+import com.joelkanyi.platypus.domain.model.RepoRef
 import com.joelkanyi.platypus.domain.model.RepositoryDetail
 
 interface RepoContentRepository {
@@ -28,45 +29,17 @@ interface RepoContentRepository {
     /** Drops all in-memory cached tree/file/path data. Call on sign-out so no session's content lingers. */
     fun clearCache()
 
-    suspend fun repository(accountId: String, workspaceSlug: String, repoSlug: String): NetworkResult<RepositoryDetail>
+    suspend fun repository(repo: RepoRef): NetworkResult<RepositoryDetail>
 
-    suspend fun directory(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        ref: String,
-        path: String,
-    ): NetworkResult<DirectoryListing>
+    suspend fun directory(repo: RepoRef, ref: String, path: String): NetworkResult<DirectoryListing>
 
-    suspend fun file(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        ref: String,
-        path: String,
-    ): NetworkResult<RepoFile>
+    suspend fun file(repo: RepoRef, ref: String, path: String): NetworkResult<RepoFile>
 
-    suspend fun paths(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        ref: String,
-    ): NetworkResult<List<String>>
+    suspend fun paths(repo: RepoRef, ref: String): NetworkResult<List<String>>
 
-    suspend fun branches(accountId: String, workspaceSlug: String, repoSlug: String): NetworkResult<List<Branch>>
+    suspend fun branches(repo: RepoRef): NetworkResult<List<Branch>>
 
-    suspend fun commits(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        ref: String,
-        cursor: String?,
-    ): NetworkResult<CommitPage>
+    suspend fun commits(repo: RepoRef, ref: String, cursor: String?): NetworkResult<CommitPage>
 
-    suspend fun commitDetail(
-        accountId: String,
-        workspaceSlug: String,
-        repoSlug: String,
-        hash: String,
-    ): NetworkResult<CommitDetail>
+    suspend fun commitDetail(repo: RepoRef, hash: String): NetworkResult<CommitDetail>
 }

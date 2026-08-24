@@ -20,7 +20,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.userMessage
+import com.joelkanyi.platypus.domain.model.AccountId
 import com.joelkanyi.platypus.domain.model.Branch
+import com.joelkanyi.platypus.domain.model.RepoRef
+import com.joelkanyi.platypus.domain.model.RepoSlug
+import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import com.joelkanyi.platypus.domain.repository.RepoContentRepository
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -45,6 +49,8 @@ class BranchesViewModel(
     private val repoSlug: String,
 ) : ViewModel() {
 
+    private val repoRef = RepoRef(AccountId(accountId), WorkspaceSlug(workspace), RepoSlug(repoSlug))
+
     private val _uiState = MutableStateFlow(BranchesUiState())
     val uiState: StateFlow<BranchesUiState> = _uiState.asStateFlow()
 
@@ -55,7 +61,7 @@ class BranchesViewModel(
     private fun load() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            when (val result = repoContentRepository.branches(accountId, workspace, repoSlug)) {
+            when (val result = repoContentRepository.branches(repoRef)) {
                 is NetworkResult.Success ->
                     _uiState.update { it.copy(isLoading = false, branches = result.data.toImmutableList()) }
                 is NetworkResult.Failure ->

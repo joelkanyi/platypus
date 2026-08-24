@@ -20,7 +20,11 @@ import androidx.lifecycle.viewModelScope
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.getOrNull
 import com.joelkanyi.platypus.core.result.userMessage
+import com.joelkanyi.platypus.domain.model.AccountId
+import com.joelkanyi.platypus.domain.model.RepoRef
+import com.joelkanyi.platypus.domain.model.RepoSlug
 import com.joelkanyi.platypus.domain.model.SrcEntryType
+import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import com.joelkanyi.platypus.domain.repository.RepoContentRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,6 +39,8 @@ class RepositoryOverviewViewModel(
     private val repoSlug: String,
 ) : ViewModel() {
 
+    private val repoRef = RepoRef(AccountId(accountId), WorkspaceSlug(workspace), RepoSlug(repoSlug))
+
     private val _uiState = MutableStateFlow(OverviewUiState())
     val uiState: StateFlow<OverviewUiState> = _uiState.asStateFlow()
 
@@ -47,7 +53,7 @@ class RepositoryOverviewViewModel(
     private fun load() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            when (val result = repoContentRepository.repository(accountId, workspace, repoSlug)) {
+            when (val result = repoContentRepository.repository(repoRef)) {
                 is NetworkResult.Success -> {
                     _uiState.update { it.copy(isLoading = false, detail = result.data) }
                     loadReadme(result.data.defaultBranch)
@@ -60,12 +66,12 @@ class RepositoryOverviewViewModel(
 
     private fun loadReadme(ref: String) {
         viewModelScope.launch {
-            val root = repoContentRepository.directory(accountId, workspace, repoSlug, ref, "").getOrNull()
+            val root = repoContentRepository.directory(repoRef, ref, "").getOrNull()
                 ?: return@launch
             val readme = root.entries.firstOrNull {
                 it.type == SrcEntryType.FILE && it.name.lowercase().startsWith("readme")
             } ?: return@launch
-            val file = repoContentRepository.file(accountId, workspace, repoSlug, ref, readme.path).getOrNull()
+            val file = repoContentRepository.file(repoRef, ref, readme.path).getOrNull()
             if (file != null && file.renderable) {
                 _uiState.update { it.copy(readme = file.lines.joinToString("\n")) }
             }

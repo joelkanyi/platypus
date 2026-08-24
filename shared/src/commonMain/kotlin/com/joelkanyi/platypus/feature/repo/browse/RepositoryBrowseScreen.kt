@@ -44,8 +44,12 @@ import com.joelkanyi.platypus.designsystem.PlatypusBreadcrumb
 import com.joelkanyi.platypus.designsystem.PlatypusIcons
 import com.joelkanyi.platypus.designsystem.crumbsFor
 import com.joelkanyi.platypus.designsystem.formatByteSize
+import com.joelkanyi.platypus.domain.model.AccountId
+import com.joelkanyi.platypus.domain.model.RepoRef
+import com.joelkanyi.platypus.domain.model.RepoSlug
 import com.joelkanyi.platypus.domain.model.SrcEntry
 import com.joelkanyi.platypus.domain.model.SrcEntryType
+import com.joelkanyi.platypus.domain.model.WorkspaceSlug
 import com.joelkanyi.platypus.domain.repository.RepoContentRepository
 import com.joelkanyi.platypus.ui.BranchesSheet
 import io.github.joelkanyi.jenga.component.button.JengaIconButton
@@ -91,6 +95,8 @@ class RepositoryBrowseViewModel(
     initialPath: String,
 ) : ViewModel() {
 
+    private val repoRef = RepoRef(AccountId(accountId), WorkspaceSlug(workspace), RepoSlug(repoSlug))
+
     private val _uiState = MutableStateFlow(BrowseUiState(ref = initialRef, path = initialPath))
     val uiState: StateFlow<BrowseUiState> = _uiState.asStateFlow()
 
@@ -134,7 +140,7 @@ class RepositoryBrowseViewModel(
     private suspend fun search(query: String) {
         val paths = allPaths ?: run {
             _uiState.update { it.copy(searchLoading = true, searchError = null) }
-            when (val result = repoContentRepository.paths(accountId, workspace, repoSlug, _uiState.value.ref)) {
+            when (val result = repoContentRepository.paths(repoRef, _uiState.value.ref)) {
                 is NetworkResult.Success -> result.data.also { allPaths = it }
                 is NetworkResult.Failure -> {
                     _uiState.update { it.copy(searchLoading = false, searchError = result.userMessage()) }
@@ -150,7 +156,7 @@ class RepositoryBrowseViewModel(
         val path = _uiState.value.path
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            when (val result = repoContentRepository.directory(accountId, workspace, repoSlug, ref, path)) {
+            when (val result = repoContentRepository.directory(repoRef, ref, path)) {
                 is NetworkResult.Success ->
                     _uiState.update { it.copy(isLoading = false, entries = result.data.entries) }
                 is NetworkResult.Failure ->

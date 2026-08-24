@@ -47,7 +47,12 @@ import io.github.joelkanyi.jenga.component.text.JengaText
 import io.github.joelkanyi.jenga.theme.JengaTheme
 
 @Composable
-fun SettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun SettingsScreen(
+    onBack: () -> Unit,
+    onOpenPrivacy: () -> Unit,
+    onOpenTerms: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val dependencies = LocalPlatypusDependencies.current
     val store = dependencies.settingsStore
     val settings by store.settings.collectAsStateWithLifecycle()
@@ -57,6 +62,8 @@ fun SettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         onUpdate = store::update,
         onBack = onBack,
         appLockAvailable = appLockAvailable,
+        onOpenPrivacy = onOpenPrivacy,
+        onOpenTerms = onOpenTerms,
         modifier = modifier,
     )
 }
@@ -67,6 +74,8 @@ internal fun SettingsContent(
     onUpdate: (AppSettings) -> Unit,
     onBack: () -> Unit,
     appLockAvailable: Boolean = false,
+    onOpenPrivacy: () -> Unit = {},
+    onOpenTerms: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val spacing = JengaTheme.spacing
@@ -158,6 +167,24 @@ internal fun SettingsContent(
                     supporting = null,
                     checked = settings.closeSourceBranchOnMerge,
                     onCheckedChange = { onUpdate(settings.copy(closeSourceBranchOnMerge = it)) },
+                )
+            }
+
+            item { SectionLabel("About") }
+            item {
+                JengaListItem(
+                    headline = "Privacy policy",
+                    trailingContent = { JengaIcon(JengaIcons.ChevronRight, contentDescription = null) },
+                    onClick = onOpenPrivacy,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            item {
+                JengaListItem(
+                    headline = "Terms of use",
+                    trailingContent = { JengaIcon(JengaIcons.ChevronRight, contentDescription = null) },
+                    onClick = onOpenTerms,
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
 

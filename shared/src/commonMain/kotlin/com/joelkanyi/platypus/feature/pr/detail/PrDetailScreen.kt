@@ -60,14 +60,12 @@ import com.joelkanyi.platypus.designsystem.expand
 import com.joelkanyi.platypus.designsystem.rememberGeistMonoFontFamily
 import com.joelkanyi.platypus.domain.model.ActivityItem
 import com.joelkanyi.platypus.domain.model.MergeStrategy
-import com.joelkanyi.platypus.domain.model.PrApproval
 import com.joelkanyi.platypus.domain.model.PrComment
 import com.joelkanyi.platypus.domain.model.PrReviewer
 import com.joelkanyi.platypus.domain.model.PrState
 import com.joelkanyi.platypus.domain.model.PullRequestDetail
 import io.github.joelkanyi.jenga.component.avatar.JengaAvatar
 import io.github.joelkanyi.jenga.component.avatar.JengaAvatarSize
-import io.github.joelkanyi.jenga.component.badge.JengaBadgeTone
 import io.github.joelkanyi.jenga.component.banner.JengaBanner
 import io.github.joelkanyi.jenga.component.banner.JengaBannerTone
 import io.github.joelkanyi.jenga.component.button.JengaButton
@@ -820,41 +818,4 @@ private fun PrDetailSkeleton(modifier: Modifier = Modifier, contentPadding: Padd
             Box(Modifier.height(64.dp).fillMaxWidth().clip(JengaTheme.shapes.card).jengaShimmer())
         }
     }
-}
-
-private fun reviewerSummary(reviewers: List<PrReviewer>): String {
-    val approved = reviewers.count { it.approval == PrApproval.APPROVED }
-    val changes = reviewers.count { it.approval == PrApproval.CHANGES_REQUESTED }
-    val pending = reviewers.count { it.approval == PrApproval.NONE }
-    return buildList {
-        if (approved > 0) add("$approved approved")
-        if (changes > 0) add("$changes changes requested")
-        if (pending > 0) add("$pending pending")
-    }.joinToString(" · ").ifEmpty { "No responses yet" }
-}
-
-private fun mergeStrategyLabel(strategy: MergeStrategy): String = when (strategy) {
-    MergeStrategy.MERGE_COMMIT -> "Merge commit"
-    MergeStrategy.SQUASH -> "Squash"
-    MergeStrategy.FAST_FORWARD -> "Fast forward"
-}
-
-private fun mergeStrategyHint(strategy: MergeStrategy): String = when (strategy) {
-    MergeStrategy.MERGE_COMMIT -> "Keeps every commit and adds a merge commit."
-    MergeStrategy.SQUASH -> "Combines all commits into one on the destination."
-    MergeStrategy.FAST_FORWARD -> "Moves the branch pointer, no merge commit."
-}
-
-private fun stateLozenge(state: PrState): Pair<String, JengaBadgeTone>? = when (state) {
-    PrState.OPEN -> "Open" to JengaBadgeTone.Success
-    PrState.MERGED -> "Merged" to JengaBadgeTone.Brand
-    PrState.DECLINED -> "Declined" to JengaBadgeTone.Error
-    PrState.SUPERSEDED -> "Superseded" to JengaBadgeTone.Neutral
-    PrState.OTHER -> null
-}
-
-private fun approvalPill(approval: PrApproval): Pair<String, JengaBadgeTone> = when (approval) {
-    PrApproval.APPROVED -> "Approved" to JengaBadgeTone.Success
-    PrApproval.CHANGES_REQUESTED -> "Changes requested" to JengaBadgeTone.Warning
-    PrApproval.NONE -> "Pending" to JengaBadgeTone.Neutral
 }

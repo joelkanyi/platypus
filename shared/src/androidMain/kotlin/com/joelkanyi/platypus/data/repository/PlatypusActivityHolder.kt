@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.joelkanyi.platypus.data.auth
+package com.joelkanyi.platypus.data.repository
 
-interface SecureStore {
-    suspend fun get(key: String): String?
+import androidx.fragment.app.FragmentActivity
 
-    suspend fun set(key: String, value: String)
-
-    suspend fun remove(key: String)
+object PlatypusActivityHolder {
+    var activity: FragmentActivity? = null
 }

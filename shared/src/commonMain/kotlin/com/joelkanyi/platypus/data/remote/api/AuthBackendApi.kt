@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.joelkanyi.platypus.data.auth
+package com.joelkanyi.platypus.data.remote.api
 
-import com.joelkanyi.platypus.data.auth.dto.ExchangeRequestDto
-import com.joelkanyi.platypus.data.auth.dto.RefreshRequestDto
-import com.joelkanyi.platypus.data.auth.dto.TokenResponseDto
+import com.joelkanyi.platypus.data.remote.dto.ExchangeRequestDto
+import com.joelkanyi.platypus.data.remote.dto.RefreshRequestDto
+import com.joelkanyi.platypus.data.remote.dto.TokenResponseDto
+import com.joelkanyi.platypus.domain.model.AuthConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post

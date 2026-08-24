@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.joelkanyi.platypus.data.auth
+package com.joelkanyi.platypus.app
 
-interface Biometrics {
-    suspend fun isAvailable(): Boolean
+import com.joelkanyi.platypus.domain.model.AuthConfig
 
-    suspend fun authenticate(reason: String): Boolean
-}
+object PlatypusConfig {
+    const val REDIRECT_URI = "platypus://oauth/callback"
 
-object NoopBiometrics : Biometrics {
-    override suspend fun isAvailable(): Boolean = false
-
-    override suspend fun authenticate(reason: String): Boolean = true
+    val auth: AuthConfig = AuthConfig(
+        backendBaseUrl = "",
+        oauthClientId = "",
+        redirectUri = REDIRECT_URI,
+    )
 }

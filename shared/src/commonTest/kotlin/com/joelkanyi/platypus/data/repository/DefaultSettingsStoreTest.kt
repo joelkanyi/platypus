@@ -16,9 +16,9 @@
 package com.joelkanyi.platypus.data.repository
 
 import com.joelkanyi.platypus.core.concurrency.DispatcherProvider
-import com.joelkanyi.platypus.data.auth.SecureStore
 import com.joelkanyi.platypus.domain.model.AppSettings
 import com.joelkanyi.platypus.domain.model.ThemeMode
+import com.joelkanyi.platypus.domain.repository.SecureStore
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest

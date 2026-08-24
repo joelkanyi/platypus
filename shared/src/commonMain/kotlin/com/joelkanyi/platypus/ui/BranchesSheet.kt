@@ -22,17 +22,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.joelkanyi.platypus.app.LocalPlatypusDependencies
-import com.joelkanyi.platypus.core.result.NetworkResult
-import com.joelkanyi.platypus.core.result.userMessage
-import com.joelkanyi.platypus.domain.model.Branch
 import io.github.joelkanyi.jenga.component.feedback.JengaBottomSheet
 import io.github.joelkanyi.jenga.component.icon.JengaIcon
 import io.github.joelkanyi.jenga.component.icon.JengaIcons
@@ -52,17 +50,23 @@ fun BranchesSheet(
     onDismiss: () -> Unit,
 ) {
     val dependencies = LocalPlatypusDependencies.current
-    val spacing = JengaTheme.spacing
-    var branches by remember { mutableStateOf<List<Branch>?>(null) }
-    var error by remember { mutableStateOf<String?>(null) }
-    var query by remember { mutableStateOf("") }
-
-    LaunchedEffect(Unit) {
-        when (val result = dependencies.repoContentRepository.branches(accountId, workspace, repoSlug)) {
-            is NetworkResult.Success -> branches = result.data
-            is NetworkResult.Failure -> error = result.userMessage()
-        }
+    val viewModel = viewModel(key = "$accountId/$workspace/$repoSlug/branches") {
+        BranchesViewModel(dependencies.repoContentRepository, accountId, workspace, repoSlug)
     }
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    BranchesSheetContent(state = state, currentRef = currentRef, onSelect = onSelect, onDismiss = onDismiss)
+}
+
+@Composable
+internal fun BranchesSheetContent(
+    state: BranchesUiState,
+    currentRef: String,
+    onSelect: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val spacing = JengaTheme.spacing
+    var query by rememberSaveable { mutableStateOf("") }
 
     JengaBottomSheet(onDismissRequest = onDismiss) {
         JengaText(
@@ -76,15 +80,14 @@ fun BranchesSheet(
             placeholder = "Filter branches",
             modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.lg, vertical = spacing.xs),
         )
-        val list = branches
         when {
-            error != null -> JengaErrorState(
+            state.error != null -> JengaErrorState(
                 title = "Couldn't load branches",
-                description = error,
+                description = state.error,
                 modifier = Modifier.fillMaxWidth().padding(spacing.lg),
             )
 
-            list == null -> JengaText(
+            state.isLoading -> JengaText(
                 text = "Loading...",
                 color = JengaTheme.colors.textMuted,
                 modifier = Modifier.padding(spacing.lg),
@@ -94,7 +97,10 @@ fun BranchesSheet(
                 modifier = Modifier.fillMaxWidth().heightIn(max = 420.dp),
                 verticalArrangement = Arrangement.spacedBy(spacing.xs),
             ) {
-                items(list.filter { it.name.contains(query, ignoreCase = true) }, key = { it.name }) { branch ->
+                items(
+                    state.branches.filter { it.name.contains(query, ignoreCase = true) },
+                    key = { it.name },
+                ) { branch ->
                     JengaListItem(
                         headline = branch.name,
                         trailingContent = if (branch.name == currentRef) {

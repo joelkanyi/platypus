@@ -45,6 +45,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.joelkanyi.platypus.app.LocalPlatypusDependencies
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.userMessage
+import com.joelkanyi.platypus.core.syntax.highlighterFor
+import com.joelkanyi.platypus.core.syntax.outlineOf
 import com.joelkanyi.platypus.designsystem.PlatypusBreadcrumb
 import com.joelkanyi.platypus.designsystem.PlatypusCodeView
 import com.joelkanyi.platypus.designsystem.PlatypusMarkdown
@@ -53,8 +55,6 @@ import com.joelkanyi.platypus.designsystem.highlightLine
 import com.joelkanyi.platypus.designsystem.rememberSyntaxColors
 import com.joelkanyi.platypus.domain.model.RepoFile
 import com.joelkanyi.platypus.domain.repository.RepoContentRepository
-import com.joelkanyi.platypus.syntax.highlighterFor
-import com.joelkanyi.platypus.syntax.outlineOf
 import com.joelkanyi.platypus.ui.toSp
 import io.github.joelkanyi.jenga.component.button.JengaIconButton
 import io.github.joelkanyi.jenga.component.feedback.JengaBottomSheet

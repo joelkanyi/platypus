@@ -19,8 +19,8 @@ import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.safeApiCall
 import com.joelkanyi.platypus.data.remote.api.AuthBackendApi
 import com.joelkanyi.platypus.data.remote.api.UserApi
-import com.joelkanyi.platypus.data.remote.ktorErrorMapper
 import com.joelkanyi.platypus.data.remote.mapper.toDomain
+import com.joelkanyi.platypus.data.remote.network.ktorErrorMapper
 import com.joelkanyi.platypus.domain.model.Account
 import com.joelkanyi.platypus.domain.model.AuthConfig
 import com.joelkanyi.platypus.domain.model.AuthMode

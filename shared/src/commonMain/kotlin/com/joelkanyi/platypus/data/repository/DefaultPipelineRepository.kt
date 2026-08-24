@@ -18,9 +18,9 @@ package com.joelkanyi.platypus.data.repository
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.safeApiCall
 import com.joelkanyi.platypus.data.remote.api.PipelinesApi
-import com.joelkanyi.platypus.data.remote.ktorErrorMapper
 import com.joelkanyi.platypus.data.remote.mapper.toDomain
 import com.joelkanyi.platypus.data.remote.mapper.toDto
+import com.joelkanyi.platypus.data.remote.network.ktorErrorMapper
 import com.joelkanyi.platypus.domain.model.Deployment
 import com.joelkanyi.platypus.domain.model.Pipeline
 import com.joelkanyi.platypus.domain.model.PipelineStep

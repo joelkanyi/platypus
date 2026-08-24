@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.joelkanyi.platypus.syntax
+package com.joelkanyi.platypus.core.syntax
 
 /**
  * Syntax token colours as raw ARGB, so contrast can be verified in a pure unit test with no Compose

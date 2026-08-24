@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.joelkanyi.platypus.syntax
+package com.joelkanyi.platypus.core.syntax
 
 enum class TokenRole { KEYWORD, STRING, NUMBER, COMMENT, TYPE, FUNCTION, ANNOTATION }
 

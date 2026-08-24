@@ -18,8 +18,8 @@ package com.joelkanyi.platypus.data.repository
 import com.joelkanyi.platypus.core.result.NetworkResult
 import com.joelkanyi.platypus.core.result.safeApiCall
 import com.joelkanyi.platypus.data.remote.api.RepoContentApi
-import com.joelkanyi.platypus.data.remote.ktorErrorMapper
 import com.joelkanyi.platypus.data.remote.mapper.toDomain
+import com.joelkanyi.platypus.data.remote.network.ktorErrorMapper
 import com.joelkanyi.platypus.domain.model.Branch
 import com.joelkanyi.platypus.domain.model.CommitDetail
 import com.joelkanyi.platypus.domain.model.CommitPage

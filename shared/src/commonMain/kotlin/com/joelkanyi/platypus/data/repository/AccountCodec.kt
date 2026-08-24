@@ -15,7 +15,7 @@
  */
 package com.joelkanyi.platypus.data.repository
 
-import com.joelkanyi.platypus.data.remote.PlatypusJson
+import com.joelkanyi.platypus.data.remote.network.PlatypusJson
 import com.joelkanyi.platypus.domain.model.BitbucketUser
 import com.joelkanyi.platypus.domain.model.Credential
 import com.joelkanyi.platypus.domain.model.StoredAccount

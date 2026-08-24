@@ -15,7 +15,7 @@
  */
 package com.joelkanyi.platypus.data.repository
 
-import com.joelkanyi.platypus.data.remote.createHttpClient
+import com.joelkanyi.platypus.data.remote.network.createHttpClient
 import com.joelkanyi.platypus.domain.model.AuthConfig
 import com.joelkanyi.platypus.domain.repository.AccountStore
 import com.joelkanyi.platypus.domain.repository.AuthRepository

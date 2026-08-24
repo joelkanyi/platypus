@@ -15,7 +15,6 @@
  */
 package com.joelkanyi.platypus.data.remote.api
 
-import com.joelkanyi.platypus.data.remote.BITBUCKET_API_BASE
 import com.joelkanyi.platypus.data.remote.dto.DeploymentDto
 import com.joelkanyi.platypus.data.remote.dto.PageDto
 import com.joelkanyi.platypus.data.remote.dto.PipelineDto
@@ -23,6 +22,7 @@ import com.joelkanyi.platypus.data.remote.dto.PipelineStepDto
 import com.joelkanyi.platypus.data.remote.dto.PipelineTriggerRequestDto
 import com.joelkanyi.platypus.data.remote.dto.ScheduleDto
 import com.joelkanyi.platypus.data.remote.dto.TestReportDto
+import com.joelkanyi.platypus.data.remote.network.BITBUCKET_API_BASE
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.accept

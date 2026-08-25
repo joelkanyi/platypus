@@ -17,10 +17,7 @@ package com.joelkanyi.platypus.feature.profile
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -58,8 +55,8 @@ import io.github.joelkanyi.jenga.component.button.JengaButtonVariant
 import io.github.joelkanyi.jenga.component.button.JengaIconButton
 import io.github.joelkanyi.jenga.component.card.JengaCard
 import io.github.joelkanyi.jenga.component.card.JengaCardVariant
-import io.github.joelkanyi.jenga.component.chip.JengaChip
 import io.github.joelkanyi.jenga.component.divider.JengaDivider
+import io.github.joelkanyi.jenga.component.feedback.JengaBottomSheet
 import io.github.joelkanyi.jenga.component.feedback.JengaDialog
 import io.github.joelkanyi.jenga.component.icon.JengaIcon
 import io.github.joelkanyi.jenga.component.icon.JengaIcons
@@ -68,6 +65,7 @@ import io.github.joelkanyi.jenga.component.menu.JengaDropdownMenu
 import io.github.joelkanyi.jenga.component.menu.JengaDropdownMenuItem
 import io.github.joelkanyi.jenga.component.scaffold.JengaScaffold
 import io.github.joelkanyi.jenga.component.scaffold.JengaTopAppBar
+import io.github.joelkanyi.jenga.component.selection.JengaRadioButton
 import io.github.joelkanyi.jenga.component.selection.JengaToggle
 import io.github.joelkanyi.jenga.component.text.JengaText
 import io.github.joelkanyi.jenga.theme.JengaTheme
@@ -192,6 +190,7 @@ internal fun ProfileContent(
                         checked = settings.wrapCode,
                         onCheckedChange = { onUpdate(settings.copy(wrapCode = it)) },
                     )
+                    InsetDivider()
                     ToggleRow(
                         title = "Render markdown by default",
                         supporting = "Show READMEs and .md files rendered, not as source",
@@ -339,19 +338,18 @@ private fun AccountRow(
 @Composable
 private fun SettingsSection(title: String, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     val spacing = JengaTheme.spacing
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
+    JengaCard(
+        variant = JengaCardVariant.Outlined,
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(vertical = spacing.sm),
+    ) {
         JengaText(
-            text = title.uppercase(),
+            text = title,
             style = JengaTheme.typography.caption,
             color = JengaTheme.colors.textMuted,
-            modifier = Modifier.padding(start = spacing.sm),
+            modifier = Modifier.padding(horizontal = spacing.lg, vertical = spacing.xs),
         )
-        JengaCard(
-            variant = JengaCardVariant.Outlined,
-            modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(0.dp),
-            content = content,
-        )
+        content()
     }
 }
 
@@ -360,19 +358,55 @@ private fun InsetDivider() {
     JengaDivider(modifier = Modifier.padding(horizontal = JengaTheme.spacing.lg))
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun <T> ChoiceRow(title: String, options: List<T>, selected: T, label: (T) -> String, onSelect: (T) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    JengaListItem(
+        headline = title,
+        supporting = label(selected),
+        onClick = { open = true },
+        modifier = Modifier.fillMaxWidth(),
+    )
+    if (open) {
+        ChoicePickerSheet(
+            title = title,
+            options = options,
+            selected = selected,
+            label = label,
+            onSelect = {
+                open = false
+                onSelect(it)
+            },
+            onDismiss = { open = false },
+        )
+    }
+}
+
+@Composable
+private fun <T> ChoicePickerSheet(
+    title: String,
+    options: List<T>,
+    selected: T,
+    label: (T) -> String,
+    onSelect: (T) -> Unit,
+    onDismiss: () -> Unit,
+) {
     val spacing = JengaTheme.spacing
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.lg, vertical = spacing.md),
-        verticalArrangement = Arrangement.spacedBy(spacing.sm),
-    ) {
-        JengaText(text = title, style = JengaTheme.typography.bodyMedium, color = JengaTheme.colors.textPrimary)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-            options.forEach { option ->
-                JengaChip(label = label(option), selected = option == selected, onClick = { onSelect(option) })
-            }
+    JengaBottomSheet(onDismissRequest = onDismiss) {
+        JengaText(
+            text = title,
+            style = JengaTheme.typography.titleMedium,
+            modifier = Modifier.padding(horizontal = spacing.lg, vertical = spacing.sm),
+        )
+        options.forEach { option ->
+            JengaListItem(
+                headline = label(option),
+                trailingContent = {
+                    JengaRadioButton(selected = option == selected, onClick = { onSelect(option) })
+                },
+                onClick = { onSelect(option) },
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }

@@ -27,6 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -40,6 +41,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.joelkanyi.jenga.component.button.JengaButton
 import io.github.joelkanyi.jenga.component.text.JengaText
 import io.github.joelkanyi.jenga.theme.JengaTheme
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 @Composable
@@ -56,33 +58,56 @@ fun AppLockGate(content: @Composable () -> Unit) {
     }
 
     var unlocked by rememberSaveable { mutableStateOf(false) }
+    var authenticating by remember { mutableStateOf(false) }
+    var authJob by remember { mutableStateOf<Job?>(null) }
+    val scope = rememberCoroutineScope()
+
+    val prompt: () -> Unit = {
+        if (!authenticating) {
+            authenticating = true
+            authJob = scope.launch {
+                try {
+                    if (dependencies.biometrics.authenticate("Unlock Platypus to continue")) {
+                        unlocked = true
+                    }
+                } finally {
+                    authenticating = false
+                }
+            }
+        }
+    }
+    val currentPrompt by rememberUpdatedState(prompt)
+
+    // Prompt only while the app is actually resumed. Firing the biometric prompt
+    // as the app is stopping (e.g. relocking on ON_STOP) leaves it unable to show
+    // and the auth call hanging, which stranded the lock screen on a spinner.
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_STOP) unlocked = false
+            when (event) {
+                Lifecycle.Event.ON_STOP -> {
+                    unlocked = false
+                    authJob?.cancel()
+                    authenticating = false
+                }
+
+                Lifecycle.Event.ON_RESUME -> if (!unlocked && !authenticating) currentPrompt()
+                else -> Unit
+            }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // Covers a cold start where composition settles after ON_RESUME was dispatched.
+    LaunchedEffect(Unit) {
+        if (!unlocked && lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) currentPrompt()
     }
 
     if (unlocked) {
         content()
         return
     }
-
-    val scope = rememberCoroutineScope()
-    var authenticating by remember { mutableStateOf(false) }
-    val prompt: () -> Unit = {
-        if (!authenticating) {
-            authenticating = true
-            scope.launch {
-                val ok = dependencies.biometrics.authenticate("Unlock Platypus to continue")
-                authenticating = false
-                if (ok) unlocked = true
-            }
-        }
-    }
-    LaunchedEffect(Unit) { prompt() }
     LockScreen(onUnlock = prompt, authenticating = authenticating)
 }
 

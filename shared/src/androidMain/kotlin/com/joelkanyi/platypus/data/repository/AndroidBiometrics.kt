@@ -57,6 +57,7 @@ class AndroidBiometrics(context: Context) : Biometrics {
                     .setAllowedAuthenticators(ALLOWED)
                     .setNegativeButtonText("Cancel")
                     .build()
+                continuation.invokeOnCancellation { prompt.cancelAuthentication() }
                 prompt.authenticate(info)
             }
         }

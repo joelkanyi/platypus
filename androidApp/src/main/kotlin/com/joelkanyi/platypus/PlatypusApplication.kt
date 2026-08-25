@@ -18,16 +18,11 @@ package com.joelkanyi.platypus
 import android.app.Application
 import com.joelkanyi.platypus.di.AppGraph
 import dev.zacsweers.metro.createGraphFactory
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 
 class PlatypusApplication : Application() {
 
     lateinit var appGraph: AppGraph
         private set
-
-    val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     override fun onCreate() {
         super.onCreate()

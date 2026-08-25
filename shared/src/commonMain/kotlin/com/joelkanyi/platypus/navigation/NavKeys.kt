@@ -34,8 +34,6 @@ data class SearchKey(
     val repoName: String? = null,
 ) : PlatypusKey
 
-@Serializable data object SettingsKey : PlatypusKey
-
 @Serializable data object PrivacyKey : PlatypusKey
 
 @Serializable data object TermsKey : PlatypusKey

@@ -18,11 +18,15 @@ package com.joelkanyi.platypus.feature.profile
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.joelkanyi.platypus.navigation.Navigator
+import com.joelkanyi.platypus.navigation.PrivacyKey
 import com.joelkanyi.platypus.navigation.ProfileKey
-import com.joelkanyi.platypus.navigation.SettingsKey
+import com.joelkanyi.platypus.navigation.TermsKey
 
 fun EntryProviderScope<NavKey>.profileEntries(navigator: Navigator) {
     entry<ProfileKey> {
-        ProfileScreen(onOpenSettings = { navigator.navigate(SettingsKey) })
+        ProfileScreen(
+            onOpenPrivacy = { navigator.navigate(PrivacyKey) },
+            onOpenTerms = { navigator.navigate(TermsKey) },
+        )
     }
 }

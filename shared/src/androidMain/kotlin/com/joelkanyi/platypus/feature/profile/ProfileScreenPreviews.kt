@@ -17,6 +17,7 @@ package com.joelkanyi.platypus.feature.profile
 
 import androidx.compose.runtime.Composable
 import com.joelkanyi.platypus.domain.model.Account
+import com.joelkanyi.platypus.domain.model.AppSettings
 import com.joelkanyi.platypus.domain.model.AuthMode
 import com.joelkanyi.platypus.domain.model.BitbucketUser
 import com.joelkanyi.platypus.preview.PlatypusPreview
@@ -31,7 +32,7 @@ private val sampleAccounts = listOf(
 @Composable
 private fun ProfileOneAccountPreview() {
     PlatypusPreview {
-        ProfileContent(accounts = sampleAccounts.take(1), onSignOut = {}, onOpenSettings = {})
+        ProfileContent(accounts = sampleAccounts.take(1), settings = AppSettings(), onUpdate = {}, onSignOut = {})
     }
 }
 
@@ -39,6 +40,6 @@ private fun ProfileOneAccountPreview() {
 @Composable
 private fun ProfileMultiAccountPreview() {
     PlatypusPreview {
-        ProfileContent(accounts = sampleAccounts, onSignOut = {}, onOpenSettings = {})
+        ProfileContent(accounts = sampleAccounts, settings = AppSettings(), onUpdate = {}, onSignOut = {})
     }
 }

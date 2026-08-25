@@ -33,7 +33,6 @@ import com.joelkanyi.platypus.feature.profile.profileEntries
 import com.joelkanyi.platypus.feature.repo.repoEntries
 import com.joelkanyi.platypus.feature.repositories.repositoriesEntries
 import com.joelkanyi.platypus.feature.search.searchEntries
-import com.joelkanyi.platypus.feature.settings.settingsEntries
 import io.github.joelkanyi.jenga.component.icon.JengaIcon
 import io.github.joelkanyi.jenga.component.icon.JengaIcons
 import io.github.joelkanyi.jenga.component.navigation.JengaNavIndicator
@@ -54,7 +53,6 @@ fun PlatypusShell() {
         inboxEntries(navigator)
         repositoriesEntries(navigator)
         profileEntries(navigator)
-        settingsEntries(navigator)
         legalEntries(navigator)
         searchEntries(navigator)
         repoEntries(navigator, onOpenUrl)
@@ -95,7 +93,7 @@ private val TopLevelDestination.label: String
         TopLevelDestination.REPOSITORIES -> "Repositories"
         TopLevelDestination.INBOX -> "Inbox"
         TopLevelDestination.SEARCH -> "Search"
-        TopLevelDestination.PROFILE -> "Profile"
+        TopLevelDestination.PROFILE -> "Account"
     }
 
 private val TopLevelDestination.icon

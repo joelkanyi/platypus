@@ -61,6 +61,28 @@ private fun OverviewContentPreview() {
 
 @PlatypusThemePreviews
 @Composable
+private fun OverviewLoadingPreview() {
+    PlatypusPreview {
+        OverviewContent(
+            repoName = "API Gateway",
+            onBack = {},
+            state = OverviewUiState(isLoading = true),
+            onRetry = {},
+            onOpenFiles = {},
+            onOpenCommits = {},
+            onOpenPullRequests = {},
+            onOpenPipelines = {},
+            onOpenDeployments = {},
+            onOpenSchedules = {},
+            onSearchRepo = {},
+            onBranchClick = {},
+            onOpenUrl = {},
+        )
+    }
+}
+
+@PlatypusThemePreviews
+@Composable
 private fun OverviewErrorPreview() {
     PlatypusPreview {
         OverviewContent(

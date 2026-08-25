@@ -45,6 +45,7 @@ import com.joelkanyi.platypus.core.syntax.outlineOf
 import com.joelkanyi.platypus.designsystem.PlatypusBreadcrumb
 import com.joelkanyi.platypus.designsystem.PlatypusCodeView
 import com.joelkanyi.platypus.designsystem.PlatypusMarkdown
+import com.joelkanyi.platypus.designsystem.PlatypusSkeletonLine
 import com.joelkanyi.platypus.designsystem.crumbsFor
 import com.joelkanyi.platypus.designsystem.highlightLine
 import com.joelkanyi.platypus.designsystem.rememberSyntaxColors
@@ -258,6 +259,8 @@ internal fun FileViewerContent(
                 contentPadding = innerPadding,
             )
 
+            state.isLoading -> FileSkeleton(contentPadding = innerPadding)
+
             else -> Unit
         }
     }
@@ -294,6 +297,21 @@ private fun OutlineSheet(fileName: String, lines: List<String>, onSelect: (Int) 
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun FileSkeleton(contentPadding: PaddingValues) {
+    val spacing = JengaTheme.spacing
+    val widths = listOf(0.5f, 0.8f, 0.65f, 0.9f, 0.4f, 0.75f, 0.85f, 0.55f, 0.7f, 0.6f, 0.9f, 0.45f)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(contentPadding)
+            .padding(horizontal = spacing.lg, vertical = spacing.md),
+        verticalArrangement = Arrangement.spacedBy(spacing.sm),
+    ) {
+        widths.forEach { PlatypusSkeletonLine(widthFraction = it, height = 12.dp) }
     }
 }
 

@@ -48,6 +48,23 @@ private fun BrowseContentPreview() {
 
 @PlatypusThemePreviews
 @Composable
+private fun BrowseLoadingPreview() {
+    PlatypusPreview {
+        BrowseContent(
+            repoLabel = "platypus",
+            state = BrowseUiState(ref = "main", path = "", isLoading = true),
+            onBack = {},
+            onRetry = {},
+            onQueryChanged = {},
+            onNavigateToPath = {},
+            onBranchClick = {},
+            onOpenFile = {},
+        )
+    }
+}
+
+@PlatypusThemePreviews
+@Composable
 private fun BrowseRootPreview() {
     PlatypusPreview {
         BrowseContent(

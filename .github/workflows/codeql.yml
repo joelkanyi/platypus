@@ -29,6 +29,11 @@ jobs:
           java-version: 21
 
       - uses: gradle/actions/setup-gradle@v4
+        with:
+          # CodeQL traces the compiler, so the build must actually recompile the
+          # Kotlin. A restored Gradle cache can make assembleDebug fully up-to-date
+          # (e.g. on a docs-only commit), leaving CodeQL with no source to analyze.
+          cache-disabled: true
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
@@ -37,7 +42,7 @@ jobs:
           build-mode: manual
 
       - name: Build
-        run: ./gradlew :androidApp:assembleDebug
+        run: ./gradlew clean :androidApp:assembleDebug --no-build-cache
 
       - name: Analyze
         uses: github/codeql-action/analyze@v3

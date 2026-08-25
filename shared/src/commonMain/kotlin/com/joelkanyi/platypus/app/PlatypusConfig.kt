@@ -27,8 +27,8 @@ object PlatypusConfig {
     // Fill these in after deploying the OAuth Worker and registering the Bitbucket
     // consumer. Both are public (not secrets). Leaving them blank disables the
     // "Sign in with Bitbucket" button; API-token sign-in works regardless.
-    private const val BACKEND_BASE_URL = ""
-    private const val OAUTH_CLIENT_ID = ""
+    private const val BACKEND_BASE_URL = "https://platypus-oauth.joelkanyi98.workers.dev"
+    private const val OAUTH_CLIENT_ID = "I2AhqUuSAM1IEHtP4KNk8KLajJmmEE0O"
 
     val auth: AuthConfig = AuthConfig(
         backendBaseUrl = BACKEND_BASE_URL,

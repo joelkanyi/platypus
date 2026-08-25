@@ -298,7 +298,7 @@ internal fun ProfileContent(
             },
             dismissButton = {
                 JengaButton(
-                    text = "Manage on Atlassian",
+                    text = "Manage",
                     variant = JengaButtonVariant.Outline,
                     onClick = {
                         onManageAtlassian()

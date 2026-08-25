@@ -58,6 +58,8 @@ class BranchesViewModel(
         load()
     }
 
+    fun retry() = load()
+
     private fun load() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }

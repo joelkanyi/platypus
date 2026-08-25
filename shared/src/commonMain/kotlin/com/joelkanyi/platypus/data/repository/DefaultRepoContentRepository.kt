@@ -44,11 +44,13 @@ class DefaultRepoContentRepository(private val authRepository: AuthRepository) :
     private val directoryCache = mutableMapOf<String, DirectoryListing>()
     private val fileCache = mutableMapOf<String, RepoFile>()
     private val pathsCache = mutableMapOf<String, List<String>>()
+    private val branchesCache = mutableMapOf<String, List<Branch>>()
 
     override fun clearCache() {
         directoryCache.clear()
         fileCache.clear()
         pathsCache.clear()
+        branchesCache.clear()
     }
 
     override suspend fun repository(repo: RepoRef): NetworkResult<RepositoryDetail> {
@@ -135,6 +137,8 @@ class DefaultRepoContentRepository(private val authRepository: AuthRepository) :
         val accountId = repo.accountId.value
         val workspaceSlug = repo.workspace.value
         val repoSlug = repo.repoSlug.value
+        val key = cacheKey(accountId, workspaceSlug, repoSlug, "", "")
+        branchesCache[key]?.let { return NetworkResult.Success(it) }
         val client = authRepository.authenticatedClient(accountId)
             ?: return NetworkResult.Failure.Http(401, SIGNED_OUT)
         return safeApiCall(::ktorErrorMapper) {
@@ -142,7 +146,7 @@ class DefaultRepoContentRepository(private val authRepository: AuthRepository) :
             collectPaged(
                 firstPage = { api.branches(workspaceSlug, repoSlug) },
                 nextPage = { api.branchesPage(it) },
-            ).map { it.toDomain() }
+            ).map { it.toDomain() }.also { branchesCache[key] = it }
         }
     }
 

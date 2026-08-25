@@ -16,6 +16,7 @@
 package com.joelkanyi.platypus.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -31,11 +32,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.joelkanyi.platypus.app.LocalPlatypusDependencies
+import com.joelkanyi.platypus.designsystem.PlatypusIcons
+import com.joelkanyi.platypus.designsystem.PlatypusListSkeleton
 import io.github.joelkanyi.jenga.component.feedback.JengaBottomSheet
 import io.github.joelkanyi.jenga.component.icon.JengaIcon
 import io.github.joelkanyi.jenga.component.icon.JengaIcons
 import io.github.joelkanyi.jenga.component.list.JengaListItem
 import io.github.joelkanyi.jenga.component.search.JengaSearchField
+import io.github.joelkanyi.jenga.component.state.JengaEmptyState
 import io.github.joelkanyi.jenga.component.state.JengaErrorState
 import io.github.joelkanyi.jenga.component.text.JengaText
 import io.github.joelkanyi.jenga.theme.JengaTheme
@@ -55,7 +59,13 @@ fun BranchesSheet(
     }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    BranchesSheetContent(state = state, currentRef = currentRef, onSelect = onSelect, onDismiss = onDismiss)
+    BranchesSheetContent(
+        state = state,
+        currentRef = currentRef,
+        onSelect = onSelect,
+        onRetry = viewModel::retry,
+        onDismiss = onDismiss,
+    )
 }
 
 @Composable
@@ -63,6 +73,7 @@ internal fun BranchesSheetContent(
     state: BranchesUiState,
     currentRef: String,
     onSelect: (String) -> Unit,
+    onRetry: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val spacing = JengaTheme.spacing
@@ -70,7 +81,7 @@ internal fun BranchesSheetContent(
 
     JengaBottomSheet(onDismissRequest = onDismiss) {
         JengaText(
-            text = "Branches",
+            text = "Switch branch",
             style = JengaTheme.typography.titleMedium,
             modifier = Modifier.padding(horizontal = spacing.lg, vertical = spacing.sm),
         )
@@ -84,32 +95,62 @@ internal fun BranchesSheetContent(
             state.error != null -> JengaErrorState(
                 title = "Couldn't load branches",
                 description = state.error,
+                actionLabel = "Try again",
+                onAction = onRetry,
                 modifier = Modifier.fillMaxWidth().padding(spacing.lg),
             )
 
-            state.isLoading -> JengaText(
-                text = "Loading...",
-                color = JengaTheme.colors.textMuted,
-                modifier = Modifier.padding(spacing.lg),
+            state.isLoading -> PlatypusListSkeleton(
+                modifier = Modifier.fillMaxWidth().heightIn(max = 320.dp),
+                contentPadding = PaddingValues(horizontal = spacing.lg, vertical = spacing.xs),
+                count = 6,
             )
 
-            else -> LazyColumn(
-                modifier = Modifier.fillMaxWidth().heightIn(max = 420.dp),
-                verticalArrangement = Arrangement.spacedBy(spacing.xs),
-            ) {
-                items(
-                    state.branches.filter { it.name.contains(query, ignoreCase = true) },
-                    key = { it.name },
-                ) { branch ->
-                    JengaListItem(
-                        headline = branch.name,
-                        trailingContent = if (branch.name == currentRef) {
-                            { JengaIcon(JengaIcons.Check, contentDescription = "Current") }
+            else -> {
+                val filtered = state.branches.filter { it.name.contains(query, ignoreCase = true) }
+                if (filtered.isEmpty()) {
+                    JengaEmptyState(
+                        title = "No branches",
+                        description = if (query.isBlank()) {
+                            "This repository has no branches."
                         } else {
-                            null
+                            "No branches match \"$query\"."
                         },
-                        onClick = { onSelect(branch.name) },
+                        modifier = Modifier.fillMaxWidth().padding(spacing.lg),
                     )
+                } else {
+                    val ordered = filtered.sortedByDescending { it.name == currentRef }
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth().heightIn(max = 420.dp),
+                        verticalArrangement = Arrangement.spacedBy(spacing.xxs),
+                    ) {
+                        items(ordered, key = { it.name }) { branch ->
+                            val isCurrent = branch.name == currentRef
+                            JengaListItem(
+                                headline = branch.name,
+                                supporting = branch.targetHash.take(7).ifBlank { null },
+                                leadingContent = {
+                                    JengaIcon(
+                                        PlatypusIcons.GitBranch,
+                                        contentDescription = null,
+                                        tint = if (isCurrent) JengaTheme.colors.brand else JengaTheme.colors.textMuted,
+                                    )
+                                },
+                                trailingContent = if (isCurrent) {
+                                    {
+                                        JengaIcon(
+                                            JengaIcons.Check,
+                                            contentDescription = "Current",
+                                            tint = JengaTheme.colors.brand,
+                                        )
+                                    }
+                                } else {
+                                    null
+                                },
+                                onClick = { onSelect(branch.name) },
+                            )
+                        }
+                    }
                 }
             }
         }

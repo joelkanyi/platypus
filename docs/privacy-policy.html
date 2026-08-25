@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Platypus Privacy Policy</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 4rem;
+    color: #1a1a1a;
+    background: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { color: #e6e6e6; background: #0d0d0d; }
+    a { color: #7ab8ff; }
+  }
+  h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.1rem; margin-top: 2rem; }
+  .updated { color: #888; font-size: 0.9rem; margin-top: 0; }
+  a { color: #0b66c3; }
+</style>
+</head>
+<body>
+  <h1>Platypus Privacy Policy</h1>
+  <p class="updated">Last updated: 25 August 2026</p>
+
+  <h2>The short version</h2>
+  <p>
+    Platypus is an unofficial Bitbucket Cloud client. It has no servers of its own for your
+    content. Your Bitbucket credentials and data stay on your device and are sent only to
+    Atlassian's Bitbucket API to do what you ask.
+  </p>
+
+  <h2>What is stored on your device</h2>
+  <p>
+    Your sign-in credentials (Atlassian API token or OAuth refresh token) are kept in the
+    platform secure store (Android Keystore-backed encrypted storage; iOS Keychain). The app
+    also stores, locally, the repositories you choose to watch, a cache of pull requests for
+    your inbox, and your app settings.
+  </p>
+
+  <h2>What is sent, and to whom</h2>
+  <p>
+    Requests go directly from your device to Atlassian's Bitbucket API (api.bitbucket.org). If
+    you use OAuth sign-in, the authorization code and token refresh are relayed through a
+    stateless backend that only attaches the OAuth secret and forwards the request to Atlassian;
+    it stores nothing and never receives your repository content.
+  </p>
+
+  <h2>No analytics or tracking</h2>
+  <p>
+    Platypus does not include analytics, advertising, or third-party tracking SDKs, and does not
+    collect a device identifier or usage profile.
+  </p>
+
+  <h2>Deleting your data</h2>
+  <p>
+    Signing out removes an account's session. Delete account (in the Account screen) removes that
+    account together with its watched repositories and cached pull requests from your device. To
+    delete your Atlassian account itself, manage it at
+    <a href="https://id.atlassian.com">id.atlassian.com</a>.
+  </p>
+
+  <h2>Contact</h2>
+  <p>
+    Questions about privacy can be raised on the project's
+    <a href="https://github.com/joelkanyi/platypus/issues">issue tracker</a>.
+  </p>
+</body>
+</html>

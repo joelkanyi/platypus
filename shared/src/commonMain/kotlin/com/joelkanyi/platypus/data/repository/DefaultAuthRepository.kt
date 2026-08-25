@@ -37,6 +37,7 @@ import io.ktor.http.encodeURLParameter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlin.random.Random
 
 class DefaultAuthRepository(
     private val config: AuthConfig,
@@ -49,6 +50,10 @@ class DefaultAuthRepository(
 
     private val sessions = mutableMapOf<String, Session>()
 
+    // CSRF guard: the state we put in the authorize URL, checked when the
+    // callback returns. Held in memory on the device (the Worker is stateless).
+    private var pendingState: String? = null
+
     private val _status = MutableStateFlow<AuthStatus>(AuthStatus.Unknown)
     override val status: StateFlow<AuthStatus> = _status.asStateFlow()
 
@@ -59,8 +64,10 @@ class DefaultAuthRepository(
 
     override fun authorizeUrl(): String? {
         if (!config.isOAuthConfigured) return null
+        val state = randomState().also { pendingState = it }
         val redirect = config.redirectUri.encodeURLParameter()
-        return "${config.authorizeEndpoint}?client_id=${config.oauthClientId}&response_type=code&redirect_uri=$redirect"
+        return "${config.authorizeEndpoint}?client_id=${config.oauthClientId}" +
+            "&response_type=code&redirect_uri=$redirect&state=$state"
     }
 
     override suspend fun restore() {
@@ -75,7 +82,12 @@ class DefaultAuthRepository(
         }
     }
 
-    override suspend fun completeOAuth(code: String): NetworkResult<Account> {
+    override suspend fun completeOAuth(code: String, state: String?): NetworkResult<Account> {
+        val expected = pendingState
+        if (expected != null && state != expected) {
+            return NetworkResult.Failure.Http(400, OAUTH_STATE_MISMATCH)
+        }
+        pendingState = null
         val tokens = when (val exchange = safeApiCall(::ktorErrorMapper) { backend.exchange(code) }) {
             is NetworkResult.Success -> exchange.data
             is NetworkResult.Failure -> return exchange
@@ -176,5 +188,15 @@ class DefaultAuthRepository(
         is Credential.OAuth -> AuthMode.OAUTH
     }
 
+    private fun randomState(): String = buildString {
+        repeat(STATE_LENGTH) { append(STATE_ALPHABET[Random.nextInt(STATE_ALPHABET.length)]) }
+    }
+
     private class Session(val account: Account, val client: HttpClient)
+
+    private companion object {
+        const val OAUTH_STATE_MISMATCH = "Sign-in could not be verified. Please try again."
+        const val STATE_LENGTH = 32
+        const val STATE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    }
 }

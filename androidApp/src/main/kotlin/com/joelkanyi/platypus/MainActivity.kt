@@ -57,7 +57,8 @@ class MainActivity : FragmentActivity() {
     private fun handleDeepLink(intent: Intent?) {
         val data = intent?.data ?: return
         if (data.scheme == OAUTH_SCHEME) {
-            data.getQueryParameter("code")?.let { dependencies.oauthDeepLinks.submit(it) }
+            val code = data.getQueryParameter("code") ?: return
+            dependencies.oauthDeepLinks.submit(code, data.getQueryParameter("state"))
         }
     }
 

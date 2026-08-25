@@ -34,7 +34,7 @@ interface AuthRepository {
 
     suspend fun signInWithApiToken(email: String, token: String): NetworkResult<Account>
 
-    suspend fun completeOAuth(code: String): NetworkResult<Account>
+    suspend fun completeOAuth(code: String, state: String?): NetworkResult<Account>
 
     suspend fun workspaces(accountId: String): NetworkResult<List<Workspace>>
 

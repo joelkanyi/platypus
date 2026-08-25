@@ -30,4 +30,3 @@ dependencyResolutionManagement {
 
 include(":shared")
 include(":androidApp")
-include(":backend")

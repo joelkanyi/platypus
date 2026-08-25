@@ -36,7 +36,8 @@ class FakeAuthRepository(private val client: HttpClient?, accounts: List<Account
     override suspend fun signInWithApiToken(email: String, token: String): NetworkResult<Account> =
         error("unused in these tests")
 
-    override suspend fun completeOAuth(code: String): NetworkResult<Account> = error("unused in these tests")
+    override suspend fun completeOAuth(code: String, state: String?): NetworkResult<Account> =
+        error("unused in these tests")
 
     override suspend fun workspaces(accountId: String): NetworkResult<List<Workspace>> = error("unused in these tests")
 

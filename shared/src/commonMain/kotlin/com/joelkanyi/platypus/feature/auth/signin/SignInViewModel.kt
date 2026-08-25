@@ -42,7 +42,7 @@ class SignInViewModel(private val authRepository: AuthRepository, private val oa
 
     init {
         viewModelScope.launch {
-            oauthDeepLinks.codes.collect { code -> completeOAuth(code) }
+            oauthDeepLinks.callbacks.collect { callback -> completeOAuth(callback.code, callback.state) }
         }
     }
 
@@ -78,10 +78,10 @@ class SignInViewModel(private val authRepository: AuthRepository, private val oa
         _effects.trySend(SignInUiEffect.OpenUrl(url))
     }
 
-    private fun completeOAuth(code: String) {
+    private fun completeOAuth(code: String, state: String?) {
         viewModelScope.launch {
             _uiState.update { it.copy(isSubmitting = true, error = null) }
-            when (val result = authRepository.completeOAuth(code)) {
+            when (val result = authRepository.completeOAuth(code, state)) {
                 is NetworkResult.Success -> {
                     _uiState.update { it.copy(isSubmitting = false) }
                     _effects.trySend(SignInUiEffect.SignedIn)

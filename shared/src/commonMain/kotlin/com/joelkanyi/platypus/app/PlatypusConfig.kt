@@ -18,14 +18,23 @@ package com.joelkanyi.platypus.app
 import com.joelkanyi.platypus.domain.model.AuthConfig
 
 object PlatypusConfig {
-    const val REDIRECT_URI = "platypus://oauth/callback"
-
     // Keep in sync with androidApp versionName and the iOS marketing version.
     const val VERSION = "0.0.1"
 
+    // The custom scheme the app catches; the OAuth Worker's /callback bounces to it.
+    const val APP_REDIRECT = "platypus://oauth/callback"
+
+    // Fill these in after deploying the OAuth Worker and registering the Bitbucket
+    // consumer. Both are public (not secrets). Leaving them blank disables the
+    // "Sign in with Bitbucket" button; API-token sign-in works regardless.
+    private const val BACKEND_BASE_URL = "https://platypus-oauth.joelkanyi98.workers.dev"
+    private const val OAUTH_CLIENT_ID = "I2AhqUuSAM1IEHtP4KNk8KLajJmmEE0O"
+
     val auth: AuthConfig = AuthConfig(
-        backendBaseUrl = "",
-        oauthClientId = "",
-        redirectUri = REDIRECT_URI,
+        backendBaseUrl = BACKEND_BASE_URL,
+        oauthClientId = OAUTH_CLIENT_ID,
+        // Bitbucket redirects to the Worker's https /callback, which then bounces to
+        // APP_REDIRECT. Authorize and token-exchange must send the same redirect_uri.
+        redirectUri = if (BACKEND_BASE_URL.isBlank()) "" else "$BACKEND_BASE_URL/callback",
     )
 }

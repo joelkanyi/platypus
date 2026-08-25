@@ -164,7 +164,7 @@ class DefaultAuthRepositoryTest {
         val store = FakeAccountStore()
         val repo = repository(store = store, handler = happyPath)
 
-        val result = repo.completeOAuth("auth-code")
+        val result = repo.completeOAuth("auth-code", state = null)
 
         assertTrue(result is NetworkResult.Success)
         assertEquals(AuthMode.OAUTH, result.data.mode)

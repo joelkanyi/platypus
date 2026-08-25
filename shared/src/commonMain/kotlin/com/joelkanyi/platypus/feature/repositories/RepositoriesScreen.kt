@@ -136,7 +136,7 @@ private fun WatchingPane(
         contentPadding = PaddingValues(horizontal = spacing.lg, vertical = spacing.sm),
         verticalArrangement = Arrangement.spacedBy(spacing.xs),
     ) {
-        items(state.watched, key = { it.repoUuid }) { watched ->
+        items(state.watched, key = { "${it.accountId}/${it.repoUuid}" }) { watched ->
             WatchedRow(
                 watched = watched,
                 onOpen = { onOpenRepo(watched) },

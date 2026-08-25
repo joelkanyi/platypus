@@ -1,0 +1,13 @@
+name = "platypus-oauth"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+
+# Public values. BITBUCKET_CLIENT_ID is the OAuth consumer key (safe to expose);
+# fill it in after registering the consumer. APP_REDIRECT is the app's custom
+# scheme that /callback bounces back to.
+[vars]
+BITBUCKET_CLIENT_ID = "I2AhqUuSAM1IEHtP4KNk8KLajJmmEE0O"
+APP_REDIRECT = "platypus://oauth/callback"
+
+# BITBUCKET_CLIENT_SECRET is NOT here. Set it as an encrypted secret:
+#   wrangler secret put BITBUCKET_CLIENT_SECRET

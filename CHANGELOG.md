@@ -6,6 +6,15 @@ to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-08-25
+
+### Fixed
+
+- OAuth sign-in no longer loses access after a while. The access token was never
+  being refreshed, so a signed-in session stopped working once the token expired
+  or the app was reopened from the background. Token refresh now runs on
+  Bitbucket's 401 response.
+
 ## [0.1.0] - 2026-08-25
 
 ### Added

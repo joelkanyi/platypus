@@ -19,7 +19,7 @@ import com.joelkanyi.platypus.domain.model.AuthConfig
 
 object PlatypusConfig {
     // Keep in sync with androidApp versionName and the iOS marketing version.
-    const val VERSION = "0.1.0"
+    const val VERSION = "0.1.1"
 
     // The custom scheme the app catches; the OAuth Worker's /callback bounces to it.
     const val APP_REDIRECT = "platypus://oauth/callback"

@@ -20,6 +20,9 @@ import com.joelkanyi.platypus.domain.model.AuthConfig
 object PlatypusConfig {
     const val REDIRECT_URI = "platypus://oauth/callback"
 
+    // Keep in sync with androidApp versionName and the iOS marketing version.
+    const val VERSION = "0.0.1"
+
     val auth: AuthConfig = AuthConfig(
         backendBaseUrl = "",
         oauthClientId = "",

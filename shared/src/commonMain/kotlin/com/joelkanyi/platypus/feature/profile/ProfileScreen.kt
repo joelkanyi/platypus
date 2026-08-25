@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.joelkanyi.platypus.app.LocalAccountActions
 import com.joelkanyi.platypus.app.LocalPlatypusDependencies
+import com.joelkanyi.platypus.app.PlatypusConfig
 import com.joelkanyi.platypus.app.purgeSessionCaches
 import com.joelkanyi.platypus.designsystem.PlatypusIcons
 import com.joelkanyi.platypus.designsystem.expand
@@ -264,6 +265,12 @@ internal fun ProfileContent(
                         headline = "Terms of use",
                         trailingContent = { JengaIcon(JengaIcons.ChevronRight, contentDescription = null) },
                         onClick = onOpenTerms,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    InsetDivider()
+                    JengaListItem(
+                        headline = "App version",
+                        supporting = PlatypusConfig.VERSION,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }

@@ -16,6 +16,7 @@
 package com.joelkanyi.platypus.feature.repo.overview
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,7 +32,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.joelkanyi.platypus.app.LocalPlatypusDependencies
 import com.joelkanyi.platypus.designsystem.PlatypusIcons
+import com.joelkanyi.platypus.designsystem.PlatypusListRowSkeleton
 import com.joelkanyi.platypus.designsystem.PlatypusMarkdown
+import com.joelkanyi.platypus.designsystem.PlatypusSkeletonLine
 import com.joelkanyi.platypus.designsystem.expand
 import com.joelkanyi.platypus.designsystem.formatByteSize
 import com.joelkanyi.platypus.domain.model.RepositoryDetail
@@ -156,7 +159,12 @@ internal fun OverviewContent(
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
             )
 
-            detail != null -> LazyColumn(
+            detail == null -> OverviewSkeleton(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = innerPadding.expand(horizontal = spacing.lg, vertical = spacing.md),
+            )
+
+            else -> LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = innerPadding.expand(horizontal = spacing.lg, vertical = spacing.md),
                 verticalArrangement = Arrangement.spacedBy(spacing.md),
@@ -241,9 +249,20 @@ internal fun OverviewContent(
                     item { ReadmeBlock(state.readme) }
                 }
             }
-
-            else -> Unit
         }
+    }
+}
+
+@Composable
+private fun OverviewSkeleton(contentPadding: PaddingValues, modifier: Modifier = Modifier) {
+    val spacing = JengaTheme.spacing
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = contentPadding,
+        verticalArrangement = Arrangement.spacedBy(spacing.md),
+    ) {
+        item { PlatypusSkeletonLine(widthFraction = 0.85f) }
+        items(8) { PlatypusListRowSkeleton() }
     }
 }
 

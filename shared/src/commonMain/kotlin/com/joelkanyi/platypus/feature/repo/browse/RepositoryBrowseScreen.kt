@@ -42,6 +42,7 @@ import com.joelkanyi.platypus.core.result.userMessage
 import com.joelkanyi.platypus.core.search.fuzzyFilter
 import com.joelkanyi.platypus.designsystem.PlatypusBreadcrumb
 import com.joelkanyi.platypus.designsystem.PlatypusIcons
+import com.joelkanyi.platypus.designsystem.PlatypusListSkeleton
 import com.joelkanyi.platypus.designsystem.crumbsFor
 import com.joelkanyi.platypus.designsystem.formatByteSize
 import com.joelkanyi.platypus.domain.model.AccountId
@@ -304,6 +305,11 @@ private fun DirectoryList(
             modifier = Modifier.fillMaxSize(),
         )
 
+        state.isLoading && state.entries.isEmpty() -> PlatypusListSkeleton(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = spacing.lg, vertical = spacing.xs),
+        )
+
         else -> LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(horizontal = spacing.lg, vertical = spacing.xs),
@@ -335,6 +341,11 @@ private fun SearchResults(state: BrowseUiState, onOpenFile: (String) -> Unit) {
             title = "Couldn't search files",
             description = state.searchError,
             modifier = Modifier.fillMaxSize(),
+        )
+
+        state.searchLoading && state.results.isEmpty() -> PlatypusListSkeleton(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = spacing.lg, vertical = spacing.xs),
         )
 
         !state.searchLoading && state.results.isEmpty() -> JengaEmptyState(

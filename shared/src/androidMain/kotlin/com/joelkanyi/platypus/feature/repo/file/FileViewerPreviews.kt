@@ -65,6 +65,35 @@ private fun FileViewerContentPreview() {
 
 @PlatypusThemePreviews
 @Composable
+private fun FileViewerLoadingPreview() {
+    PlatypusPreview {
+        FileViewerContent(
+            fileName = "Main.kt",
+            repoLabel = "platypus",
+            path = "shared/src/Main.kt",
+            wrap = true,
+            fontSize = 13.sp,
+            onNavigateToPath = {},
+            onBack = {},
+            searchedVersion = null,
+            onViewLatest = {},
+            state = FileUiState(isLoading = true),
+            onRetry = {},
+            onTogglePreview = {},
+            onToggleWrap = {},
+            onToggleFind = {},
+            onFindQuery = {},
+            onNextMatch = {},
+            onPreviousMatch = {},
+            onToggleOutline = {},
+            onJumpTo = {},
+            onOpenUrl = {},
+        )
+    }
+}
+
+@PlatypusThemePreviews
+@Composable
 private fun FileViewerBinaryPreview() {
     PlatypusPreview {
         FileViewerContent(

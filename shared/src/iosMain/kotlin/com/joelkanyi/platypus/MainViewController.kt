@@ -41,14 +41,10 @@ fun MainViewController() = ComposeUIViewController {
 }
 
 fun handleOAuthDeepLink(url: String) {
-    val code = extractCode(url) ?: return
-    IosApp.deepLinks.submit(code)
-}
-
-private fun extractCode(url: String): String? {
-    val components = NSURLComponents(string = url)
-    val items = components.queryItems ?: return null
-    return items.filterIsInstance<NSURLQueryItem>().firstOrNull { it.name == "code" }?.value
+    val items = NSURLComponents(string = url).queryItems?.filterIsInstance<NSURLQueryItem>() ?: return
+    val code = items.firstOrNull { it.name == "code" }?.value ?: return
+    val state = items.firstOrNull { it.name == "state" }?.value
+    IosApp.deepLinks.submit(code, state)
 }
 
 private object IosApp {

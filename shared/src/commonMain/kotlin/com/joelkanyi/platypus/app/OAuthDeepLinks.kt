@@ -22,14 +22,16 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
+data class OAuthCallback(val code: String, val state: String?)
+
 @Inject
 @SingleIn(AppScope::class)
 class OAuthDeepLinks {
 
-    private val _codes = MutableSharedFlow<String>(replay = 1, extraBufferCapacity = 1)
-    val codes: SharedFlow<String> = _codes.asSharedFlow()
+    private val _callbacks = MutableSharedFlow<OAuthCallback>(replay = 1, extraBufferCapacity = 1)
+    val callbacks: SharedFlow<OAuthCallback> = _callbacks.asSharedFlow()
 
-    fun submit(code: String) {
-        _codes.tryEmit(code)
+    fun submit(code: String, state: String?) {
+        _callbacks.tryEmit(OAuthCallback(code, state))
     }
 }

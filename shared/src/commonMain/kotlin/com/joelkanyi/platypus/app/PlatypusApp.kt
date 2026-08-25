@@ -37,6 +37,7 @@ fun PlatypusApp(dependencies: PlatypusDependencies) {
     }
     CompositionLocalProvider(LocalPlatypusDependencies provides dependencies) {
         PlatypusTheme(darkTheme = darkTheme) {
+            SystemBarAppearance(darkTheme = darkTheme)
             Box(
                 modifier = Modifier
                     .fillMaxSize()

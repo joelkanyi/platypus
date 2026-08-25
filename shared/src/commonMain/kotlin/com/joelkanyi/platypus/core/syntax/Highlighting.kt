@@ -23,7 +23,10 @@ data class Token(val start: Int, val end: Int, val role: TokenRole)
  * A deliberately simple, line-scoped highlighter. It tokenizes a single line at a time (no multi-line
  * string or block-comment state), which is the standard, cheap approach for a read-only mobile viewer.
  */
-class LineHighlighter(private val keywords: Set<String>, private val lineComment: String?) {
+class LineHighlighter(
+    private val keywords: Set<String>,
+    private val lineComment: String?
+) {
     fun tokenize(line: String): List<Token> {
         val tokens = mutableListOf<Token>()
         var i = 0

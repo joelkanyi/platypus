@@ -33,13 +33,3 @@ inline fun <T, R> NetworkResult<T>.map(transform: (T) -> R): NetworkResult<R> = 
 }
 
 fun <T> NetworkResult<T>.getOrNull(): T? = (this as? NetworkResult.Success)?.data
-
-inline fun <T> NetworkResult<T>.onSuccess(action: (T) -> Unit): NetworkResult<T> {
-    if (this is NetworkResult.Success) action(data)
-    return this
-}
-
-inline fun <T> NetworkResult<T>.onFailure(action: (NetworkResult.Failure) -> Unit): NetworkResult<T> {
-    if (this is NetworkResult.Failure) action(this)
-    return this
-}

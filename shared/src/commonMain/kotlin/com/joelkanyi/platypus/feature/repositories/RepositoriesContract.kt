@@ -24,12 +24,19 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
-data class WorkspaceOption(val accountId: String, val accountLabel: String, val workspace: Workspace) {
+data class WorkspaceOption(
+    val accountId: String,
+    val accountLabel: String,
+    val workspace: Workspace
+) {
     val id: String get() = "$accountId/${workspace.slug}"
 }
 
 @Immutable
-data class RepoRow(val repo: Repository, val watched: Boolean)
+data class RepoRow(
+    val repo: Repository,
+    val watched: Boolean
+)
 
 @Immutable
 data class RepositoriesUiState(

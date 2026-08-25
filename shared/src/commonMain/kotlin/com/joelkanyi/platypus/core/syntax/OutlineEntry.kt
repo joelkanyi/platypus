@@ -15,13 +15,19 @@
  */
 package com.joelkanyi.platypus.core.syntax
 
-data class OutlineEntry(val line: Int, val label: String)
+data class OutlineEntry(
+    val line: Int,
+    val label: String
+)
 
 /**
  * A heuristic, regex-based outline of a file's top-level declarations. It is deliberately labelled
  * "Outline" in the UI and never presented as jump-to-definition, since Bitbucket exposes no symbol index.
  */
-fun outlineOf(fileName: String, lines: List<String>): List<OutlineEntry> {
+fun outlineOf(
+    fileName: String,
+    lines: List<String>
+): List<OutlineEntry> {
     val patterns = patternsFor(fileName)
     if (patterns.isEmpty()) return emptyList()
     val out = mutableListOf<OutlineEntry>()

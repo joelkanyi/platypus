@@ -20,7 +20,10 @@ package com.joelkanyi.platypus.core.search
  * otherwise a score where LOWER is a better match. A contiguous match inside the file name is
  * ranked well ahead of a scattered match across the full path.
  */
-fun fuzzyScore(query: String, text: String): Int? {
+fun fuzzyScore(
+    query: String,
+    text: String
+): Int? {
     val q = query.lowercase().trim()
     if (q.isEmpty()) return 0
     val t = text.lowercase()
@@ -43,7 +46,11 @@ fun fuzzyScore(query: String, text: String): Int? {
 }
 
 /** Top [limit] paths matching [query], best first. */
-fun fuzzyFilter(query: String, paths: List<String>, limit: Int = 50): List<String> {
+fun fuzzyFilter(
+    query: String,
+    paths: List<String>,
+    limit: Int = 50
+): List<String> {
     if (query.isBlank()) return emptyList()
     return paths
         .mapNotNull { path -> fuzzyScore(query, path)?.let { path to it } }

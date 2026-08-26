@@ -1,15 +1,42 @@
+<div align="center">
+
+<img src="art/platypus-icon.png" width="120" alt="Platypus" />
+
 # Platypus
 
-An unofficial Bitbucket Cloud client for Android and iOS, built with Kotlin Multiplatform.
+**An unofficial Bitbucket Cloud client for Android and iOS, built with Kotlin Multiplatform.**
+
+[![Platform](https://img.shields.io/badge/platform-Android%20%7C%20iOS-D0553C)](https://github.com/joelkanyi/platypus/releases)
+[![Kotlin Multiplatform](https://img.shields.io/badge/Kotlin-Multiplatform-D0553C?logo=kotlin&logoColor=white)](https://kotlinlang.org/docs/multiplatform.html)
+[![Release](https://img.shields.io/github/v/release/joelkanyi/platypus?color=D0553C)](https://github.com/joelkanyi/platypus/releases)
+[![License](https://img.shields.io/github/license/joelkanyi/platypus?color=D0553C)](LICENSE)
+
+</div>
 
 Platypus talks to Bitbucket Cloud directly from your device. Your repository content never
-passes through a Platypus server. One Compose Multiplatform codebase runs on Android and iOS.
+passes through a Platypus server, and there is no analytics or third-party tracking. One
+Compose Multiplatform codebase runs on Android and iOS.
 
 ## Why
 
-Reviewing pull requests and checking pipelines on Bitbucket's mobile web is painful.
-Platypus is a native client built around the review path: the pull requests awaiting you
-across every account and workspace, a real diff viewer, and one-tap approve or merge.
+Reviewing pull requests and checking pipelines on Bitbucket's mobile web is painful. Platypus
+is a native client built around the review path: the pull requests awaiting you across every
+account and workspace, a real diff viewer, and one-tap approve or merge.
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="33%"><img src="art/screenshots/01-inbox.png" alt="Reviewer inbox" /><br/><sub><b>Reviewer inbox</b> across accounts</sub></td>
+    <td width="33%"><img src="art/screenshots/02-pull-request.png" alt="Pull request" /><br/><sub><b>Pull request</b> review</sub></td>
+    <td width="33%"><img src="art/screenshots/03-diff.png" alt="Diff viewer" /><br/><sub><b>Diff</b> with inline comments</sub></td>
+  </tr>
+  <tr>
+    <td width="33%"><img src="art/screenshots/04-file-viewer.png" alt="File viewer" /><br/><sub><b>File viewer</b> with syntax highlighting</sub></td>
+    <td width="33%"><img src="art/screenshots/05-repositories.png" alt="Repositories" /><br/><sub><b>Repositories</b> and watchlist</sub></td>
+    <td width="33%"><img src="art/screenshots/06-settings.png" alt="Settings" /><br/><sub><b>Themes</b> and app lock</sub></td>
+  </tr>
+</table>
 
 ## Features
 
@@ -28,7 +55,7 @@ across every account and workspace, a real diff viewer, and one-tap approve or m
 ## Install
 
 Android: download the signed APK from the [Releases](https://github.com/joelkanyi/platypus/releases)
-page and sideload it.
+page and sideload it. A Google Play listing is on the way.
 
 iOS: build from source (below). No public distribution yet.
 
@@ -41,6 +68,12 @@ Requires JDK 21.
 ./gradlew :shared:compileKotlinIosSimulatorArm64
 open iosApp/iosApp.xcodeproj
 ```
+
+## Built with
+
+Kotlin Multiplatform and Compose Multiplatform, one shared module for Android and iOS.
+Ktor for networking, Room for local storage, Metro for compile-time dependency injection,
+Coil for images, and Navigation 3. Android 7.0 (API 24) and up.
 
 ## Sign in with Bitbucket (OAuth)
 

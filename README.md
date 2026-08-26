@@ -27,14 +27,16 @@ account and workspace, a real diff viewer, and one-tap approve or merge.
 
 <table>
   <tr>
-    <td width="33%"><img src="art/screenshots/01-inbox.png" alt="Reviewer inbox" /><br/><sub><b>Reviewer inbox</b> across accounts</sub></td>
-    <td width="33%"><img src="art/screenshots/02-pull-request.png" alt="Pull request" /><br/><sub><b>Pull request</b> review</sub></td>
-    <td width="33%"><img src="art/screenshots/03-diff.png" alt="Diff viewer" /><br/><sub><b>Diff</b> with inline comments</sub></td>
+    <td align="center" width="25%"><sub><b>Sign in</b></sub><br/><img src="art/screenshots/01-sign-in.png" alt="Sign in" /></td>
+    <td align="center" width="25%"><sub><b>Repositories</b></sub><br/><img src="art/screenshots/02-repositories.png" alt="Repositories and watchlist" /></td>
+    <td align="center" width="25%"><sub><b>Repository</b></sub><br/><img src="art/screenshots/03-repository.png" alt="Repository overview" /></td>
+    <td align="center" width="25%"><sub><b>File viewer</b></sub><br/><img src="art/screenshots/04-file-viewer.png" alt="File viewer with syntax highlighting" /></td>
   </tr>
   <tr>
-    <td width="33%"><img src="art/screenshots/04-file-viewer.png" alt="File viewer" /><br/><sub><b>File viewer</b> with syntax highlighting</sub></td>
-    <td width="33%"><img src="art/screenshots/05-repositories.png" alt="Repositories" /><br/><sub><b>Repositories</b> and watchlist</sub></td>
-    <td width="33%"><img src="art/screenshots/06-settings.png" alt="Settings" /><br/><sub><b>Themes</b> and app lock</sub></td>
+    <td align="center" width="25%"><sub><b>Inbox</b></sub><br/><img src="art/screenshots/05-inbox.png" alt="Reviewer inbox" /></td>
+    <td align="center" width="25%"><sub><b>Pull request</b></sub><br/><img src="art/screenshots/06-pull-request.png" alt="Pull request review" /></td>
+    <td align="center" width="25%"><sub><b>Diff</b></sub><br/><img src="art/screenshots/07-diff.png" alt="Diff with inline comments" /></td>
+    <td align="center" width="25%"><sub><b>Account</b></sub><br/><img src="art/screenshots/08-account.png" alt="Account, themes, and app lock" /></td>
   </tr>
 </table>
 

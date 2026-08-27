@@ -17,6 +17,9 @@ Platypus talks to Bitbucket Cloud directly from your device. Your repository con
 passes through a Platypus server, and there is no analytics or third-party tracking. One
 Compose Multiplatform codebase runs on Android and iOS.
 
+## Become a Tester
+Google play: https://play.google.com/apps/testing/com.joelkanyi.platypus
+
 ## Why
 
 Reviewing pull requests and checking pipelines on Bitbucket's mobile web is painful. Platypus

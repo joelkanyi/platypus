@@ -88,7 +88,7 @@ fun PlatypusCommitRow(commit: Commit, onClick: () -> Unit, modifier: Modifier = 
     val spacing = JengaTheme.spacing
     JengaListItem(
         modifier = modifier,
-        headline = commit.subject,
+        headline = commit.subject.take(15).let { if (commit.subject.length > 15) "$it..." else it },
         supporting = "${commit.authorName} · ${shortDate(commit.date)}",
         leadingContent = { JengaAvatar(name = commit.authorName, size = JengaAvatarSize.Small) },
         trailingContent = {
